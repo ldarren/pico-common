@@ -6,12 +6,9 @@ lib-cov
 *.out
 *.pid
 *.gz
-*.js
 
 pids
 logs
 results
 
 npm-debug.log
-
-!objTools.js
