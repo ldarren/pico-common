@@ -1,0 +1,23 @@
+{
+    "name": "pico-common",
+    "version": "0.0.1",
+    "main":"./index.js",
+    "description": "A common libraries for pico server and client",
+    "keywords": [
+        "pico-common"
+    ],
+    "author": {
+        "name": "Darren Liew",
+        "email": "ldarren@gmail.com"
+    }, 
+    "license": {
+        "type": "MIT"
+    }, 
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ldarren/pico-common.git" 
+    }, 
+    "engines": {
+        "node": ">=0.6.0"
+    }
+}
