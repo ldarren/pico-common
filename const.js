@@ -5,4 +5,9 @@ Object.freeze(G_CCONST = {
     INIT: '.i',
     READ: '.r',
     UPDATE: '.u',
+// standard header params
+    API: 'api',
+    DATA: 'data',
+    REQ_ID: 'reqId',
+    RES_ID: 'resId',
 });
