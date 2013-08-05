@@ -10,4 +10,5 @@ Object.freeze(G_CCONST = {
     DATA: 'data',
     REQ_ID: 'reqId',
     RES_ID: 'resId',
+    MODEL_SEP: '.',
 });
