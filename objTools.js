@@ -7,11 +7,11 @@
         }
         if (!options || typeof options !== 'object') options = {};
         var key, value;
-        if (obj.length === undefined){
+        if (undefined === obj.length){
             for (key in obj){
                 value = obj[key];
                 if (typeof value === 'object')
-                    base[key] = mergeObj(base[key], value);
+                    base[key] = mergeObj(base[key], value, options);
                 else
                     base[key] = obj[key];
             }
@@ -36,4 +36,4 @@
         }
         return base;
     };
-})(exports === undefined ? this['objTools']={} : exports);
+})(undefined === exports ? this['objTools']={} : exports);
