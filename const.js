@@ -11,7 +11,8 @@ Object.freeze(G_CCONST = {
     SESSION_JOBS: 'jobs',
     SESSION_ACKS: 'acks',
 // channel header key
-    CHANNEL: 'pico-channel', // channel id
+    CHANNEL_ID: 'pico-channel-id', // channel id
+    CHANNEL_PASS: 'pico-channel-pass', // channel id
 // standard header params
     API: 'api',
     DATA: 'data',
