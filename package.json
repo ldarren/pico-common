@@ -1,6 +1,6 @@
 {
     "name": "pico-common",
-    "version": "0.0.12",
+    "version": "0.0.13",
     "main":"./index.js",
     "description": "A common libraries for pico server and client",
     "keywords": [
