@@ -1,6 +1,9 @@
 var
 util = require('util'),
-mergeObj = require('./objTools').mergeObj,
+common = require('./index'),
+mergeObj = common.mergeObj,
+deltaToNext = common.deltaToNext,
+timeOfNext = common.timeOfNext,
 ensure = function(msg, task){
     task(function(err, result){
         if (err) return console.error(msg+':', '\t', err);
@@ -54,4 +57,13 @@ ensure('ensure options.mergeArr off is working. output should contain[2,3] list'
     obj2 = {key1:[2,3]};
 
     cb(null, mergeObj(obj1, obj2));
+});
+
+ensure('ensure deltaToNext 5 sec is 5000', function(cb){
+    var d = new Date();
+    cb(null, deltaToNext(0, d.getHours(), d.getMinutes(), d.getSeconds()+5, d.getMilliseconds()));
+});
+
+ensure('ensure timeOfNext 2days 9am is Xxx, D+2 MM YYYY 09:00:00 GMT', function(cb){
+    cb(null, (new Date(timeOfNext(2, 9))).toUTCString());
 });
