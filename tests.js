@@ -1,15 +1,9 @@
 var
-util = require('util'),
 common = require('./index'),
 mergeObj = common.mergeObj,
 deltaToNext = common.deltaToNext,
 timeOfNext = common.timeOfNext,
-ensure = function(msg, task){
-    task(function(err, result){
-        if (err) return console.error(msg+':', '\t', err);
-        console.log(msg+':', '\t', util.inspect(result,{colors:true}));
-    });
-};
+ensure = common.ensure;
 
 ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
     var
