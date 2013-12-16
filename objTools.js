@@ -1,4 +1,5 @@
 (function(exports){
+debugger;
     var mergeObj;
     exports.mergeObj = mergeObj = function(base, obj, options){
         if (typeof base !== typeof obj) {
@@ -37,4 +38,4 @@
         }
         return base;
     };
-})(undefined === exports ? this['objTools']={} : exports);
+})('undefined' === typeof exports ? pico['objTools']={} : exports);

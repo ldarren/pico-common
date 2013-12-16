@@ -5,4 +5,4 @@
             console.log(msg+':\t'+format(result,{colors:true}));
         });
     };
-})(undefined === exports ? this['testTools']={} : exports, undefined === require ? JSON.stringify : require('util').inspect);
+})('undefined' === typeof exports ? pico['testTools']={} : exports, 'undefined' === typeof require ? JSON.stringify : require('util').inspect);
