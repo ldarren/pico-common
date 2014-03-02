@@ -1,5 +1,4 @@
 (function(exports){
-debugger;
     var mergeObj;
     exports.mergeObj = mergeObj = function(base, obj, options){
         if (typeof base !== typeof obj) {
