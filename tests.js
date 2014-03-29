@@ -3,6 +3,7 @@ common = require('./index'),
 mergeObj = common.mergeObj,
 deltaToNext = common.deltaToNext,
 timeOfNext = common.timeOfNext,
+strCodec = common.strCodec,
 ensure = common.ensure;
 
 ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
@@ -60,4 +61,11 @@ ensure('ensure deltaToNext 5 sec is 5000', function(cb){
 
 ensure('ensure timeOfNext 2days 9am is Xxx, D+2 MM YYYY 09:00:00 GMT', function(cb){
     cb(null, (new Date(timeOfNext(2, 9))).toUTCString());
+});
+
+ensure('ensure strCodec encode string "{"data":123}" and decode the same', function(cb){
+    var
+    data = JSON.stringify({data:123}),
+    key = parseInt('100007900715391');
+    cb(null, strCodec(key, strCodec(key, data)));
 });
