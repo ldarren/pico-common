@@ -69,7 +69,3 @@ ensure('ensure strCodec encode string "{"data":123}" and decode the same', funct
     key = parseInt('100007900715391');
     cb(null, strCodec(key, strCodec(key, data)));
 });
-
-ensure('ensure hashing same string always return the same hash', function(cb){
-    cb(null, hash('lpsum'));
-});
