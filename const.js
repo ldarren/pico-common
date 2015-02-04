@@ -19,7 +19,6 @@ Object.freeze(G_CCONST = {
     KEY: 'key', // hmac key
     MODEL_SEP: '.',
 })
-console.log('############################################### const')
 Object.freeze(G_CERROR = {
     400: {code: 400, msg:'Bad Request'},
     401: {code: 401, msg:'Unauthorized'},
