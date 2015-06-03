@@ -1,40 +1,40 @@
 (function(exports){
-    exports.mergeObj = function(base, obj, options){
-        if (typeof base !== typeof obj) {
-            base = obj
-            return base
-        }
-        if (!options || typeof options !== 'object') options = {}
-        var tidy = options.tidy, key, value
-        if (undefined === obj.length){
-            for (key in obj){
-                value = obj[key]
+    exports.extend= function(to, from, options){
+        var o = 'object'
+        if (o !== typeof from || typeof to !== typeof from) return from
+        if (!options || o !== typeof options) options = {}
+        var tidy = options.tidy, callee=arguments.callee,key, value
+        if (undefined === from.length){
+            for (key in from){
+                value = from[key]
                 if (undefined === value && tidy) continue
-                if (typeof value === 'object')
-                    base[key] = arguments.callee(base[key], value, options)
-                else
-                    base[key] = value
+                to[key] = callee(to[key], value, options)
             }
         }else{
             if (options.mergeArr){
                 var i, l, unique={}
-                for (i=0,l=base.length; i<l; i++){
-                    if (undefined === (value = base[i]) && tidy) continue
+                for (i=0,l=to.length; i<l; i++){
+                    if (undefined === (value = to[i]) && tidy) continue
                     unique[value] = value
                 }
-                for (i=0,l=obj.length; i<l; i++){
-                    if (undefined === (value = obj[i]) && tidy) continue
+                for (i=0,l=from.length; i<l; i++){
+                    if (undefined === (value = from[i]) && tidy) continue
                     unique[value] = value
                 }
-                base = []
-                for (key in unique){
-                    base.push(unique[key])
-                }
+                to = []
+                for (key in unique) to.push(unique[key]);
             }else{
-                base = obj
+                to = from
             }
         }
-        return base
+        return to
+    }
+    exports.extends= function(to, list, options){
+        var e = exports.extend
+        for(var i=0,f; f=list[i]; i++){
+            to= e(to, f, options)
+        }
+        return to
     }
 	exports.parseInts= function(arr){
 		for(var i=0,l=arr.length; i<l; i++){
