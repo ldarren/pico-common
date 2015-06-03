@@ -23,4 +23,4 @@
 
         return nextTime.getTime();
     };
-})('undefined' === typeof exports ? pico['timeTools']={} : exports);
+})('undefined' === typeof exports ? pico['time']={} : exports);

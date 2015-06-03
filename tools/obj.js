@@ -161,4 +161,4 @@
 		}
 		return arr
     }
-})('undefined' === typeof exports ? pico['objTools']={} : exports)
+})('undefined' === typeof exports ? pico['obj']={} : exports)
