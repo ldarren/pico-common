@@ -20,15 +20,6 @@
         return o
     }(exports),
     consoleCB = function(){console.log(arguments)},
-    hash = function(str){
-        var hash = 0
-
-        for (var i = 0, l=str.length; i < l; i++) {
-            hash = ((hash<<5)-hash)+str.charCodeAt(i)
-            hash = hash & hash // Convert to 32bit integer
-        }
-        return hash
-    },
     createMod = function(link, obj, ancestor){
         ancestor = ancestor || pico.prototype
 
@@ -136,7 +127,7 @@
             envs.production = !!options.production
             script = script.substring(script.indexOf('{') + 1, script.lastIndexOf('}'))
 
-            pico.objTools.extend(paths, options.paths)
+            pico.obj.extend(paths, options.paths)
             options.onLoad(function(){
                 vm(options.name, script, function(err, mod){
                     script = undefined
@@ -189,7 +180,7 @@
             channel = this.slots[channelName] = this.slots[channelName] || {},
             con = this.contexts[channelName] = this.contexts[channelName] || {},
             evt = this.signals[channelName],
-            h = hash(channelName+func.toString())
+            h = pico.str.hash(channelName+func.toString())
 
             channel[h] = func
             con[h] = context
@@ -212,7 +203,7 @@
                 for(k in c) delete c[k]
                 break
             case 2:
-                var h = hash(channelName + func.toString())
+                var h = pico.str.hash(channelName + func.toString())
                 c = slots[channelName] || {}
                 if (c) delete c[h]
                 c = contexts[channelName] || {}
