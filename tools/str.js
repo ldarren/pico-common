@@ -1,4 +1,4 @@
-(function(exports){
+!function(exports){
     exports.codec = function(num, str){
         for(var i=0,l=str.length,ret=''; i<l; i++){
             ret += String.fromCharCode(str.charCodeAt(i) ^ num)
@@ -13,5 +13,5 @@
             hash = hash & hash // Convert to 32bit integer
         }
         return hash
-    },
-})('undefined' === typeof exports ? pico['str']={} : exports)
+    }
+}((pico || exports.pico)['str']={})

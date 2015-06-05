@@ -1,4 +1,4 @@
-(function(exports){
+!function(exports){
     exports.extend= function(to, from, options){
         var o = 'object'
         if (o !== typeof from || typeof to !== typeof from) return from
@@ -161,4 +161,4 @@
 		}
 		return arr
     }
-})('undefined' === typeof exports ? pico['obj']={} : exports)
+}((pico || exports.pico)['obj']={})

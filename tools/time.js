@@ -1,4 +1,4 @@
-(function(exports){
+!function(exports){
     var
     HR = 3600000,
     MIN = 60000,
@@ -23,4 +23,4 @@
 
         return nextTime.getTime();
     };
-})('undefined' === typeof exports ? pico['time']={} : exports);
+}((pico||exports.pico)['time']={});
