@@ -92,16 +92,16 @@
         }
         fname = raw ? fname : fname+'.js'
 
-        ajax('get', path+fname, '', null, function(err, xhr){
+        ajax('get', path+fname, '', null, function(err, readyState, text){
             if (err) return cb(err)
-            if (4 !== xhr.readyState) return
+            if (4 !== readyState) return
             if (raw){
-                mod.text = xhr.responseText
+                mod.text = text
                 try{ mod.json = JSON.parse(mod.text) }
                 catch(exp){}
                 return cb(null, mod)
             }
-            return vm(link, xhr.responseText, cb)
+            return vm(link, text, cb)
         })
 
         return mod
@@ -143,10 +143,10 @@
         getEnv: function(key){ return envs[key] },
         // use require('html') insteads?
         embed: function(holder, url, cb){
-            ajax('get', url, '', null, function(err, xhr){
+            ajax('get', url, '', null, function(err, readyState, text){
                 if (err) return cb(err)
-                if (4 !== xhr.readyState) return
-                holder.innerHTML = xhr.responseText
+                if (4 !== readyState) return
+                holder.innerHTML = text
 
                 pico.embedJS(Array.prototype.slice.call(holder.getElementsByTagName('script')), cb)
             })
