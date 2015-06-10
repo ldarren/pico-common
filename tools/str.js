@@ -1,17 +1,20 @@
-!function(exports){
-    exports.codec = function(num, str){
-        for(var i=0,l=str.length,ret=''; i<l; i++){
-            ret += String.fromCharCode(str.charCodeAt(i) ^ num)
-        }
-        return ret
-    }
-    exports.hash = function(str){
-        var hash = 0
+!function(pico){
+    pico.str = {
+        codec: function(num, str){
+            var ret=''
+            for(var i=0,c; c=str.charCodeAt(i); i++){
+                ret += String.fromCharCode(c ^ num)
+            }
+            return ret
+        },
+        hash: function(str){
+            var h = 0
 
-        for (var i = 0, l=str.length; i < l; i++) {
-            hash = ((hash<<5)-hash)+str.charCodeAt(i)
-            hash = hash & hash // Convert to 32bit integer
+            for (var i=0,c; c=str.charCodeAt(i); i++) {
+                h = ((h<<5)-h)+c
+                h = h & h // Convert to 32bit integer
+            }
+            return h
         }
-        return hash
     }
-}((pico || exports.pico)['str']={})
+}('undefined' === typeof window ? module.exports : window.pico)

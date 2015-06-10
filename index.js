@@ -1,4 +1,5 @@
-!function(exports){
+// TODO: make pico a exports.module
+!function(module, exports){
     'use strict'
 
     var
@@ -8,8 +9,9 @@
     envs = {production:true},
     dummyCB = function(){},
     dummyObj = {},
-    dummyGlobal = function(g){
+    dummyGlobal = function(){
         var
+        g = this,
         notAllows = ['frameElement'],
         o = {}
         for(var k in g){
@@ -18,8 +20,7 @@
             else o[k] = dummyObj
         }
         return o
-    }(exports),
-    consoleCB = function(){console.log(arguments)},
+    }(),
     createMod = function(link, obj, ancestor){
         ancestor = ancestor || pico.prototype
 
@@ -40,9 +41,9 @@
     getModAsync = function(link, cb){
         return cb ? loadLink(link, cb) : getMod(link)
     },
-    parseFunc = function(g, me, require, inherit, script){
+    parseFunc = function(me, require, inherit, script){
         try{
-            Function('exports', 'require', 'inherit', 'me', 'window', script).call(g, me, require, inherit, me, g)
+            Function('exports', 'require', 'inherit', 'me', script).call(this, me, require, inherit, me)
             return me
         }catch(exp){
             //console.error(exp.fileName+' ('+exp.lineNumber+':'+exp.columnNumber+')')
@@ -55,12 +56,12 @@
         deps=[],
         ancestorLink
 
-        parseFunc(dummyGlobal, createMod(scriptLink, {}), function(l){var d=modules[l];if(d)return d;deps.push(l)},function(l){ancestorLink=l}, script)
+        parseFunc.call(dummyGlobal, createMod(scriptLink, {}), function(l){if(!modules[l])deps.push(l)}, function(l){ancestorLink=l}, script)
 
         loadLink(ancestorLink, function(err, ancestor){
             if (err) return cb(err)
 
-            var mod = parseFunc(exports, createMod(scriptLink, getMod(scriptLink), ancestor), getModAsync, dummyCB, '"use strict"\n'+script+(envs.production ? '' : '//# sourceURL='+scriptLink))
+            var mod = parseFunc(createMod(scriptLink, getMod(scriptLink), ancestor), getModAsync, dummyCB, '"use strict"\n'+script+(envs.production ? '' : '//# sourceURL='+scriptLink))
             loadDeps(deps, function(err){
                 if (err) return cb(err)
                 mod.signalStep(pico.LOAD, [])
@@ -92,16 +93,16 @@
         }
         fname = raw ? fname : fname+'.js'
 
-        ajax('get', path+fname, '', null, function(err, xhr){
+        ajax('get', path+fname, '', null, function(err, readyState, text){
             if (err) return cb(err)
-            if (4 !== xhr.readyState) return
+            if (4 !== readyState) return
             if (raw){
-                mod.text = xhr.responseText
+                mod.text = text
                 try{ mod.json = JSON.parse(mod.text) }
                 catch(exp){}
                 return cb(null, mod)
             }
-            return vm(link, xhr.responseText, cb)
+            return vm(link, text, cb)
         })
 
         return mod
@@ -119,7 +120,7 @@
         })
     }
 
-    pico = exports.pico = {
+    module[exports]=pico={
         start: function(options, cb){
             var script = cb.toString()
 
@@ -143,10 +144,10 @@
         getEnv: function(key){ return envs[key] },
         // use require('html') insteads?
         embed: function(holder, url, cb){
-            ajax('get', url, '', null, function(err, xhr){
+            ajax('get', url, '', null, function(err, readyState, text){
                 if (err) return cb(err)
-                if (4 !== xhr.readyState) return
-                holder.innerHTML = xhr.responseText
+                if (4 !== readyState) return
+                holder.innerHTML = text
 
                 pico.embedJS(Array.prototype.slice.call(holder.getElementsByTagName('script')), cb)
             })
@@ -246,185 +247,190 @@
         signalStep: pico.signalStep,
     }
 
-}('undefined' === typeof window? exports : window)
-!function(exports){
-    exports.extend= function(to, from, options){
-        var o = 'object'
-        if (o !== typeof from || typeof to !== typeof from) return from
-        if (!options || o !== typeof options) options = {}
-        var tidy = options.tidy, callee=arguments.callee,key, value
-        if (undefined === from.length){
-            for (key in from){
-                value = from[key]
-                if (undefined === value && tidy) continue
-                to[key] = callee(to[key], value, options)
-            }
-        }else{
-            if (options.mergeArr){
-                var i, l, unique={}
-                for (i=0,l=to.length; i<l; i++){
-                    if (undefined === (value = to[i]) && tidy) continue
-                    unique[value] = value
+}('undefined' === typeof window ? module : window, 'undefined' === typeof window ? 'exports':'pico')
+!function(pico){
+    pico.obj = {
+        extend: function(to, from, options){
+            var o = 'object'
+            if (o !== typeof from || typeof to !== typeof from) return from
+            if (!options || o !== typeof options) options = {}
+            var tidy = options.tidy, callee=arguments.callee,key, value
+            if (undefined === from.length){
+                for (key in from){
+                    value = from[key]
+                    if (undefined === value && tidy) continue
+                    to[key] = callee(to[key], value, options)
                 }
-                for (i=0,l=from.length; i<l; i++){
-                    if (undefined === (value = from[i]) && tidy) continue
-                    unique[value] = value
-                }
-                to = []
-                for (key in unique) to.push(unique[key]);
             }else{
-                to = from
+                if (options.mergeArr){
+                    var i, l, unique={}
+                    for (i=0,l=to.length; i<l; i++){
+                        if (undefined === (value = to[i]) && tidy) continue
+                        unique[value] = value
+                    }
+                    for (i=0,l=from.length; i<l; i++){
+                        if (undefined === (value = from[i]) && tidy) continue
+                        unique[value] = value
+                    }
+                    to = []
+                    for (key in unique) to.push(unique[key]);
+                }else{
+                    to = from
+                }
             }
-        }
-        return to
-    }
-    exports.extends= function(to, list, options){
-        var e = exports.extend
-        for(var i=0,f; f=list[i]; i++){
-            to= e(to, f, options)
-        }
-        return to
-    }
-	exports.parseInts= function(arr){
-		for(var i=0,l=arr.length; i<l; i++){
-			arr[i] = parseInt(arr[i])
-		}
-		return arr
-	}
-	// pluck([{k:1},{k:2}], 'k') = [1,2]
-    exports.pluck= function(objs, key){
-        var arr = []
-        if (objs.length){
-            var map = {}, obj, id, i, l, k
-            for(i=0,l=objs.length; i<l; i++){
-                obj = objs[i]
-                if (!obj) continue
-                id = obj[key]
-                if (undefined === id) continue
-                map[id] = id
+            return to
+        },
+        extends: function(to, list, options){
+            var e = pico.obj.extend
+            for(var i=0,f; f=list[i]; i++){
+                to= e(to, f, options)
             }
-            for(k in map){
-                arr.push(map[k])
+            return to
+        },
+        parseInts: function(arr){
+            for(var i=0,l=arr.length; i<l; i++){
+                arr[i] = parseInt(arr[i])
             }
-        }
-        return arr
-	}
-	// strip([{k:1,q:1},{k:2,q:2}], 'k') = [{q:1},{q:2}]
-    exports.strip= function(objs, key){
-        if (objs.length){
-            for(var i=0,o; o=objs[i]; i++){
-				o[key] = undefined
+            return arr
+        },
+        // pluck([{k:1},{k:2}], 'k') = [1,2]
+        pluck: function(objs, key){
+            var arr = []
+            if (objs.length){
+                var map = {}, obj, id, i, l, k
+                for(i=0,l=objs.length; i<l; i++){
+                    obj = objs[i]
+                    if (!obj) continue
+                    id = obj[key]
+                    if (undefined === id) continue
+                    map[id] = id
+                }
+                for(k in map){
+                    arr.push(map[k])
+                }
             }
+            return arr
+        },
+        // strip([{k:1,q:1},{k:2,q:2}], 'k') = [{q:1},{q:2}]
+        strip: function(objs, key){
+            if (objs.length){
+                for(var i=0,o; o=objs[i]; i++){
+                    o[key] = undefined
+                }
+            }
+            return objs 
+        },
+        // keyValues([{k:1, v:5},{k:2, v:6}], 'k', 'v') = {1:5, 2:6}
+        keyValues: function(arr, key, value){
+            var kv = {}
+            for(var i=0,a; a=arr[i]; i++){
+                kv[a[key]] = a[value]
+            }
+            return kv
+        },
+        // map([{k:1, v:5},{k:2, v:6}], {1:'key1', 2:'key2'}, 'k', 'v') = {key1:5, key2:6}
+        map: function(arr, keys, K, V){
+            var output = {}
+            for(var i=0,a; a=arr[i]; i++){
+                output[keys[a[K]]] = a[V]
+            }
+            return output
+        },
+        // replace([{k:1, v:5},{k:2, v:6}], {1:'key1', 2:'key2'}, 'k') = [{k:'key1', v:5},{k:'key2', v:6}]
+        replace: function(arr, keys, K){
+            for(var i=0,a; a=arr[i]; i++){
+                a[K] = keys[a[K]]
+            }
+            return arr
+        },
+        // group([{k:1, v:5},{k:1, v:6}], {1:'key1', 2:'key2'}, 'k') = {key1:[{k:1,v:5},{k:1,v:6}]}
+        group: function(arr, keys, K){
+            var output = {}, k
+            for(var i=0,a; a=arr[i]; i++){
+                k = a[K]
+                k = keys[k] || k
+                output[k] = output[k] || []
+                output[k].push(a)
+            }
+            return output
+        },
+        // values(['key1','key2'], {key1:1, key2:2}) = [1,2]
+        values: function(keys, kv){
+            var output = []
+            for(var i=0,k; k=keys[i]; i++){
+                output.push(kv[k])
+            }
+            return output
+        },
+        // merge({key1:1, key2:2}, {key3:3, key4:4}) = {key1:1,key2:2,key3:3,key4:4}
+        merge: function(obj1, obj2){
+            if (!obj1) return obj2
+            if (!obj2) return obj1
+            for(var i=0,keys = Object.keys(obj2),k; k=keys[i]; i++){
+                obj1[k] = obj2[k]
+            }
+            return obj1
+        },
+        // mergeByKey({key1:1, key2:2}, {key1:2, key3:3}, {key1:1, key3:4}, 'key1') = [{key1:1,key2:2,key3:4},{key1:2,key3:3}]
+        mergeByKey: function(arr1, arr2, KEY){
+            var m=module.exports.merge,k, obj={}, arr=[]
+            if (arr1){
+                for(var i=0,a1; a1=arr1[i]; i++){
+                    k = a1[KEY]
+                    if (undefined === k) continue
+                    obj[k] = a1
+                }
+            }
+            if (arr2){
+                for(var j=0,a2; a2=arr2[j]; j++){
+                    k = a2[KEY]
+                    if (undefined === k) continue
+                    a1 = obj[k]
+                    obj[k] = a1 ? m(a1,a2) : a2
+                }
+            }
+            for(k in obj){
+                arr.push(obj[k])
+            }
+            return arr
+        },
+        // filter([{key1:1,key2:2},{key1:2,key2:3}], [1], 'key1') = [{key1:2,key2:3}]
+        filter: function(list, exclude, key){
+            var arr=[],k
+            for(var i=0,l; l=list[i]; i++){
+                k = l[key]
+                if (!k || -1 !== exclude.indexOf(k)) continue
+                arr.push(l)
+            }
+            return arr
+        },
+        // insert([{key2:2}, {key3:3}, {key1:3}], {key4:4,key5:5}) = [{key2:2,key4:4,key5:5},{key3:3,key4:4,key5:5},{key1:3,key4:4,key5:5}]
+        insert: function(arr, obj){
+            var m = module.exports.merge
+            for(var i=0,a; a=arr[i]; i++){
+                a = m(a, obj)
+            }
+            return arr
         }
-        return objs 
-	}
-	// keyValues([{k:1, v:5},{k:2, v:6}], 'k', 'v') = {1:5, 2:6}
-	exports.keyValues= function(arr, key, value){
-		var kv = {}
-		for(var i=0,a; a=arr[i]; i++){
-			kv[a[key]] = a[value]
-		}
-		return kv
-	}
-	// map([{k:1, v:5},{k:2, v:6}], {1:'key1', 2:'key2'}, 'k', 'v') = {key1:5, key2:6}
-	exports.map= function(arr, keys, K, V){
-		var output = {}
-		for(var i=0,a; a=arr[i]; i++){
-			output[keys[a[K]]] = a[V]
-		}
-		return output
-	}
-	// replace([{k:1, v:5},{k:2, v:6}], {1:'key1', 2:'key2'}, 'k') = [{k:'key1', v:5},{k:'key2', v:6}]
-	exports.replace= function(arr, keys, K){
-		for(var i=0,a; a=arr[i]; i++){
-			a[K] = keys[a[K]]
-		}
-		return arr
-	}
-	// group([{k:1, v:5},{k:1, v:6}], {1:'key1', 2:'key2'}, 'k') = {key1:[{k:1,v:5},{k:1,v:6}]}
-	exports.group= function(arr, keys, K){
-		var output = {}, k
-		for(var i=0,a; a=arr[i]; i++){
-            k = a[K]
-			k = keys[k] || k
-			output[k] = output[k] || []
-			output[k].push(a)
-		}
-		return output
-	}
-	// values(['key1','key2'], {key1:1, key2:2}) = [1,2]
-	exports.values= function(keys, kv){
-		var output = []
-		for(var i=0,k; k=keys[i]; i++){
-			output.push(kv[k])
-		}
-		return output
-	}
-	// merge({key1:1, key2:2}, {key3:3, key4:4}) = {key1:1,key2:2,key3:3,key4:4}
-	exports.merge= function(obj1, obj2){
-		if (!obj1) return obj2
-		if (!obj2) return obj1
-		for(var i=0,keys = Object.keys(obj2),k; k=keys[i]; i++){
-			obj1[k] = obj2[k]
-		}
-		return obj1
-	}
-	// mergeByKey({key1:1, key2:2}, {key1:2, key3:3}, {key1:1, key3:4}, 'key1') = [{key1:1,key2:2,key3:4},{key1:2,key3:3}]
-	exports.mergeByKey= function(arr1, arr2, KEY){
-		var m=module.exports.merge,k, obj={}, arr=[]
-		if (arr1){
-			for(var i=0,a1; a1=arr1[i]; i++){
-				k = a1[KEY]
-				if (undefined === k) continue
-				obj[k] = a1
-			}
-		}
-		if (arr2){
-			for(var j=0,a2; a2=arr2[j]; j++){
-				k = a2[KEY]
-				if (undefined === k) continue
-				a1 = obj[k]
-				obj[k] = a1 ? m(a1,a2) : a2
-			}
-		}
-		for(k in obj){
-			arr.push(obj[k])
-		}
-		return arr
-	}
-	// filter([{key1:1,key2:2},{key1:2,key2:3}], [1], 'key1') = [{key1:2,key2:3}]
-	exports.filter= function(list, exclude, key){
-		var arr=[],k
-		for(var i=0,l; l=list[i]; i++){
-			k = l[key]
-			if (!k || -1 !== exclude.indexOf(k)) continue
-			arr.push(l)
-		}
-		return arr
-	}
-	// insert([{key2:2}, {key3:3}, {key1:3}], {key4:4,key5:5}) = [{key2:2,key4:4,key5:5},{key3:3,key4:4,key5:5},{key1:3,key4:4,key5:5}]
-	exports.insert= function(arr, obj){
-		var m = module.exports.merge
-		for(var i=0,a; a=arr[i]; i++){
-			a = m(a, obj)
-		}
-		return arr
     }
-}((pico || exports.pico)['obj']={})
-!function(exports){
-    exports.codec = function(num, str){
-        for(var i=0,l=str.length,ret=''; i<l; i++){
-            ret += String.fromCharCode(str.charCodeAt(i) ^ num)
-        }
-        return ret
-    }
-    exports.hash = function(str){
-        var hash = 0
+}('undefined'===typeof window ? module.exports : window.pico)
+!function(pico){
+    pico.str = {
+        codec: function(num, str){
+            var ret=''
+            for(var i=0,c; c=str.charCodeAt(i); i++){
+                ret += String.fromCharCode(c ^ num)
+            }
+            return ret
+        },
+        hash: function(str){
+            var h = 0
 
-        for (var i = 0, l=str.length; i < l; i++) {
-            hash = ((hash<<5)-hash)+str.charCodeAt(i)
-            hash = hash & hash // Convert to 32bit integer
+            for (var i=0,c; c=str.charCodeAt(i); i++) {
+                h = ((h<<5)-h)+c
+                h = h & h // Convert to 32bit integer
+            }
+            return h
         }
-        return hash
     }
-}((pico || exports.pico)['str']={})
+}('undefined' === typeof window ? module.exports : window.pico)

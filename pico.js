@@ -1,4 +1,5 @@
-!function(exports){
+// TODO: make pico a exports.module
+!function(module, exports){
     'use strict'
 
     var
@@ -8,8 +9,9 @@
     envs = {production:true},
     dummyCB = function(){},
     dummyObj = {},
-    dummyGlobal = function(g){
+    dummyGlobal = function(){
         var
+        g = this,
         notAllows = ['frameElement'],
         o = {}
         for(var k in g){
@@ -18,8 +20,7 @@
             else o[k] = dummyObj
         }
         return o
-    }(exports),
-    consoleCB = function(){console.log(arguments)},
+    }(),
     createMod = function(link, obj, ancestor){
         ancestor = ancestor || pico.prototype
 
@@ -40,9 +41,9 @@
     getModAsync = function(link, cb){
         return cb ? loadLink(link, cb) : getMod(link)
     },
-    parseFunc = function(g, me, require, inherit, script){
+    parseFunc = function(me, require, inherit, script){
         try{
-            Function('exports', 'require', 'inherit', 'me', 'window', script).call(g, me, require, inherit, me, g)
+            Function('exports', 'require', 'inherit', 'me', script).call(this, me, require, inherit, me)
             return me
         }catch(exp){
             //console.error(exp.fileName+' ('+exp.lineNumber+':'+exp.columnNumber+')')
@@ -55,12 +56,12 @@
         deps=[],
         ancestorLink
 
-        parseFunc(dummyGlobal, createMod(scriptLink, {}), function(l){var d=modules[l];if(d)return d;deps.push(l)},function(l){ancestorLink=l}, script)
+        parseFunc.call(dummyGlobal, createMod(scriptLink, {}), function(l){if(!modules[l])deps.push(l)}, function(l){ancestorLink=l}, script)
 
         loadLink(ancestorLink, function(err, ancestor){
             if (err) return cb(err)
 
-            var mod = parseFunc(exports, createMod(scriptLink, getMod(scriptLink), ancestor), getModAsync, dummyCB, '"use strict"\n'+script+(envs.production ? '' : '//# sourceURL='+scriptLink))
+            var mod = parseFunc(createMod(scriptLink, getMod(scriptLink), ancestor), getModAsync, dummyCB, '"use strict"\n'+script+(envs.production ? '' : '//# sourceURL='+scriptLink))
             loadDeps(deps, function(err){
                 if (err) return cb(err)
                 mod.signalStep(pico.LOAD, [])
@@ -119,7 +120,7 @@
         })
     }
 
-    pico = exports.pico = {
+    module[exports]=pico={
         start: function(options, cb){
             var script = cb.toString()
 
@@ -246,4 +247,4 @@
         signalStep: pico.signalStep,
     }
 
-}('undefined' === typeof window? exports : window)
+}('undefined' === typeof window ? module : window, 'undefined' === typeof window ? 'exports':'pico')

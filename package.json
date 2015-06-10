@@ -1,8 +1,8 @@
 {
   "name": "pico-common",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "pico common tools",
-  "main": "pico.js",
+  "main": "index.js",
   "scripts": {
     "test": "node tests.js"
   },
