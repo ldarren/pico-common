@@ -1,8 +1,20 @@
+#!/usr/bin/env node
+
 var
-obj = require('./tools/obj'),
-str = require('./tools/str'),
-time = require('./tools/time'),
-ensure= require('./tools/test').ensure
+pico= require('./all'),
+web= pico.web,
+obj= pico.obj,
+str= pico.str,
+time= pico.time,
+ensure= pico.test.ensure
+
+ensure('ensure pico has obj', function(cb){
+    cb(null, pico.obj !== undefined)
+})
+
+ensure('ensure pico has web', function(cb){
+    cb(null, pico.web!== undefined)
+})
 
 ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
     var
@@ -20,7 +32,7 @@ ensure('ensure obj1 merges with obj2. output should contain key1 and key2', func
     cb(null, obj.extend(obj1, obj2))
 })
 
-ensure('ensure options.tidy on is working. output should not contain undefined key', function(cb){
+ensure('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
     var
     obj1 = {key1:1},
     obj2 = {key2:undefined}
@@ -28,7 +40,7 @@ ensure('ensure options.tidy on is working. output should not contain undefined k
     cb(null, obj.extend(obj1, obj2, {tidy:1}))
 })
 
-ensure('ensure options.tidy off is working. output should contain undefined key', function(cb){
+ensure('ensure options.tidy off is working. output should contain an undefined key', function(cb){
     var
     obj1 = {key1:1},
     obj2 = {key2:undefined}
@@ -65,9 +77,9 @@ ensure('ensure timeOfNext 2days 9am is Xxx, D+2 MM YYYY 09:00:00 GMT', function(
     cb(null, (new Date(time.timeOfNext(2, 9))).toUTCString())
 })
 
-ensure('ensure strCodec encode string "{"data":123}" and decode the same', function(cb){
+ensure('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
     var
     data = JSON.stringify({data:123}),
     key = parseInt('100007900715391')
-    cb(null, str.strCodec(key, str.strCodec(key, data)))
+    cb(null, str.codec(key, str.codec(key, data)))
 })

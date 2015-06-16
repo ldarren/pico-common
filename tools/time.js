@@ -1,10 +1,10 @@
-!function(pico){
+!function(context, mod){
     var
     HR = 3600000,
     MIN = 60000,
     SEC = 1000
 
-    pico.time={
+    context[mod]={
         deltaToNext: function(day, hr, min, sec, msec){
             hr = hr || 0
             min = min || 0
@@ -20,10 +20,10 @@
         },
         timeOfNext: function(day, hr, min, sec, msec){
             var
-            delta = exports.deltaToNext(day, hr, min, sec, msec),
+            delta = this.deltaToNext(day, hr, min, sec, msec),
             nextTime = new Date(Date.now() + delta)
 
             return nextTime.getTime()
         }
     }
-}('undefined' === typeof window ? module.exports : window.pico)
+}('undefined' === typeof pico ? module.exports:pico, 'time')

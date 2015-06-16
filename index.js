@@ -248,8 +248,8 @@
     }
 
 }('undefined' === typeof window ? module : window, 'undefined' === typeof window ? 'exports':'pico')
-!function(pico){
-    pico.obj = {
+!function(context, mod){
+    context[mod] = {
         extend: function(to, from, options){
             var o = 'object'
             if (o !== typeof from || typeof to !== typeof from) return from
@@ -413,9 +413,9 @@
             return arr
         }
     }
-}('undefined'===typeof window ? module.exports : window.pico)
-!function(pico){
-    pico.str = {
+}('undefined' === typeof pico ? module : pico, 'undefined' === typeof pico ? 'exports':'obj')
+!function(context, mod){
+    context[mod]= {
         codec: function(num, str){
             var ret=''
             for(var i=0,c; c=str.charCodeAt(i); i++){
@@ -433,4 +433,4 @@
             return h
         }
     }
-}('undefined' === typeof window ? module.exports : window.pico)
+}('undefined' === typeof pico ? module : pico, 'undefined' === typeof pico ? 'exports':'str')
