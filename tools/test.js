@@ -1,5 +1,5 @@
-!function(pico, format){
-    pico.text = {
+!function(context, mod, format){
+    context[mod]= {
         ensure: function(msg, task){
             task(function(err, result){
                 if (err) return console.error(msg+':\t'+err)
@@ -7,4 +7,4 @@
             })
         }
     }
-}('undefined' === typeof window ? module.exports : window.pico, 'undefined' === typeof require ? JSON.stringify : require('util').inspect)
+}('undefined' === typeof pico ? module.exports:pico, 'test', 'undefined' === typeof require ? JSON.stringify : require('util').inspect)

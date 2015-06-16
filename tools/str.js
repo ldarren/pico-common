@@ -1,5 +1,5 @@
-!function(pico){
-    pico.str = {
+!function(context, mod){
+    context[mod]= {
         codec: function(num, str){
             var ret=''
             for(var i=0,c; c=str.charCodeAt(i); i++){
@@ -17,4 +17,4 @@
             return h
         }
     }
-}('undefined' === typeof window ? module.exports : window.pico)
+}('undefined' === typeof pico ? module.exports:pico, 'str')
