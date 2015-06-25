@@ -8,6 +8,7 @@
     paths = {'*':''},
     envs = {production:true},
     dummyCB = function(){},
+    dummyLoader=function(cb){cb()},
     dummyObj = {},
     dummyGlobal = function(){
         var
@@ -128,8 +129,8 @@
             envs.production = !!options.production
             script = script.substring(script.indexOf('{') + 1, script.lastIndexOf('}'))
 
-            pico.obj.extend(paths, options.paths)
-            options.onLoad(function(){
+            pico.obj.extend(paths, options.paths);
+            (options.onLoad || dummyLoader)(function(){
                 vm(options.name, script, function(err, mod){
                     script = undefined
                     options = undefined
