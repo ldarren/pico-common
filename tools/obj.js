@@ -2,6 +2,7 @@
     context[mod] = {
         extend: function(to, from, options){
             var o = 'object'
+            if (!from)return to
             if (o !== typeof from || typeof to !== typeof from) return from
             if (!options || o !== typeof options) options = {}
             var tidy = options.tidy, callee=arguments.callee,key, value

@@ -253,6 +253,7 @@
     context[mod] = {
         extend: function(to, from, options){
             var o = 'object'
+            if (!from) return to
             if (o !== typeof from || typeof to !== typeof from) return from
             if (!options || o !== typeof options) options = {}
             var tidy = options.tidy, callee=arguments.callee,key, value
@@ -415,3 +416,23 @@
         }
     }
 }('undefined' === typeof pico ? module.exports:pico, 'obj')
+!function(context, mod){
+    context[mod]= {
+        codec: function(num, str){
+            var ret=''
+            for(var i=0,c; c=str.charCodeAt(i); i++){
+                ret += String.fromCharCode(c ^ num)
+            }
+            return ret
+        },
+        hash: function(str){
+            var h = 0
+
+            for (var i=0,c; c=str.charCodeAt(i); i++) {
+                h = ((h<<5)-h)+c
+                h = h & h // Convert to 32bit integer
+            }
+            return h
+        }
+    }
+}('undefined' === typeof pico ? module.exports:pico, 'str')
