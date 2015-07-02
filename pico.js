@@ -1,9 +1,9 @@
-// TODO: make pico a exports.module
 !function(module, exports){
     'use strict'
 
     var
     pico,ajax,
+    LOAD='load',
     modules = {},
     paths = {'*':''},
     envs = {production:true},
@@ -65,7 +65,7 @@
             var mod = parseFunc(createMod(scriptLink, getMod(scriptLink), ancestor), getModAsync, dummyCB, '"use strict"\n'+script+(envs.production ? '' : '//# sourceURL='+scriptLink))
             loadDeps(deps, function(err){
                 if (err) return cb(err)
-                mod.signalStep(pico.LOAD, [])
+                mod.signalStep(LOAD, [])
                 cb(null, mod)
                 deps = ancestorLink = ancestor = script = mod = undefined
             })
@@ -126,7 +126,7 @@
             var script = cb.toString()
 
             pico.ajax = ajax = options.ajax
-            envs.production = !!options.production
+            envs.production = 'prod'===options.env
             script = script.substring(script.indexOf('{') + 1, script.lastIndexOf('}'))
 
             pico.obj.extend(paths, options.paths);
@@ -136,6 +136,8 @@
                     options = undefined
                 })
             })
+        },
+        stop: function(){
         },
         ajax: null,
         // for future file concatenating
@@ -235,7 +237,6 @@
     }
 
     Object.defineProperties(pico, {
-        LOAD:           {value:'load',          writable:false, configurable:false, enumerable:true},
         slots:          {value:{},              writable:false, configurable:false, enumerable:false},
         signals:        {value:{},              writable:false, configurable:false, enumerable:false},
         contexts:       {value:{},              writable:false, configurable:false, enumerable:false},
