@@ -179,48 +179,45 @@
             }
         },
 
-        slot: function(channelName, func, context){
+        slot: function(name, func, context){
             var
-            channel = this.slots[channelName] = this.slots[channelName] || {},
-            con = this.contexts[channelName] = this.contexts[channelName] || {},
-            evt = this.signals[channelName],
-            h = pico.str.hash(channelName+func.toString())
+            channel = this.slots[name] = this.slots[name] || {},
+            con = this.contexts[name] = this.contexts[name] || {},
+            evt = this.signals[name],
+            h = pico.str.hash(name+func.toString())
 
             channel[h] = func
             con[h] = context
             if (evt) func.apply(context, evt)
         },
-        unslot: function(channelName, func){
+        unslot: function(name, func){
             var
             slots = this.slots,
             contexts = this.contexts,
-            k, c
+            c
             switch(arguments.length){
             case 0:
-                for(k in slots) delete slots[k]
-                for(k in contexts) delete contexts[k]
+                slots={}
+                contexts={}
                 break
             case 1:
-                c = slots[channelName] || {}
-                for(k in c) delete c[k]
-                c = contexts[channelName] || {}
-                for(k in c) delete c[k]
+                delete slots[name]
+                delete contexts[name]
                 break
             case 2:
-                var h = pico.str.hash(channelName + func.toString())
-                c = slots[channelName] || {}
+                var h = pico.str.hash(name + func.toString())
+                c = slots[name]
                 if (c) delete c[h]
-                c = contexts[channelName] || {}
+                c = contexts[name]
                 if (c) delete c[h]
                 break
             }
         },
-        signal: function(channelName, evt){
+        signal: function(name, evt){
             var
-            channel = this.slots[channelName],
-            con = this.contexts[channelName],
-            results = [],
-            mod
+            channel = this.slots[name],
+            con = this.contexts[name],
+            results = []
 
             if (!channel) return results
             evt = evt || []
@@ -230,9 +227,9 @@
             }
             return results
         },
-        signalStep: function(channelName, evt){
-            this.signals[channelName] = evt
-            this.signal(channelName, evt)
+        signalStep: function(name, evt){
+            this.signals[name] = evt
+            this.signal(name, evt)
         }
     }
 
