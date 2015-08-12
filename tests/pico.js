@@ -1,6 +1,7 @@
 var
 fs=require('fs'),
 dummyCB=function(){},
+dummyLoader=function(cb){cb()},
 modules={},
 containers={},
 DEF="define('URL',function(require,exports,module,define,inherit){BODY})\n",
@@ -18,7 +19,7 @@ getMod=function(url,cb){
         cb(null, mod)
         return mod
     }
-    vm(url,cb)
+    linker(url,cb)
 },
 compile=function(script,deps,base){
     var
@@ -45,29 +46,33 @@ console.log('define',url,o)
     containers[url]=me
     return o
 },
-vm=function(url,cb){
-    cb=cb||dummyCB
+linker=function(url,cb){
     if (modules[url])return cb(null, modules[url])
     fs.readFile(url+'.js', {encoding:'utf8'},function(err,txt){
         if (err) return cb(err)
+        vm(url,txt,cb)
+    })
+},
+vm=function(url,txt,cb){
+    cb=cb||dummyCB
+    if (modules[url])return cb(null, modules[url])
 
-        var
-        deps=[],
-        base=[],
-        func=compile(txt,deps,base)
+    var
+    deps=[],
+    base=[],
+    func=compile(txt,deps,base)
 
-        modules[url]=function(){return arguments.callee.__proto__(this)}
+    modules[url]=function(){return arguments.callee.__proto__(this)}
 
 console.log('loading',url)
-        loadDeps(deps, vm, function(err){
-            if (err) return cb(err)
-            
-            var
-            m=define(url,func,modules[base[0]]),
-            me=containers[url]
-            if(me.load)me.load()
-            cb(null,m)
-        })
+    loadDeps(deps, linker, function(err){
+        if (err) return cb(err)
+        
+        var
+        m=define(url,func,modules[base[0]]),
+        me=containers[url]
+        if(me.load)me.load()
+        cb(null,m)
     })
 },
 build=function(url, cb){
@@ -94,27 +99,25 @@ console.log('building',url,deps)
 
 pico={
     run:function(options,func){
+        var txt=func.toString();
+        (options.onLoad||dummyLoader)(function(){
+            vm('main',txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
+                if (err) return console.error(err)
+                if (main instanceof Function) main()
+            })
+        })
     },
-    build:function(options,func){
+    build:function(options){
+        fs.unlink('./output.js', function(){
+            build(options.entry)
+        })
     },
     embed:function(link){
     }
 }
 
-switch(process.argv[2]){
-case 'run':
-    vm(process.argv[3],function(err, main){
+if(process.argv[2]){
+    linker(process.argv[2],function(err){
         if (err) return console.error(err)
-console.log('vm',main)
-        main()
     })
-    break
-case 'build':
-    fs.unlink('./output.js', function(){
-        build(process.argv[3],function(err){
-            if (err) return console.error(err)
-            fs.appendFile('./output.js',"return require('"+process.argv[3]+"')",dummyCB)
-        })
-    })
-    break
 }
