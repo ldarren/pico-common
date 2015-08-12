@@ -5,3 +5,6 @@ exports.a=function(){
 exports.b=function(){
     return (new modClass).a()
 }
+this.load=function(){
+    console.log('modAttach loaded!')
+}

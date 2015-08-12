@@ -2,8 +2,8 @@ var
 fs=require('fs'),
 dummyCB=function(){},
 modules={},
-PREFIX="define('URL',function(require,exports,module,define){",
-POSTFIX="})\n",
+containers={},
+DEF="define('URL',function(require,exports,module,define,inherit){BODY})\n",
 loadDeps=function(deps, func, cb){
     if (!deps.length) return cb()
     func(deps.pop(),function(err){
@@ -11,17 +11,39 @@ loadDeps=function(deps, func, cb){
         loadDeps(deps, func, cb)
     })
 },
-require=function(k){return modules[k]},
-define=function(url, func){
+getMod=function(url,cb){
+    cb=cb||dummyCB
+    var mod=modules[url]
+    if(mod){
+        cb(null, mod)
+        return mod
+    }
+    vm(url,cb)
+},
+compile=function(script,deps,base){
+    var
+    frequire=function(k){if(!modules[k])deps.push(k)},
+    inherit=function(k){base.unshift(k),frequire(k)},
+    func=Function('require','exports','module','define','inherit',script)
+
+    func.call({}, frequire,{},{},dummyCB,inherit)
+    return func
+},
+define=function(url, func, base){
     var
     module={exports:{}},
-    m=func(require,module.exports,module,define)||module.exports,
-    o=function(){return arguments.callee.__proto__(this)}
+    me={},
+    m=func.call(me,getMod,module.exports,module,define)||module.exports,
+    o=modules[url]||function(){return arguments.callee.__proto__(this)}
+
+    if (base)m.__proto__=base
 
     o.prototype=m.prototype
     o.__proto__=m
 console.log('define',url,o)
     modules[url]=o
+    containers[url]=me
+    return o
 },
 vm=function(url,cb){
     cb=cb||dummyCB
@@ -30,29 +52,21 @@ vm=function(url,cb){
         if (err) return cb(err)
 
         var
-        fmodule={exports:{}},
-        fdeps=[],
-        frequire=function(k){if(!modules[k])fdeps.push(k)}
-
-        Function('require','exports','module','define',txt)(frequire,fmodule.exports,fmodule,dummyCB)
+        deps=[],
+        base=[],
+        func=compile(txt,deps,base)
 
         modules[url]=function(){return arguments.callee.__proto__(this)}
+
 console.log('loading',url)
-        loadDeps(fdeps, vm, function(err){
+        loadDeps(deps, vm, function(err){
             if (err) return cb(err)
-
+            
             var
-            module={exports:{}},
-            m=Function('require','exports','module','define',txt)(require,module.exports,module,define)||module.exports,
-            o=modules[url]
-
-            if(m){
-                o.prototype = m.prototype
-                o.__proto__ = m
-console.log(url, o)
-            }
-
-            cb(null, o)
+            m=define(url,func,modules[base[0]]),
+            me=containers[url]
+            if(me.load)me.load()
+            cb(null,m)
         })
     })
 },
@@ -63,20 +77,28 @@ build=function(url, cb){
         if (err) return cb(err)
 
         var
-        fmodule={exports:{}},
-        fdeps=[],
-        frequire=function(k){if(!modules[k])fdeps.push(k)}
+        deps=[],
+        base=[]
 
-        Function('require','exports','module',txt)(frequire,fmodule.exports,fmodule)
+        compile(txt,deps,base)
 
-        modules[url]={}
-console.log('building',url,fdeps)
-        loadDeps(fdeps, build, function(err){
+        modules[url]=1
+console.log('building',url,deps)
+        loadDeps(deps, build, function(err){
             if (err) return cb(err)
 
-            fs.appendFile('./output.js', PREFIX.replace('URL',url)+txt+POSTFIX, cb)
+            fs.appendFile('./output.js', DEF.replace('URL',url).replace('BODY',txt), cb)
         })
     })
+}
+
+pico={
+    run:function(options,func){
+    },
+    build:function(options,func){
+    },
+    embed:function(link){
+    }
 }
 
 switch(process.argv[2]){

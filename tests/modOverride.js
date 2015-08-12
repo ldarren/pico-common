@@ -3,3 +3,6 @@ module.exports={
         return 'modOverride'
     }
 }
+this.load=function(){
+    console.log('modOverride loaded')
+}

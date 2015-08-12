@@ -10,3 +10,6 @@ module.exports.prototype={
         return modAttach.a()
     }
 }
+this.load=function(){
+    console.log('modClass loaded!')
+}
