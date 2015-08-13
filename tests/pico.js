@@ -4,7 +4,7 @@ dummyCB=function(){},
 dummyLoader=function(cb){cb()},
 modules={},
 containers={},
-DEF="define('URL',function(require,exports,module,define,inherit){BODY})\n",
+DEF="define('URL',FUNC)\n",
 loadDeps=function(deps, func, cb){
     if (!deps.length) return cb()
     func(deps.pop(),function(err){
@@ -44,7 +44,12 @@ define=function(url, func, base){
 console.log('define',url,o)
     modules[url]=o
     containers[url]=me
+    if(me.load)me.load()
     return o
+},
+write=function(url, func){
+console.log('writing',url)
+    fs.appendFile('./output.js', DEF.replace('URL',url).replace('FUNC',func.toString()))
 },
 linker=function(url,cb){
     if (modules[url])return cb(null, modules[url])
@@ -57,10 +62,7 @@ vm=function(url,txt,cb){
     cb=cb||dummyCB
     if (modules[url])return cb(null, modules[url])
 
-    var
-    deps=[],
-    base=[],
-    func=compile(txt,deps,base)
+    var deps=[], base=[], func=compile(txt,deps,base)
 
     modules[url]=function(){return arguments.callee.__proto__(this)}
 
@@ -68,32 +70,7 @@ console.log('loading',url)
     loadDeps(deps, linker, function(err){
         if (err) return cb(err)
         
-        var
-        m=define(url,func,modules[base[0]]),
-        me=containers[url]
-        if(me.load)me.load()
-        cb(null,m)
-    })
-},
-build=function(url, cb){
-    cb=cb||dummyCB
-    if(modules[url])return cb()
-    fs.readFile(url+'.js', {encoding:'utf8'},function(err,txt){
-        if (err) return cb(err)
-
-        var
-        deps=[],
-        base=[]
-
-        compile(txt,deps,base)
-
-        modules[url]=1
-console.log('building',url,deps)
-        loadDeps(deps, build, function(err){
-            if (err) return cb(err)
-
-            fs.appendFile('./output.js', DEF.replace('URL',url).replace('BODY',txt), cb)
-        })
+        cb(null,define(url,func,modules[base[0]]))
     })
 }
 
@@ -109,10 +86,12 @@ pico={
     },
     build:function(options){
         fs.unlink('./output.js', function(){
-            build(options.entry)
+            define=write
+            linker(options.entry,function(err){
+                if (err) return console.error(err)
+                fs.appendFile('./output.js', 'return require("'+options.entry+'")')
+            })
         })
-    },
-    embed:function(link){
     }
 }
 
