@@ -15,13 +15,15 @@ linker=function(deps, func, cb){
     })
 },
 getMod=function(url,cb){
-    cb=cb||dummyCB
     var mod=modules[url]
+console.log('getMod',url,mod)
     if(mod){
-        cb(null, mod)
+        if(cb)cb(null, mod)
         return mod
     }
-    loader(url,cb)
+    if (cb) return loader(url,cb)
+    modules[url]=mod=function(){return arguments.callee.__proto__(this)}
+    return mod
 },
 compile=function(script,deps,base){
     var
@@ -33,14 +35,14 @@ compile=function(script,deps,base){
     return func
 },
 define=function(url, func, base){
+console.log('# defining',url)
+
     var
     module={exports:{}},
     me={},
     m=func.call(me,getMod,module.exports,module,define)||module.exports
 
     if(me.load)me.load()
-
-console.log('define',url)
 
     if (!url) return m
 
@@ -53,6 +55,7 @@ console.log('define',url)
     modules[url]=o
     containers[url]=me
 
+console.log('# defined',url)
     return o
 },
 write=function(url, func){
@@ -116,7 +119,7 @@ pico={
             dummyPico=pico
             loader(options.entry,function(err){
                 if (err) return console.error(err)
-                fs.appendFile(options.output, 'module.exports=require("'+options.entry+'")\n')
+                fs.appendFile(options.output, 'this.load=function(){require("'+options.entry+'")}\n')
             })
         })
     }
