@@ -4,9 +4,13 @@ dummyCB=function(){},
 dummyLoader=function(cb){cb()},
 dummyPico={run:function(){},build:function(){}},
 modules={},
-containers={},
+// module events, e.g. onLoad
+events={},
 EXT_JS='.js',
 DEF="define('URL',FUNC)\n",
+// call when pico.run done
+ran,
+// link to all deps
 linker=function(deps, func, cb){
     if (!deps.length) return cb()
     func(deps.pop(),function(err){
@@ -25,22 +29,29 @@ console.log('getMod',url,mod)
     modules[url]=mod=function(){return arguments.callee.__proto__(this)}
     return mod
 },
-compile=function(script,deps,base){
+// do not run the module but getting the deps and inherit
+compile=function(script,deps,base,andRun){
     var
     frequire=function(k){if(!modules[k])deps.push(k)},
     inherit=function(k){base.unshift(k),frequire(k)},
     func=Function('require','exports','module','define','inherit',script)
 
+    if (!andRun){
+        var org=pico
+        pico=dummyPico // prevent actual execution
+    }
     func.call({}, frequire,{},{},dummyCB,inherit)
+    if (org)pico=org
     return func
 },
+// run the module and register the module output and events
 define=function(url, func, base){
 console.log('# defining',url)
 
     var
     module={exports:{}},
     me={},
-    m=func.call(me,getMod,module.exports,module,define)||module.exports
+    m=func.call(me,getMod,module.exports,module,define,dummyCB)||module.exports
 
     if(me.load)me.load()
 
@@ -53,16 +64,18 @@ console.log('# defining',url)
     o.prototype=m.prototype
     o.__proto__=m
     modules[url]=o
-    containers[url]=me
+    events[url]=me
 
 console.log('# defined',url)
     return o
 },
+// write module to file, replacement of define
 write=function(url, func){
     if(!url)return
 console.log('writing',url)
     fs.appendFile('./output.js', DEF.replace('URL',url).replace('FUNC',func.toString()))
 },
+// load files, and execute them based on ext
 loader=function(url,cb){
     if (modules[url])return cb(null, modules[url])
 
@@ -79,6 +92,7 @@ console.log('loading',url,ext,idx)
         }
     })
 },
+// js file executer
 js=function(url,txt,cb){
     cb=cb||dummyCB
     if (modules[url])return cb(null, modules[url])
@@ -86,12 +100,7 @@ js=function(url,txt,cb){
     var
     deps=[],
     base=[],
-    org=pico,
-    func
-
-    pico=dummyPico
     func=compile(txt,deps,base)
-    pico=org
 
     if(url)modules[url]=function(){return arguments.callee.__proto__(this)}
 
@@ -110,21 +119,23 @@ pico={
             js(null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
                 if (err) return console.error(err)
                 if (main instanceof Function) main()
+                if(ran)ran()
             })
         })
     },
     build:function(options){
         fs.unlink(options.output, function(){
-            define=write
-            dummyPico=pico
-            loader(options.entry,function(err){
+            fs.readFile(options.entry, {encoding:'utf8'}, function(err, txt){
                 if (err) return console.error(err)
-                fs.appendFile(options.output, 'this.load=function(){require("'+options.entry+'")}\n')
+                define=write // write instead of run
+                var func=compile(txt,[],[],true) // since no define, compile and run
+                ran=function(){
+                    fs.appendFile(options.output, DEF.replace('URL',options.entry).replace('FUNC',func.toString()))
+                }
             })
         })
     }
 }
-
 if(process.argv[2]){
     loader(process.argv[2],function(err){
         if (err) return console.error(err)

@@ -1,4 +1,4 @@
 pico.build({
-    entry:'./main',
+    entry:'./main.js',
     output:'./output.js'
 })
