@@ -1,4 +1,23 @@
+var
+fs=require('fs'),
+pico=require('./pico')
+
+console.log(pico)
+
 pico.run({
+    ajax:function(method, url, params, headers, cb, userData){
+        fs.readFile(url, {encoding:'utf8'}, function(err, txt){
+            if (err) return cb(err,2,null,userData)
+            cb(null,4,txt,userData)
+        })
+    },
+    onLoad:function(cb){
+        cb()
+    },
+    env:{
+    },
+    paths:{
+    }
 },
 function(){
     var
