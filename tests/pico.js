@@ -6,16 +6,40 @@
     modules={},
     // module events, e.g. onLoad
     events={},
-    EXT_JS='.js',
+    EXT_JS='.js',EXT_JSON:'.json',
     DEF="define('URL',FUNC)\n",
     // call when pico.run done
-    ajax,ran,
+    ajax,paths,env,ran,
     // link to all deps
-    linker=function(deps, func, cb){
+    linker=function(deps, cb){
         if (!deps.length) return cb()
-        func(deps.pop(),function(err){
+        loader(deps.pop(),function(err){
             if (err) return cb(err)
-            linker(deps, func, cb)
+            linker(deps, cb)
+        })
+    },
+    // load files, and execute them based on ext
+    loader=function(url,cb){
+        if (modules[url])return cb(null, modules[url])
+
+        var
+        extIdx=url.lastIndexOf('.'),
+        sh=-1===extIdx || -1!==url.indexOf('/',extIdx),
+        ext=sh ? EXT_JS : url.substr(extIdx),
+        symbolIdx=url.indexOf('/'),
+        path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)] || paths['*'] || '',
+        fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
+
+console.log('loading',url,path+fname+(sh?ext:''))
+
+        ajax('get',path+fname+(sh?ext:''),null,null,function(err,state,txt){
+            if (err) return cb(err)
+            if (4!==state) return
+            switch(ext){
+            case EXT_JS: js(url,txt,cb); break
+            case EXT_JSON: json(url,txt,cb); break
+            default: text(url,txt,cb); break
+            }
         })
     },
     placeHolder=function(){
@@ -68,24 +92,6 @@ console.log('# defining',url)
 console.log('# defined',url)
         return o
     },
-    // load files, and execute them based on ext
-    loader=function(url,cb){
-        if (modules[url])return cb(null, modules[url])
-
-        var
-        idx=url.lastIndexOf('.'),
-        sh=-1===idx || -1!==url.indexOf('/',idx),
-        ext=sh ? EXT_JS : url.substr(idx)
-console.log('loading',url,ext,idx)
-
-        ajax('get',url+(sh?ext:''),null,null,function(err,state,txt){
-            if (err) return cb(err)
-            if (4!==state) return
-            switch(ext){
-            case EXT_JS: js(url,txt,cb); break
-            }
-        })
-    },
     // js file executer
     js=function(url,txt,cb){
         cb=cb||dummyCB
@@ -99,16 +105,32 @@ console.log('loading',url,ext,idx)
         if(url)modules[url]=placeHolder()
 
 console.log('jsing',url,deps)
-        linker(deps, loader, function(err){
+        linker(deps, function(err){
             if (err) return cb(err)
             
             cb(null,define(url,func,modules[base[0]]))
         })
+    },
+    //TODO: compress and decompress with define
+    json=function(url,txt,cb){
+        var m=JSON.parse(txt),
+
+        modules[url]=m
+
+        cb(null, m)
+    },
+    //TODO: compress and decompress with define
+    text=function(url,txt,cb){
+        modules[url]=txt
+
+        cb(null, txt)
     }
 
     var pico=module[exports]={
         run:function(options,func){
-            ajax=options.ajax||ajax
+            pico.ajax=ajax=options.ajax||ajax
+            paths=paths
+            env=env
             var txt=func.toString();
             (options.onLoad||dummyLoader)(function(){
                 js(null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
@@ -134,7 +156,9 @@ console.log('writing',url)
                     }
                 })
             })
-        }
+        },
+        ajax:ajax,
+        env:function(k){ return env[k] }
     }
     if('undefined'!==typeof process && process.argv[2]){
         var fs=require('fs')
