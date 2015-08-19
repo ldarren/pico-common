@@ -6,10 +6,17 @@
     modules={},
     // module events, e.g. onLoad
     events={},
-    EXT_JS='.js',EXT_JSON:'.json',
-    DEF="define('URL',FUNC)\n",
+    EXT_JS='.js',EXT_JSON='.json',
+    DEF="define('URL','FUNC')\n",
     // call when pico.run done
-    ajax,paths,env,ran,
+    ajax,ran,
+    paths={},
+    env={},
+    getExt=function(url){
+        if (!url)return null
+        var idx=url.lastIndexOf('.')
+        return -1===url.indexOf('/',idx) ? url.substr(idx) : null
+    },
     // link to all deps
     linker=function(deps, cb){
         if (!deps.length) return cb()
@@ -23,22 +30,19 @@
         if (modules[url])return cb(null, modules[url])
 
         var
-        extIdx=url.lastIndexOf('.'),
-        sh=-1===extIdx || -1!==url.indexOf('/',extIdx),
-        ext=sh ? EXT_JS : url.substr(extIdx),
+        ext=getExt(url),
         symbolIdx=url.indexOf('/'),
         path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)] || paths['*'] || '',
         fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
 
-console.log('loading',url,path+fname+(sh?ext:''))
+console.log('loading',url,path+fname+(ext?'':EXT_JS))
 
-        ajax('get',path+fname+(sh?ext:''),null,null,function(err,state,txt){
+        ajax('get',path+fname+(ext?'':EXT_JS),null,null,function(err,state,txt){
             if (err) return cb(err)
             if (4!==state) return
-            switch(ext){
-            case EXT_JS: js(url,txt,cb); break
-            case EXT_JSON: json(url,txt,cb); break
-            default: text(url,txt,cb); break
+            switch(ext || EXT_JS){
+            case EXT_JS: return js(url,txt,cb)
+            default: return cb(null, define(url,txt))
             }
         })
     },
@@ -69,28 +73,36 @@ console.log('getMod',url,mod)
     },
     // run the module and register the module output and events
     define=function(url, func, base){
-console.log('# defining',url)
+console.log('defining',url)
 
-        var
-        module={exports:{}},
-        evt={},
-        m=func.call(evt,getMod,module.exports,module,define,dummyCB,pico)||module.exports
+        switch(getExt(url)||EXT_JS){
+        case EXT_JS:
+            var
+            module={exports:{}},
+            evt={},
+            m=func.call(evt,getMod,module.exports,module,define,dummyCB,pico)||module.exports
 
-        if(evt.load)evt.load()
+            if(evt.load)evt.load()
 
-        if (!url) return m
+            if (!url) return m
 
-        var o=modules[url]||placeHolder()
+            var o=modules[url]||placeHolder()
 
-        if (base)m.__proto__=base
+            if (base)m.__proto__=base
 
-        o.prototype=m.prototype
-        o.__proto__=m
-        modules[url]=o
-        events[url]=evt
-
-console.log('# defined',url)
-        return o
+            o.prototype=m.prototype
+            o.__proto__=m
+            modules[url]=o
+            events[url]=evt
+            return o
+        case EXT_JSON:
+            var m=JSON.parse(func)
+            modules[url]=m
+            return m
+        default:
+            modules[url]=func
+            return func
+        }
     },
     // js file executer
     js=function(url,txt,cb){
@@ -110,29 +122,16 @@ console.log('jsing',url,deps)
             
             cb(null,define(url,func,modules[base[0]]))
         })
-    },
-    //TODO: compress and decompress with define
-    json=function(url,txt,cb){
-        var m=JSON.parse(txt),
-
-        modules[url]=m
-
-        cb(null, m)
-    },
-    //TODO: compress and decompress with define
-    text=function(url,txt,cb){
-        modules[url]=txt
-
-        cb(null, txt)
     }
 
     var pico=module[exports]={
         run:function(options,func){
             pico.ajax=ajax=options.ajax||ajax
-            paths=paths
-            env=env
-            var txt=func.toString();
-            (options.onLoad||dummyLoader)(function(){
+            paths=options.paths||paths
+            env=options.env||env
+
+            ;(options.onLoad||dummyLoader)(function(){
+                var txt=func.toString()
                 js(null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
                     if (err) return console.error(err)
                     if (main instanceof Function) main()
@@ -148,11 +147,15 @@ console.log('jsing',url,deps)
                     define=function(url, func){
                         if(!url)return
 console.log('writing',url)
-                        fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',func.toString()))
+                        switch(getExt(url)||EXT_JS){
+                        case EXT_JS: return fs.appendFile(options.output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
+                        case EXT_JSON: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
+                        default: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
+                        }
                     }
                     var func=compile(txt,[],[],pico) // since no define, compile with real pico
                     ran=function(){
-                        fs.appendFile(options.output, DEF.replace('URL',options.entry).replace('FUNC',func.toString()))
+                        fs.appendFile(options.output, DEF.replace('URL',options.entry).replace("'FUNC'",func.toString()))
                     }
                 })
             })
