@@ -1,4 +1,4 @@
-var modUsers=require('./modUsers.json')
+var modUsers=require('modUsers.json')
 module.exports=function(){
     return ['modFunc',JSON.stringify(modUsers)]
 }

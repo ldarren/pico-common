@@ -1,4 +1,4 @@
-var modDesc=require('./modDesc.txt')
+var modDesc=require('modDesc.txt')
 module.exports={
     a:function(){
         return 'modOverride'

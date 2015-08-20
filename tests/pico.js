@@ -1,13 +1,15 @@
-!function(module, exports){
+!function(module,exports,require){
     var
     dummyCB=function(){},
-    dummyLoader=function(cb){cb()},
-    dummyPico={run:function(){},build:function(){}},
+    dummyLoader=function(){arguments[arguments.length-1]()},
+    dummyPico={run:dummyCB,build:dummyCB,ajax:dummyLoader,env:dummyCB},
     modules={},
     // module events, e.g. onLoad
     events={},
     EXT_JS='.js',EXT_JSON='.json',
     DEF="define('URL','FUNC')\n",
+    MOD_PREFIX='"use strict"\n',
+    MOD_POSTFIX='//# sourceURL=',
     // call when pico.run done
     ajax,ran,
     paths={},
@@ -15,7 +17,7 @@
     getExt=function(url){
         if (!url)return null
         var idx=url.lastIndexOf('.')
-        return -1===url.indexOf('/',idx) ? url.substr(idx) : null
+        return -1!==idx && -1===url.indexOf('/',idx) ? url.substr(idx) : null
     },
     // link to all deps
     linker=function(deps, cb){
@@ -32,19 +34,33 @@
         var
         ext=getExt(url),
         symbolIdx=url.indexOf('/'),
-        path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)] || paths['*'] || '',
-        fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
+        path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)]
+
+        if (!path){
+            symbolIdx=-1
+            path=paths['*']||''
+        }
+
+        var fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
 
 console.log('loading',url,path+fname+(ext?'':EXT_JS))
 
-        ajax('get',path+fname+(ext?'':EXT_JS),null,null,function(err,state,txt){
-            if (err) return cb(err)
-            if (4!==state) return
-            switch(ext || EXT_JS){
-            case EXT_JS: return js(url,txt,cb)
-            default: return cb(null, define(url,txt))
-            }
-        })
+        if (path instanceof Function){
+            path(fname, function(err, m){
+                if (err) return cb(err)
+                modules[url]=m
+                cb(null, m)
+            })
+        }else{
+            ajax('get',path+fname+(ext?'':EXT_JS),null,null,function(err,state,txt){
+                if (err) return cb(err)
+                if (4!==state) return
+                switch(ext || EXT_JS){
+                case EXT_JS: return js(url,txt,cb)
+                default: return cb(null, define(url,txt))
+                }
+            })
+        }
     },
     placeHolder=function(){
         return function(){return arguments.callee.__proto__(this)}
@@ -61,14 +77,15 @@ console.log('getMod',url,mod)
         return mod
     },
     // do not run the module but getting the deps and inherit
-    compile=function(script,deps,base,me){
+    compile=function(url,txt,deps,base,me){
         me=me||dummyPico
         var
+        script=url?MOD_PREFIX+txt+MOD_POSTFIX+url : txt,
         frequire=function(k){if(!modules[k])deps.push(k)},
         inherit=function(k){base.unshift(k),frequire(k)},
-        func=Function('require','exports','module','define','inherit','pico',script)
+        func=Function('exports','require','module','define','inherit','pico',script)
 
-        func.call({}, frequire,{},{},dummyCB,inherit,me)
+        func.call({}, {},frequire,{},dummyCB,inherit,me)
         return func
     },
     // run the module and register the module output and events
@@ -80,7 +97,7 @@ console.log('defining',url)
             var
             module={exports:{}},
             evt={},
-            m=func.call(evt,getMod,module.exports,module,define,dummyCB,pico)||module.exports
+            m=func.call(evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
 
             if(evt.load)evt.load()
 
@@ -112,11 +129,11 @@ console.log('defining',url)
         var
         deps=[],
         base=[],
-        func=compile(txt,deps,base)
+        func=compile(url,txt,deps,base)
+console.log('jsing',url,deps)
 
         if(url)modules[url]=placeHolder()
 
-console.log('jsing',url,deps)
         linker(deps, function(err){
             if (err) return cb(err)
             
@@ -144,6 +161,7 @@ console.log('jsing',url,deps)
             fs.unlink(options.output, function(){
                 fs.readFile(options.entry, {encoding:'utf8'}, function(err, txt){
                     if (err) return console.error(err)
+                    // overide define to write function
                     define=function(url, func){
                         if(!url)return
 console.log('writing',url)
@@ -153,19 +171,20 @@ console.log('writing',url)
                         default: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
                         }
                     }
-                    var func=compile(txt,[],[],pico) // since no define, compile with real pico
+                    var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
                     ran=function(){
                         fs.appendFile(options.output, DEF.replace('URL',options.entry).replace("'FUNC'",func.toString()))
                     }
                 })
             })
         },
+        require:require,
         ajax:ajax,
         env:function(k){ return env[k] }
     }
     if('undefined'!==typeof process && process.argv[2]){
-        var fs=require('fs')
         ajax=function(method, url, params, headers, cb, userData){
+            var fs=require('fs')
             fs.readFile(url, {encoding:'utf8'}, function(err, txt){
                 if (err) return cb(err,2,null,userData)
                 cb(null,4,txt,userData)
@@ -173,4 +192,4 @@ console.log('writing',url)
         }
         loader(process.argv[2],dummyCB)
     }
-}('undefined' === typeof window ? module : window, 'undefined' === typeof window ? 'exports' : 'pico')
+}.apply(null, 'undefined' === typeof window ? [module, 'exports', require] : [window, 'pico'])

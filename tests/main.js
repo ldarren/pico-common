@@ -1,18 +1,20 @@
 pico.run({
-    onLoad:function(cb){
-        cb()
-    },
     env:{
     },
     paths:{
+        '*':'./',
+        'node':function(name,cb){
+console.log('path',name)
+            cb(null, pico.require(name))
+        }
     }
 },
 function(){
     var
-    modAttach=require('./modAttach'),
-    modClass=require('./modClass'),
-    modFunc=require('./modFunc'),
-    modOverride=require('./modOverride')
+    modAttach=require('modAttach'),
+    modClass=require('modClass'),
+    modFunc=require('modFunc'),
+    modOverride=require('modOverride')
 
     return function(){
         console.log('modAttach.a',modAttach.a())

@@ -13,13 +13,18 @@ pico.run({
     env:{
     },
     paths:{
+        '*':'./',
+        'node':function(name, cb){
+            if (pico.require) return cb(null, pico.require(name))
+            cb('node not found')
+        }
     }
 },function(){
     var
     modAttach=require('./modAttach'),
-    modClass=require('./modClass'),
-    modFunc=require('./modFunc'),
-    modOverride=require('./modOverride')
+    modClass=require('modClass'),
+    modFunc=require('modFunc'),
+    modOverride=require('modOverride')
 
     return function(){
         console.log('modAttach.a',modAttach.a())
@@ -27,7 +32,8 @@ pico.run({
         console.log('modClass.a',(new modClass).a())
         console.log('modClass.b',(new modClass).b())
         console.log('modFunc',modFunc())
-        console.log('modOverride',modOverride.a())
+        console.log('modOverride.a',modOverride.a())
+        console.log('modOverride.desc',modOverride.desc())
     }
 })
 </script>

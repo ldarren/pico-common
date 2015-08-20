@@ -1,4 +1,4 @@
-var modAttach=require('./modAttach')
+var modAttach=require('modAttach')
 module.exports=function(){
 }
 
