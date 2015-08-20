@@ -2,7 +2,7 @@
   "name": "pico-common",
   "version": "0.2.4",
   "description": "pico common tools",
-  "main": "index.js",
+  "main": "pico.js",
   "scripts": {
     "test": "node tests.js"
   },
@@ -12,7 +12,8 @@
   },
   "keywords": [
     "pico",
-    "common"
+    "commonjs"
+    "requirejs"
   ],
   "author": "Darren Liew",
   "license": "MIT",
