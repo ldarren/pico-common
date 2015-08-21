@@ -1,5 +1,5 @@
-!function(context, mod){
-    context[mod] = {
+pico.define('pico.obj',function(){
+    return  {
         extend: function(to, from, options){
             var o = 'object'
             if (!from)return to
@@ -164,4 +164,4 @@
             return arr
         }
     }
-}('undefined' === typeof pico ? module.exports:pico, 'obj')
+})

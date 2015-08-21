@@ -1,249 +1,197 @@
-!function(module, exports){
-    'use strict'
-
+var pico=(function(module,exports,require){
     var
-    pico,ajax,
-    LOAD='load',
-    modules = {},
-    paths = {'*':''},
-    envs = {production:true},
-    dummyCB = function(){},
-    dummyLoader=function(cb){cb()},
-    dummyObj = {},
-    dummyGlobal = function(){
-        var
-        g = this,
-        notAllows = ['frameElement'],
-        o = {}
-        for(var k in g){
-            if (-1 !== k.indexOf('webkit') || -1 !== notAllows.indexOf(k)) continue
-            if (g[k] instanceof Function) o[k] = dummyCB
-            else o[k] = dummyObj
-        }
-        return o
-    }(),
-    createMod = function(link, obj, ancestor){
-        ancestor = ancestor || pico.prototype
-
-        obj.__proto__ = Object.create(ancestor, {
-            moduleName: {value:link,    writable:false, configurable:false, enumerable:true},
-            base:       {value:ancestor,writable:false, configurable:false, enumerable:true},
-            slots:      {value:{},      writable:false, configurable:false, enumerable:false},
-            signals:    {value:{},      writable:false, configurable:false, enumerable:false},
-            contexts:   {value:{},      writable:false, configurable:false, enumerable:false},
-        })
-        return obj
+    dummyCB=function(){},
+    dummyLoader=function(){arguments[arguments.length-1]()},
+    dummyPico={run:dummyCB,build:dummyCB,define:dummyCB,ajax:dummyLoader,env:dummyCB},
+    modules={},
+    // module events, e.g. onLoad
+    events={},
+    EXT_JS='.js',EXT_JSON='.json',
+    DEF="define('URL','FUNC')\n",
+    MOD_PREFIX='"use strict"\n',
+    MOD_POSTFIX='//# sourceURL=',
+    // call when pico.run done
+    ajax,ran,
+    paths={},
+    env={},
+    getExt=function(url){
+        if (!url)return null
+        var idx=url.lastIndexOf('.')
+        return -1!==idx && -1===url.indexOf('/',idx) ? url.substr(idx) : null
     },
-    getMod = function(link){
-        var mod = modules[link]
-        if (mod) return mod
-        return modules[link] = {}
-    },
-    getModAsync = function(link, cb){
-        return cb ? loadLink(link, cb) : getMod(link)
-    },
-    parseFunc = function(me, require, inherit, script){
-        try{
-            Function('exports', 'require', 'inherit', 'me', script).call(this, me, require, inherit, me)
-            return me
-        }catch(exp){
-            //console.error(exp.fileName+' ('+exp.lineNumber+':'+exp.columnNumber+')')
-            console.error(exp.stack)
-        }
-    },
-    vm = function(scriptLink, script, cb){
-        // 2 evaluation passes, 1st is a dry run to get deps, after loading deps, do the actual run
-        var
-        deps=[],
-        ancestorLink
-
-        parseFunc.call(dummyGlobal, createMod(scriptLink, {}), function(l){if(!modules[l])deps.push(l)}, function(l){ancestorLink=l}, script)
-
-        loadLink(ancestorLink, function(err, ancestor){
+    // link to all deps
+    linker=function(deps, cb){
+        if (!deps.length) return cb()
+        loader(deps.pop(),function(err){
             if (err) return cb(err)
+            linker(deps, cb)
+        })
+    },
+    // load files, and execute them based on ext
+    loader=function(url,cb){
+        if (modules[url])return cb(null, modules[url])
 
-            var mod = parseFunc(createMod(scriptLink, getMod(scriptLink), ancestor), getModAsync, dummyCB, '"use strict"\n'+script+(envs.production ? '' : '//# sourceURL='+scriptLink))
-            loadDeps(deps, function(err){
+        var
+        ext=getExt(url),
+        symbolIdx=url.indexOf('/'),
+        path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)]
+
+        if (!path){
+            symbolIdx=-1
+            path=paths['*']||''
+        }
+
+        var fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
+
+console.log('loading',url,path+fname+(ext?'':EXT_JS))
+
+        if (path instanceof Function){
+            path(fname, function(err, m){
                 if (err) return cb(err)
-                mod.signalStep(LOAD, [])
-                cb(null, mod)
-                deps = ancestorLink = ancestor = script = mod = undefined
+                modules[url]=m
+                cb(null, m)
             })
-        })
-    },
-    loadLink = function(link, cb){
-        if (!link) return cb()
-        var mod = modules[link]
-        if (mod && mod.moduleName) return cb(null, mod)
-        if (!mod) mod = modules[link] = {}
-
-        var
-        raw = '@' === link[0],
-        symbol = raw ? link.substr(1) : link,
-        fname = paths[symbol],
-        path = ''
-
-        if (!fname){
-            var keyPos = symbol.indexOf('/')
-
-            if (-1 !== keyPos){
-                path = paths[symbol.substr(0, keyPos)]
-            }
-            fname = symbol.substr(keyPos+1)
-            path = path || paths['*'] || ''
+        }else{
+            ajax('get',path+fname+(ext?'':EXT_JS),null,null,function(err,state,txt){
+                if (err) return cb(err)
+                if (4!==state) return
+                switch(ext || EXT_JS){
+                case EXT_JS: return js(url,txt,cb)
+                default: return cb(null, define(url,txt))
+                }
+            })
         }
-        fname = raw ? fname : fname+'.js'
-
-        ajax('get', path+fname, '', null, function(err, readyState, text){
-            if (err) return cb(err)
-            if (4 !== readyState) return
-            if (raw){
-                mod.text = text
-                try{ mod.json = JSON.parse(mod.text) }
-                catch(exp){}
-                return cb(null, mod)
-            }
-            return vm(link, text, cb)
-        })
-
+    },
+    placeHolder=function(){
+        return function(){return arguments.callee.__proto__(this)}
+    },
+    getMod=function(url,cb){
+        var mod=modules[url]
+console.log('getMod',url,mod)
+        if(mod){
+            if(cb)cb(null, mod)
+            return mod
+        }
+        if (cb) return loader(url,cb)
+        modules[url]=mod=placeHolder()
         return mod
     },
-    // recurssively load dependencies in a module
-    loadDeps = function(deps, cb){
-        if (!cb) cb = function(){}
-        if (!deps || !deps.length) return cb()
+    // do not run the module but getting the deps and inherit
+    compile=function(url,txt,deps,base,me){
+        me=me||dummyPico
+        var
+        script=url ? MOD_PREFIX+txt+(env.live ? '' : MOD_POSTFIX+url) : txt,
+        frequire=function(k){if(!modules[k])deps.push(k)},
+        inherit=function(k){base.unshift(k),frequire(k)},
+        func=Function('exports','require','module','define','inherit','pico',script)
 
-        var link = deps.shift()
+        func.call({}, {},frequire,{},dummyCB,inherit,me)
+        return func
+    },
+    // run the module and register the module output and events
+    define=function(url, func, base){
+console.log('defining',url)
 
-        loadLink(link, function(err){
+        switch(getExt(url)||EXT_JS){
+        case EXT_JS:
+            var
+            module={exports:{}},
+            evt={},
+            m=func.call(evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
+
+            if(evt.load)evt.load()
+
+            if (!url) return m
+
+            var o=modules[url]||placeHolder()
+
+            if (base)m.__proto__=base
+
+            o.prototype=m.prototype
+            o.__proto__=m
+            modules[url]=o
+            events[url]=evt
+            return o
+        case EXT_JSON:
+            var m=JSON.parse(func)
+            modules[url]=m
+            return m
+        default:
+            modules[url]=func
+            return func
+        }
+    },
+    // js file executer
+    js=function(url,txt,cb){
+        cb=cb||dummyCB
+        if (modules[url])return cb(null, modules[url])
+
+        var
+        deps=[],
+        base=[],
+        func=compile(url,txt,deps,base)
+console.log('jsing',url,deps)
+
+        if(url)modules[url]=placeHolder()
+
+        linker(deps, function(err){
             if (err) return cb(err)
-            return loadDeps(deps, cb)
+            
+            cb(null,define(url,func,modules[base[0]]))
         })
     }
 
-    module[exports]=pico={
-        start: function(options, cb){
-            var script = cb.toString()
+    var pico=module[exports]={
+        run:function(options,func){
+            pico.ajax=ajax=options.ajax||ajax
+            paths=options.paths||paths
+            env=options.env||env
 
-            pico.ajax = ajax = options.ajax
-            envs.production = 'prod'===options.env
-            script = script.substring(script.indexOf('{') + 1, script.lastIndexOf('}'))
-
-            pico.obj.extend(paths, options.paths);
-            (options.onLoad || dummyLoader)(function(){
-                vm(options.name, script, function(err, mod){
-                    script = undefined
-                    options = undefined
+            ;(options.onLoad||dummyLoader)(function(){
+                var txt=func.toString()
+                js(null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
+                    if (err) return console.error(err)
+                    if (main instanceof Function) main()
+                    if(ran)ran()
                 })
             })
         },
-        stop: function(){
-        },
-        ajax: null,
-        // for future file concatenating
-        def: function(scriptLink, script){
-            vm(srciptLink, script, dummyCB)
-        },
-        getEnv: function(key){ return envs[key] },
-        // use require('html') insteads?
-        embed: function(holder, url, cb){
-            ajax('get', url, '', null, function(err, readyState, text){
-                if (err) return cb(err)
-                if (4 !== readyState) return
-                holder.innerHTML = text
-
-                pico.embedJS(Array.prototype.slice.call(holder.getElementsByTagName('script')), cb)
+        build:function(options){
+            var fs=require('fs')
+            fs.unlink(options.output, function(){
+                fs.readFile(options.entry, {encoding:'utf8'}, function(err, txt){
+                    if (err) return console.error(err)
+                    // overide define to write function
+                    define=function(url, func){
+                        if(!url)return
+console.log('writing',url)
+                        switch(getExt(url)||EXT_JS){
+                        case EXT_JS: return fs.appendFile(options.output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
+                        case EXT_JSON: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
+                        default: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
+                        }
+                    }
+                    var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
+                    ran=function(){
+                        fs.appendFile(options.output, DEF.replace('URL',options.entry).replace("'FUNC'",func.toString()))
+                    }
+                })
             })
         },
-        // always fire LOAD event when script is embed, due to dom have been reloaded
-        embedJS: function(scripts, cb){
-            if (!scripts || !scripts.length) return cb && cb()
-
-            var
-            script = scripts.shift(),
-            link = script.getAttribute('link'),
-            content = script.textContent || script.innerText
-
-            if (!link) return pico.embedJS(scripts, cb) // non pico script tag, ignore
-
-            if (content){
-                vm(link, content, function(err){
-                    if (err) console.error('embedJS ['+link+'] with content error: '+err)
-                    return pico.embedJS(scripts, cb)
-                })
-            }else{
-                loadLink(link, function(err){
-                    if (err) console.error('embedJS['+link+'] without content error: '+err)
-                    return pico.embedJS(scripts, cb)
-                })
-            }
-        },
-
-        slot: function(name, func, context){
-            var
-            channel = this.slots[name] = this.slots[name] || {},
-            con = this.contexts[name] = this.contexts[name] || {},
-            evt = this.signals[name],
-            h = pico.str.hash(name+func.toString())
-
-            channel[h] = func
-            con[h] = context
-            if (evt) func.apply(context, evt)
-        },
-        unslot: function(name, func){
-            var
-            slots = this.slots,
-            contexts = this.contexts,
-            c
-            switch(arguments.length){
-            case 0:
-                slots={}
-                contexts={}
-                break
-            case 1:
-                delete slots[name]
-                delete contexts[name]
-                break
-            case 2:
-                var h = pico.str.hash(name + func.toString())
-                c = slots[name]
-                if (c) delete c[h]
-                c = contexts[name]
-                if (c) delete c[h]
-                break
-            }
-        },
-        signal: function(name, evt){
-            var
-            channel = this.slots[name],
-            con = this.contexts[name],
-            results = []
-
-            if (!channel) return results
-            evt = evt || []
-
-            for(var key in channel){
-                results.push(channel[key].apply(con[key], evt))
-            }
-            return results
-        },
-        signalStep: function(name, evt){
-            this.signals[name] = evt
-            this.signal(name, evt)
+        require:require,
+        define:define,
+        ajax:ajax,
+        env:function(k){ return env[k] }
+    }
+    if('undefined'!==typeof process && process.argv[2]){
+        ajax=function(method, url, params, headers, cb, userData){
+            var fs=require('fs')
+            fs.readFile(url, {encoding:'utf8'}, function(err, txt){
+                if (err) return cb(err,2,null,userData)
+                cb(null,4,txt,userData)
+            })
         }
+        loader(process.argv[2],dummyCB)
     }
-
-    Object.defineProperties(pico, {
-        slots:          {value:{},              writable:false, configurable:false, enumerable:false},
-        signals:        {value:{},              writable:false, configurable:false, enumerable:false},
-        contexts:       {value:{},              writable:false, configurable:false, enumerable:false},
-    })
-
-    pico.prototype = {
-        slot: pico.slot,
-        unslot: pico.unslot,
-        signal: pico.signal,
-        signalStep: pico.signalStep,
-    }
-
-}('undefined' === typeof window ? module : window, 'undefined' === typeof window ? 'exports':'pico')
+    return pico
+}).apply(null, 'undefined' === typeof window ? [module, 'exports', require] : [window, 'pico'])

@@ -1,5 +1,5 @@
-!function(context, mod){
-    context[mod]= {
+pico.define('pico.str', function(){
+    return {
         codec: function(num, str){
             var ret=''
             for(var i=0,c; c=str.charCodeAt(i); i++){
@@ -17,4 +17,4 @@
             return h
         }
     }
-}('undefined' === typeof pico ? module.exports:pico, 'str')
+})

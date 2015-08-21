@@ -1,4 +1,4 @@
-!function(context, mod){
+pico.define('pico.web',function(){
     var
     Abs = Math.abs,Floor=Math.floor,Random=Math.random,
     API_ACK = 'ack',
@@ -344,7 +344,7 @@
         }
     }
 
-    context[mod]={
+    return {
         create: function(cfg, cb){
             var net= new Net(cfg)
             timeSync(net, function(err){
@@ -356,4 +356,4 @@
         //window.addEventListener('offline', offlie)
         offline: function(){isOnline=false}
     }
-}('undefined'===typeof pico?module.exports:pico,'web')
+})

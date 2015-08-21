@@ -1,10 +1,10 @@
-!function(context, mod){
+pico.define('pico.time',function(){
     var
     HR = 3600000,
     MIN = 60000,
     SEC = 1000
 
-    context[mod]={
+    return {
         deltaToNext: function(day, hr, min, sec, msec){
             hr = hr || 0
             min = min || 0
@@ -26,4 +26,4 @@
             return nextTime.getTime()
         }
     }
-}('undefined' === typeof pico ? module.exports:pico, 'time')
+})

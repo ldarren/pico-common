@@ -1,5 +1,6 @@
-!function(context, mod, format){
-    context[mod]= {
+pico.define('pico.test',function(){
+    var format='undefined' === typeof require ? JSON.stringify : require('util').inspect
+    return {
         ensure: function(msg, task){
             task(function(err, result){
                 if (err) return console.error(msg+':\t'+err)
@@ -7,4 +8,4 @@
             })
         }
     }
-}('undefined' === typeof pico ? module.exports:pico, 'test', 'undefined' === typeof require ? JSON.stringify : require('util').inspect)
+})
