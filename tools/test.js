@@ -1,4 +1,4 @@
-pico.define('pico.test',function(){
+pico.define('pico/test',function(){
     var format='undefined' === typeof require ? JSON.stringify : require('util').inspect
     return {
         ensure: function(msg, task){

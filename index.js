@@ -99,19 +99,24 @@ console.log('defining',url)
             evt={},
             m=func.call(evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
 
+            if (base)m.__proto__=base
+
             if(evt.load)evt.load()
 
             if (!url) return m
 
-            var o=modules[url]||placeHolder()
-
-            if (base)m.__proto__=base
-
-            o.prototype=m.prototype
-            o.__proto__=m
-            modules[url]=o
             events[url]=evt
-            return o
+
+            var o=modules[url]
+
+            if(o){
+                o.prototype=m.prototype
+                o.__proto__=m
+                modules[url]=o
+                return o
+            }
+            modules[url]=m
+            return m
         case EXT_JSON:
             var m=JSON.parse(func)
             modules[url]=m
@@ -195,7 +200,7 @@ console.log('writing',url)
     }
     return pico
 }).apply(null, 'undefined' === typeof window ? [module, 'exports', require] : [window, 'pico'])
-pico.define('pico.obj',function(){
+pico.define('pico/obj',function(){
     return  {
         extend: function(to, from, options){
             var o = 'object'
@@ -362,7 +367,7 @@ pico.define('pico.obj',function(){
         }
     }
 })
-pico.define('pico.str', function(){
+pico.define('pico/str', function(){
     return {
         codec: function(num, str){
             var ret=''
@@ -382,7 +387,7 @@ pico.define('pico.str', function(){
         }
     }
 })
-pico.define('pico.test',function(){
+pico.define('pico/test',function(){
     var format='undefined' === typeof require ? JSON.stringify : require('util').inspect
     return {
         ensure: function(msg, task){
@@ -393,7 +398,7 @@ pico.define('pico.test',function(){
         }
     }
 })
-pico.define('pico.time',function(){
+pico.define('pico/time',function(){
     var
     HR = 3600000,
     MIN = 60000,
@@ -422,7 +427,7 @@ pico.define('pico.time',function(){
         }
     }
 })
-pico.define('pico.web',function(){
+pico.define('pico/web',function(){
     var
     Abs = Math.abs,Floor=Math.floor,Random=Math.random,
     API_ACK = 'ack',

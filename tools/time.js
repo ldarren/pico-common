@@ -1,4 +1,4 @@
-pico.define('pico.time',function(){
+pico.define('pico/time',function(){
     var
     HR = 3600000,
     MIN = 60000,

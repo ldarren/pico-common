@@ -1,4 +1,4 @@
-pico.define('pico.web',function(){
+pico.define('pico/web',function(){
     var
     Abs = Math.abs,Floor=Math.floor,Random=Math.random,
     API_ACK = 'ack',

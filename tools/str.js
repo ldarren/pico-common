@@ -1,4 +1,4 @@
-pico.define('pico.str', function(){
+pico.define('pico/str', function(){
     return {
         codec: function(num, str){
             var ret=''

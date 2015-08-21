@@ -99,19 +99,24 @@ console.log('defining',url)
             evt={},
             m=func.call(evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
 
+            if (base)m.__proto__=base
+
             if(evt.load)evt.load()
 
             if (!url) return m
 
-            var o=modules[url]||placeHolder()
-
-            if (base)m.__proto__=base
-
-            o.prototype=m.prototype
-            o.__proto__=m
-            modules[url]=o
             events[url]=evt
-            return o
+
+            var o=modules[url]
+
+            if(o){
+                o.prototype=m.prototype
+                o.__proto__=m
+                modules[url]=o
+                return o
+            }
+            modules[url]=m
+            return m
         case EXT_JSON:
             var m=JSON.parse(func)
             modules[url]=m

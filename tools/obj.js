@@ -1,4 +1,4 @@
-pico.define('pico.obj',function(){
+pico.define('pico/obj',function(){
     return  {
         extend: function(to, from, options){
             var o = 'object'

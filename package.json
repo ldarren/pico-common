@@ -1,10 +1,10 @@
 {
   "name": "pico-common",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "pico common tools",
   "main": "index.js",
   "scripts": {
-    "test": "node tests.js"
+    "test": "node index.js tests.js"
   },
   "repository": {
     "type": "git",
