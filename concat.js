@@ -27,7 +27,6 @@ fs.readlink(symPath, function(err, realPath){
         fs.readdir(getPath(wd, TOOL_PATH), function(err, files){
             if (err) return console.error(err)
             files.unshift('../pico.js')
-console.log(wd,files)
             !function(cb){
                 if (!files.length) return cb()
                 var

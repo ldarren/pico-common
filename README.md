@@ -4,6 +4,9 @@
 * Same syntax on all platforms
 * Support cycular dependency
 * Small footprint
+
+##How?
+pico can be this small is due to it very small number of dependencies, in fact it is depended on standard javascript and node.js functionality only such as Function object etc
 ##Features
 ##Installation
 ##Configuration

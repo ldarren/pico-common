@@ -10,6 +10,7 @@ var pico=(function(module,exports,require){
     DEF="define('URL','FUNC')\n",
     MOD_PREFIX='"use strict"\n',
     MOD_POSTFIX='//# sourceURL=',
+    PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)',
     // call when pico.run done
     ajax,ran,
     paths={},
@@ -22,7 +23,7 @@ var pico=(function(module,exports,require){
     // link to all deps
     linker=function(deps, cb){
         if (!deps.length) return cb()
-        loader(deps.pop(),function(err){
+        loader(deps.shift(),function(err){
             if (err) return cb(err)
             linker(deps, cb)
         })
@@ -63,7 +64,7 @@ console.log('loading',url,path+fname+(ext?'':EXT_JS))
         }
     },
     placeHolder=function(){
-        return function(){return arguments.callee.__proto__(this)}
+        return Function(PLACE_HOLDER)
     },
     getMod=function(url,cb){
         var mod=modules[url]
@@ -73,15 +74,14 @@ console.log('getMod',url,mod)
             return mod
         }
         if (cb) return loader(url,cb)
-        modules[url]=mod=placeHolder()
-        return mod
+        return modules[url]=placeHolder()
     },
     // do not run the module but getting the deps and inherit
     compile=function(url,txt,deps,base,me){
         me=me||dummyPico
         var
         script=url ? MOD_PREFIX+txt+(env.live ? '' : MOD_POSTFIX+url) : txt,
-        frequire=function(k){if(!modules[k])deps.push(k)},
+        frequire=function(k){if(!modules[k])deps.push(k);return modules[k]},
         inherit=function(k){base.unshift(k),frequire(k)},
         func=Function('exports','require','module','define','inherit','pico',script)
 

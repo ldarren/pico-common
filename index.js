@@ -10,6 +10,7 @@ var pico=(function(module,exports,require){
     DEF="define('URL','FUNC')\n",
     MOD_PREFIX='"use strict"\n',
     MOD_POSTFIX='//# sourceURL=',
+    PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)',
     // call when pico.run done
     ajax,ran,
     paths={},
@@ -22,7 +23,7 @@ var pico=(function(module,exports,require){
     // link to all deps
     linker=function(deps, cb){
         if (!deps.length) return cb()
-        loader(deps.pop(),function(err){
+        loader(deps.shift(),function(err){
             if (err) return cb(err)
             linker(deps, cb)
         })
@@ -63,7 +64,7 @@ console.log('loading',url,path+fname+(ext?'':EXT_JS))
         }
     },
     placeHolder=function(){
-        return function(){return arguments.callee.__proto__(this)}
+        return Function(PLACE_HOLDER)
     },
     getMod=function(url,cb){
         var mod=modules[url]
@@ -73,15 +74,14 @@ console.log('getMod',url,mod)
             return mod
         }
         if (cb) return loader(url,cb)
-        modules[url]=mod=placeHolder()
-        return mod
+        return modules[url]=placeHolder()
     },
     // do not run the module but getting the deps and inherit
     compile=function(url,txt,deps,base,me){
         me=me||dummyPico
         var
         script=url ? MOD_PREFIX+txt+(env.live ? '' : MOD_POSTFIX+url) : txt,
-        frequire=function(k){if(!modules[k])deps.push(k)},
+        frequire=function(k){if(!modules[k])deps.push(k);return modules[k]},
         inherit=function(k){base.unshift(k),frequire(k)},
         func=Function('exports','require','module','define','inherit','pico',script)
 
@@ -427,7 +427,7 @@ pico.define('pico/time',function(){
         }
     }
 })
-pico.define('pico/web',function(){
+pico.define('pico/web',function(exports,require,module,define,inherit,pico){
     var
     Abs = Math.abs,Floor=Math.floor,Random=Math.random,
     API_ACK = 'ack',
@@ -440,7 +440,7 @@ pico.define('pico/web',function(){
     appendObj = function(obj, name, value){ obj[name] = value },
     timeSync = function(net, cb){
         cb = cb || stdCB
-        context.ajax('get', net.url, null, null, function(err, readyState, responseText){
+        pico.ajax('get', net.url, null, null, function(err, readyState, responseText){
             if (4 !== readyState) return
             if (err) return cb(err)
             var st = parseInt(responseText)
@@ -587,13 +587,13 @@ pico.define('pico/web',function(){
             if (net.uploads.length){
                 var fb = net.uploads.shift()
                 fb.append('channel', net.channel)
-                context.ajax('post', net.url, net.uploads.shift(), null, onResponse, net)
+                pico.ajax('post', net.url, net.uploads.shift(), null, onResponse, net)
             }else{
                 var reqs = net.reqs = net.acks.concat(net.outbox)
                 reqs.unshift(net.channel)
                 net.acks.length = net.outbox.length = 0
 
-                context.ajax('post', net.url, reqs.join(net.delimiter)+net.delimiter, null, onResponse, net)
+                pico.ajax('post', net.url, reqs.join(net.delimiter)+net.delimiter, null, onResponse, net)
             }
             clearInterval(net.beatId)
             net.beatId = 0

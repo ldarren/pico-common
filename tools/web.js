@@ -1,4 +1,4 @@
-pico.define('pico/web',function(){
+pico.define('pico/web',function(exports,require,module,define,inherit,pico){
     var
     Abs = Math.abs,Floor=Math.floor,Random=Math.random,
     API_ACK = 'ack',
@@ -11,7 +11,7 @@ pico.define('pico/web',function(){
     appendObj = function(obj, name, value){ obj[name] = value },
     timeSync = function(net, cb){
         cb = cb || stdCB
-        context.ajax('get', net.url, null, null, function(err, readyState, responseText){
+        pico.ajax('get', net.url, null, null, function(err, readyState, responseText){
             if (4 !== readyState) return
             if (err) return cb(err)
             var st = parseInt(responseText)
@@ -158,13 +158,13 @@ pico.define('pico/web',function(){
             if (net.uploads.length){
                 var fb = net.uploads.shift()
                 fb.append('channel', net.channel)
-                context.ajax('post', net.url, net.uploads.shift(), null, onResponse, net)
+                pico.ajax('post', net.url, net.uploads.shift(), null, onResponse, net)
             }else{
                 var reqs = net.reqs = net.acks.concat(net.outbox)
                 reqs.unshift(net.channel)
                 net.acks.length = net.outbox.length = 0
 
-                context.ajax('post', net.url, reqs.join(net.delimiter)+net.delimiter, null, onResponse, net)
+                pico.ajax('post', net.url, reqs.join(net.delimiter)+net.delimiter, null, onResponse, net)
             }
             clearInterval(net.beatId)
             net.beatId = 0
