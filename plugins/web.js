@@ -1,4 +1,4 @@
-pico.define('pico/web',function(exports,require,module,define,inherit,pico){
+define('pico/web',function(exports,require,module,define,inherit,pico){
     var
     Abs = Math.abs,Floor=Math.floor,Random=Math.random,
     API_ACK = 'ack',
@@ -11,7 +11,7 @@ pico.define('pico/web',function(exports,require,module,define,inherit,pico){
     appendObj = function(obj, name, value){ obj[name] = value },
     timeSync = function(net, cb){
         cb = cb || stdCB
-        pico.ajax('get', net.url, null, null, function(err, readyState, responseText){
+        ajax('get', net.url, null, null, function(err, readyState, responseText){
             if (4 !== readyState) return
             if (err) return cb(err)
             var st = parseInt(responseText)
@@ -158,13 +158,13 @@ pico.define('pico/web',function(exports,require,module,define,inherit,pico){
             if (net.uploads.length){
                 var fb = net.uploads.shift()
                 fb.append('channel', net.channel)
-                pico.ajax('post', net.url, net.uploads.shift(), null, onResponse, net)
+                ajax('post', net.url, net.uploads.shift(), null, onResponse, net)
             }else{
                 var reqs = net.reqs = net.acks.concat(net.outbox)
                 reqs.unshift(net.channel)
                 net.acks.length = net.outbox.length = 0
 
-                pico.ajax('post', net.url, reqs.join(net.delimiter)+net.delimiter, null, onResponse, net)
+                ajax('post', net.url, reqs.join(net.delimiter)+net.delimiter, null, onResponse, net)
             }
             clearInterval(net.beatId)
             net.beatId = 0
@@ -351,6 +351,7 @@ pico.define('pico/web',function(exports,require,module,define,inherit,pico){
                 cb(err, net)
             })
         },
+        ajax:ajax,
         //window.addEventListener('online', online)
         online: function(){isOnline=true},
         //window.addEventListener('offline', offlie)

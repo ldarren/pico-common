@@ -10,6 +10,6 @@ exports.b=function(){
     return (new modClass).a()
 }
 this.load=function(){
-    if (pico.require) p=process
+    if (pico.import) p=process
     console.log('modAttach loaded!')
 }

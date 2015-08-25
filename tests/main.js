@@ -5,7 +5,7 @@ pico.run({
         '*':'./',
         'node':function(name,cb){
 console.log('path',name)
-            cb(null, pico.require(name))
+            cb(null, pico.import(name))
         }
     }
 },

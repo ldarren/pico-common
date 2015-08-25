@@ -12,7 +12,7 @@
   },
   "keywords": [
     "pico",
-    "commonjs"
+    "commonjs",
     "requirejs"
   ],
   "author": "Darren Liew",
