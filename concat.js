@@ -2,7 +2,7 @@
 
 var TOOL_PATH= process.argv[2]
 
-if (!TOOL_PATH) return console.log('Usage: '+process.argv[1]+' TOOL_PATH [index.js]')
+if (!TOOL_PATH) return console.log('Usage: '+process.argv[1]+' TOOL_PATH [pico.js]')
 
 var
 PREFIX="(function(module,exports,require){",
@@ -11,7 +11,7 @@ fs = require('fs'),
 path = require('path'),
 stream=require('stream'),
 symPath= process.argv[1],
-dest= process.argv[3] || 'index.js',
+dest= process.argv[3] || 'pico.js',
 getPath = function(dir, file){
     if (path.isAbsolute(file)) return file
     return dir+path.sep+file
@@ -36,7 +36,7 @@ fs.readlink(symPath, function(err, realPath){
         pipeStr(PREFIX,ws)
         fs.readdir(getPath(wd, TOOL_PATH), function(err, files){
             if (err) return console.error(err)
-            files.unshift('../pico.js')
+            files.unshift('../amd.js')
             !function(cb){
                 if (!files.length) return cb()
                 var

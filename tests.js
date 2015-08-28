@@ -8,11 +8,11 @@ test= require('pico/test')
 this.load=function(){
     var ensure=test.ensure
     ensure('ensure pico has obj', function(cb){
-        cb(null, pico.obj !== undefined)
+        cb(null, obj !== undefined)
     })
 
     ensure('ensure pico has web', function(cb){
-        cb(null, pico.web!== undefined)
+        cb(null, web!== undefined)
     })
 
     ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
