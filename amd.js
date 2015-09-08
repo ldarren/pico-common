@@ -14,6 +14,7 @@ PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)',
 ajax,ran,
 paths={},
 env={},
+preprocessors={},
 getExt=function(url){
     if (!url)return null
     var idx=url.lastIndexOf('.')
@@ -67,7 +68,7 @@ placeHolder=function(){
 },
 getMod=function(url,cb){
     var mod=modules[url]
-console.log('getMod',url,mod)
+console.log('getMod',url)
     if(mod){
         if(cb)cb(null, mod)
         return mod
@@ -89,9 +90,15 @@ compile=function(url,txt,deps,base,me){
 },
 // run the module and register the module output and events
 define=function(url, func, base){
-console.log('defining',url)
+    var
+    ext=getExt(url)||EXT_JS,
+    pp=preprocessors[ext]
 
-    switch(getExt(url)||EXT_JS){
+console.log('defining',url, ext, preprocessors)
+
+    if (pp) func=pp(url, func)
+
+    switch(ext){
     case EXT_JS:
         var
         module={exports:{}},
@@ -150,6 +157,7 @@ var pico=module[exports]={
         pico.ajax=ajax=options.ajax||ajax
         paths=options.paths||paths
         env=options.env||env
+        preprocessors=options.preprocessors||preprocessors
 
         ;(options.onLoad||dummyLoader)(function(){
             var txt=func.toString()

@@ -15,6 +15,22 @@ this.load=function(){
         cb(null, web!== undefined)
     })
 
+    ensure('ensure pico preprocessors and env work', function(cb){
+        pico.run({
+            preprocessors:{
+                '.md':function(){return 1}
+            },
+            env:{
+                cb:cb
+            }
+        },function(){
+            var md=require('README.md')
+            this.load=function(){
+                pico.env('cb')(null, md===1)
+            }
+        })
+    })
+
     ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
         var
         obj1 = {key1:1},
