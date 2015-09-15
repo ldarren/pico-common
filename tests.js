@@ -3,10 +3,44 @@ web= require('pico/web'),
 obj= require('pico/obj'),
 str= require('pico/str'),
 time= require('pico/time'),
-test= require('pico/test')
+test= require('pico/test'),
+_=define('underscore',function(exports,require,module,define,inherit,pico){
+(function() {
+  var root = this;
+
+  var _ = function(obj) {
+    if (obj instanceof _) return obj;
+    if (!(this instanceof _)) return new _(obj);
+    this._wrapped = obj;
+  };
+
+  if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports) {
+      exports = module.exports = _;
+    }
+    exports._ = _;
+  } else {
+    root._ = _;
+  }
+
+  _.VERSION = '1.8.3';
+
+  if (typeof define === 'function' && define.amd) {
+    define('underscore', [], function() {
+      return _;
+    });
+  }
+}.call(this));
+})
 
 this.load=function(){
     var ensure=test.ensure
+
+    ensure('ensure underscore VER is 1.8.3',function(cb){
+        //cb(null, require('backbone').VERSION)
+        cb(null, _.VERSION)
+    })
+
     ensure('ensure pico has obj', function(cb){
         cb(null, obj !== undefined)
     })

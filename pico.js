@@ -7,7 +7,7 @@ modules={},
 events={},
 EXT_JS='.js',EXT_JSON='.json',
 DEF="define('URL','FUNC')\n",
-MOD_PREFIX='"use strict"\n',
+MOD_PREFIX='"use strict";\n',
 MOD_POSTFIX='//# sourceURL=',
 PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)',
 // call when pico.run done
