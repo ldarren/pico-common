@@ -44,8 +44,6 @@ loader=function(url,cb){
 
     var fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
 
-console.log('loading',url,path+fname+(ext?'':EXT_JS))
-
     if (path instanceof Function){
         path(fname, function(err, m){
             if (err) return cb(err)
@@ -68,7 +66,6 @@ placeHolder=function(){
 },
 getMod=function(url,cb){
     var mod=modules[url]
-console.log('getMod',url)
     if(mod){
         if(cb)cb(null, mod)
         return mod
@@ -93,8 +90,6 @@ define=function(url, func, base){
     var
     ext=getExt(url)||EXT_JS,
     pp=preprocessors[ext]
-
-console.log('defining',url, ext, preprocessors)
 
     if (pp) func=pp(url, func)
 
@@ -141,7 +136,6 @@ js=function(url,txt,cb){
     deps=[],
     base=[],
     func=compile(url,txt,deps,base)
-console.log('jsing',url,deps)
 
     if(url)modules[url]=placeHolder()
 
@@ -176,7 +170,6 @@ var pico=module[exports]={
                 // overide define to write function
                 define=function(url, func){
                     if(!url)return
-console.log('writing',url)
                     switch(getExt(url)||EXT_JS){
                     case EXT_JS: return fs.appendFile(options.output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
                     case EXT_JSON: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))

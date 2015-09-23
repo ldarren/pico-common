@@ -1,14 +1,11 @@
 #A Lean Modular System For Browsers and NodeJS
-A single file solution to use commonjs/nodejs module definition in your client code. picojs has additional functions such as nodejs friendly, compile into single file, plugin system, etc. All these features in 188 lines of codes (before uglify and minification)
+A single file solution to use commonjs/nodejs module definition in your browser or server (node.js), it can also compile javascripts into single file. It has tiny footprint, 188 lines of codes (before uglify and minification)
 
 ##Why?
 * Work on browsers and NodeJS (Universal Javascript)
 * Same syntax on client and server 
-* Support cycular dependency
+* Support circular dependency
 * Small footprint
-
-##How?
-pico can be this small is due to it has very small dependencies, in fact it is depended on standard javascript and node.js functionality only such as Function object, node.js filesystem etc
 
 ##Features
 * Asyncronous Module Definition
@@ -16,18 +13,21 @@ pico can be this small is due to it has very small dependencies, in fact it is d
 * Plugin system to extend it capabilities
 
 ##Installation
+Download just the [pico.js](https://raw.githubusercontent.com/ldarren/pico-common/master/pico.js) or clone github
+```
+git clone https://github.com/ldarren/pico-common.git pico-common
+```
 ###Browser
-Link single javascript in your html
 ```html
 <script src=PATH/TO/pico.js></script>
 ```
 ###Nodejs
-```jaavscript
+```javascript
 var pico=require('PATH/TO/pico.js')
 ```
 
 ##Configuration
-To start project
+It has similar requirejs config but not compatible. To bootstrap the amd
 ```javascript
 pico.run({
     ajax:ajaxFunc,

@@ -44,8 +44,6 @@ loader=function(url,cb){
 
     var fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
 
-console.log('loading',url,path+fname+(ext?'':EXT_JS))
-
     if (path instanceof Function){
         path(fname, function(err, m){
             if (err) return cb(err)
@@ -68,7 +66,6 @@ placeHolder=function(){
 },
 getMod=function(url,cb){
     var mod=modules[url]
-console.log('getMod',url)
     if(mod){
         if(cb)cb(null, mod)
         return mod
@@ -93,8 +90,6 @@ define=function(url, func, base){
     var
     ext=getExt(url)||EXT_JS,
     pp=preprocessors[ext]
-
-console.log('defining',url, ext, preprocessors)
 
     if (pp) func=pp(url, func)
 
@@ -141,7 +136,6 @@ js=function(url,txt,cb){
     deps=[],
     base=[],
     func=compile(url,txt,deps,base)
-console.log('jsing',url,deps)
 
     if(url)modules[url]=placeHolder()
 
@@ -176,7 +170,6 @@ var pico=module[exports]={
                 // overide define to write function
                 define=function(url, func){
                     if(!url)return
-console.log('writing',url)
                     switch(getExt(url)||EXT_JS){
                     case EXT_JS: return fs.appendFile(options.output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
                     case EXT_JSON: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
@@ -388,16 +381,26 @@ define('pico/str', function(){
                 h = h & h // Convert to 32bit integer
             }
             return h
+        },
+        tab: function(col1, spaces, c){
+            var ret='', l=spaces-col1.length
+            if (!l || l<1) return ret
+            c=c||' '
+            for(var i=0; i<l; i++) ret+=c
+            return ret
         }
     }
 })
 define('pico/test',function(){
-    var format='undefined' === typeof require ? JSON.stringify : require('util').inspect
+    var
+    str=pico.export('pico/str'),
+    format='undefined' === typeof require ? JSON.stringify : require('util').inspect
+
     return {
         ensure: function(msg, task){
             task(function(err, result){
-                if (err) return console.error(msg+':\t'+err)
-                console.log(msg+':\t'+format(result,{colors:true}))
+                if (err) return console.error(msg+':'+str.tab(msg,100,'-')+err)
+                console.log(msg+':'+str.tab(msg,100,'.')+format(result,{colors:true}))
             })
         }
     }

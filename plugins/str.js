@@ -15,6 +15,13 @@ define('pico/str', function(){
                 h = h & h // Convert to 32bit integer
             }
             return h
+        },
+        tab: function(col1, spaces, c){
+            var ret='', l=spaces-col1.length
+            if (!l || l<1) return ret
+            c=c||' '
+            for(var i=0; i<l; i++) ret+=c
+            return ret
         }
     }
 })
