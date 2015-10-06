@@ -14,7 +14,7 @@ symPath= process.argv[1],
 dest= process.argv[3] || 'pico.js',
 getPath = function(dir, file){
     if (path.isAbsolute(file)) return file
-    return dir+path.sep+file
+    return path.resolve(dir,file)
 },
 pipeStr=function(str,w){
     var r = new stream.Readable

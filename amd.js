@@ -155,7 +155,7 @@ var pico=module[exports]={
 
         ;(options.onLoad||dummyLoader)(function(){
             var txt=func.toString()
-            js(null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
+            js(options.name||null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
                 if (err) return console.error(err)
                 if (main instanceof Function) main()
                 if(ran)ran()
