@@ -76,3 +76,36 @@ this.load=function(){
 }
 ```
 to avoid circular dependency, results returned by require() function can't be use in the document scope, they can only be used in function such as this.load
+
+##Caveat
+The object returns by require() are not the actual object itself but a proxy object. In most cases, you can handle the proxy object just like the actual object except for few cases
+```javascript
+// obj.js
+module.exports={
+    a:1,
+    b:2
+}
+// somewhere.js
+var proxy=require('obj')
+proxy[a] // 1
+Object.keys(proxy) // []
+Object.keys(Object.getPrototypeOf(proxy)) // ['a','b']
+```
+```javascript
+// arr.js
+module.exports=[ 1, 2 ]
+// somewhere.js
+var proxy=require('arr')
+proxy[0] // 1
+proxy.length // 0
+Object.getPrototypeOf(proxy).length // 2
+```
+```javascript
+// func.js
+module.exports=function(name){return name}
+// somewhere.js
+var proxy=require('func')
+proxy('hello pico') // 'hello pico'
+proxy.length // 0
+Object.getPrototypeOf(proxy).length // 1
+```
