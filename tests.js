@@ -36,17 +36,13 @@ _=define('underscore',function(exports,require,module,define,inherit,pico){
 this.load=function(){
     var ensure=test.ensure
 
-    ensure('ensure underscore VER is 1.8.3',function(cb){
-        //cb(null, require('backbone').VERSION)
-        cb(null, _.VERSION)
-    })
-
-    ensure('ensure pico has obj', function(cb){
+    ensure('ensure pico has loaded correctly', function(cb){
         cb(null, obj !== undefined)
     })
 
-    ensure('ensure pico has web', function(cb){
-        cb(null, web!== undefined)
+    ensure('ensure underscore loaded correctly, VER should be 1.8.3',function(cb){
+        //cb(null, require('backbone').VERSION)
+        cb(null, _.VERSION)
     })
 
     ensure('ensure pico preprocessors and env work', function(cb){
@@ -131,5 +127,15 @@ this.load=function(){
         data = JSON.stringify({data:123}),
         key = parseInt('100007900715391')
         cb(null, str.codec(key, str.codec(key, data)))
+    })
+
+    ensure('ensure str.log works', function(cb){
+        str.log('str.log test')
+        cb(null, true)
+    })
+
+    ensure('ensure str.error works', function(cb){
+        str.error('str.error test')
+        cb(null, true)
     })
 }

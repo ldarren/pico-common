@@ -2,7 +2,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
     var
     Abs = Math.abs,Floor=Math.floor,Random=Math.random,
     API_ACK = 'ack',
-    PT_CHANNEL = 0,
     PT_HEAD = 1,
     PT_BODY = 2,
     isOnline = true,
@@ -51,7 +50,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         switch(readyState){
         case 2: // send() and header received
             net.head = null
-            net.currPT = PT_CHANNEL
+            net.currPT = PT_HEAD
             break
         case 3: break // body loading 
         case 4: // body received
@@ -72,10 +71,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
                 if (-1 === endPos) break
 
                 switch(net.currPT){
-                case PT_CHANNEL:
-                    net.channel = responseText.substring(startPos, endPos)
-                    net.currPT = PT_HEAD
-                    break
                 case PT_HEAD:
                     net.head = JSON.parse(responseText.substring(startPos, endPos))
                     body.length = 0
@@ -156,12 +151,9 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             net.resEndPos = 0
 
             if (net.uploads.length){
-                var fb = net.uploads.shift()
-                fb.append('channel', net.channel)
                 ajax('post', net.url, net.uploads.shift(), null, onResponse, net)
             }else{
                 var reqs = net.reqs = net.acks.concat(net.outbox)
-                reqs.unshift(net.channel)
                 net.acks.length = net.outbox.length = 0
 
                 ajax('post', net.url, reqs.join(net.delimiter)+net.delimiter, null, onResponse, net)
@@ -203,7 +195,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
     },
     netReset = function(net){
         net.resEndPos = net.outbox.length = net.acks.length = 0
-        net.currPT = PT_CHANNEL
+        net.currPT = PT_HEAD
     }
 
 
@@ -218,10 +210,9 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         this.acks = []
         this.reqs = []
         this.resEndPos = 0
-        this.channel = '',
         this.head = null,
         this.body = [],
-        this.currPT = PT_CHANNEL,
+        this.currPT = PT_HEAD,
         this.serverTime = 0
         this.serverTimeAtClient = 0
         this.beatId = 0
