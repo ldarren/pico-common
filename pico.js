@@ -497,10 +497,10 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         if (err) {
             // network or auth error, return error to callbacks
             if (4 !== readyState) return
-            try{
-                var header=JSON.parse(responseText)
-            }catch(exp){
-                return console.error(exp)
+            var header={error:'Network error'}
+            if (responseText){
+                try{ header=JSON.parse(responseText) }
+                catch(exp){ return console.error(exp) }
             }
             var
             reqs = net.reqs,
