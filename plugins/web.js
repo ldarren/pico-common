@@ -24,6 +24,12 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
     onResponse = function(err, readyState, responseText, net){
         if (err) {
             // network or auth error, return error to callbacks
+            if (4 !== readyState) return
+            try{
+                var header=JSON.parse(responseText)
+            }catch(exp){
+                return console.error(exp)
+            }
             var
             reqs = net.reqs,
             sep = net.delimiter,
@@ -36,7 +42,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
                     cb = net.callbacks[reqId]
                     if (!cb) continue
                     delete net.callbacks[reqId]
-                    cb(err)
+                    cb(header.error)
                 }catch(exp){
                     console.error(exp)
                     continue
