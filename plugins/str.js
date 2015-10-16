@@ -1,5 +1,7 @@
 define('pico/str', function(){
-    function pinPointCaller(_, stack){
+    var
+    Ceil=Math.ceil, Random=Math.random,
+    callerFormat = function(_, stack){
         var r = stack[0]
         return '['+
             (r.getFunctionName() || r.getTypeName()+'.'+r.getMethodName())+
@@ -22,6 +24,9 @@ define('pico/str', function(){
             }
             return h
         },
+        rand: function(){
+            return Random().toString(36).substr(2)
+        },
         tab: function(col1, spaces, c){
             var ret='', l=spaces-col1.length
             if (!l || l<1) return ret
@@ -34,7 +39,7 @@ define('pico/str', function(){
             orgPrepare = Error.prepareStackTrace,
             orgCount = Error.stackTraceLimit
 
-            Error.prepareStackTrace = pinPointCaller
+            Error.prepareStackTrace = callerFormat
             Error.stackTraceLimit = 1
 
             var err = new Error
