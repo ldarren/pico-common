@@ -506,6 +506,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             if (responseText){
                 try{ header=JSON.parse(responseText) }
                 catch(exp){ return console.error(exp) }
+                return // server error, dun reset all pending requests
             }
             var
             reqs = net.reqs,
