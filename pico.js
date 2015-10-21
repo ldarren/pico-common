@@ -200,12 +200,14 @@ if('undefined'!==typeof process && process.argv[2]){
 define('pico/obj',function(){
     return  {
         extend: function(to, from, options){
-            var o = 'object'
-            if (!from)return to
-            if (o !== typeof from || typeof to !== typeof from) return from
-            if (!options || o !== typeof options) options = {}
+            var
+            o = ['object','function'],
+            ft=o.indexOf(typeof from)
+            if (!from || -1 === ft)return to
+            if (!to || -1 === o.indexOf(typeof to)) return from
+            if (!options || -1 === o.indexOf(typeof options)) options = {}
             var tidy = options.tidy, callee=arguments.callee,key, value
-            if (undefined === from.length){
+            if (1===ft || undefined === from.length){ // function or object (non array)
                 for (key in from){
                     value = from[key]
                     if (undefined === value && tidy) continue
