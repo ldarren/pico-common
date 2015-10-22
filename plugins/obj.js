@@ -1,12 +1,13 @@
 define('pico/obj',function(){
+    var allows = ['object','function']
     return  {
         extend: function(to, from, options){
-            var
-            o = ['object','function'],
-            ft=o.indexOf(typeof from)
-            if (!from || -1 === ft)return to
-            if (!to || -1 === o.indexOf(typeof to)) return from
-            if (!options || -1 === o.indexOf(typeof options)) options = {}
+            var tf=allows.indexOf(typeof to)
+            if (-1 === tf) return from
+            var ft=allows.indexOf(typeof from)
+            if (-1 === ft)return to
+            if (1===ft && ft===tf) return from
+            options=options||{}
             var tidy = options.tidy, callee=arguments.callee,key, value
             if (1===ft || undefined === from.length){ // function or object (non array)
                 for (key in from){
