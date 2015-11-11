@@ -67,7 +67,7 @@ placeHolder=function(){
 getMod=function(url,cb){
     var mod=modules[url]
     if(mod){
-        setTimeout(cb, 0, null, mod) // make sure consistent async behaviour
+        setTimeout(cb||dummyCB, 0, null, mod) // make sure consistent async behaviour
         return mod
     }
     if (cb) return loader(url,cb)
@@ -234,7 +234,7 @@ define('pico/obj',function(){
             return to
         },
         extends: function(to, list, options){
-            var e = pico.obj.extend
+            var e = this.extend
             for(var i=0,f; f=list[i]; i++){
                 to= e(to, f, options)
             }

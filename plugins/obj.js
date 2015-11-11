@@ -35,7 +35,7 @@ define('pico/obj',function(){
             return to
         },
         extends: function(to, list, options){
-            var e = pico.obj.extend
+            var e = this.extend
             for(var i=0,f; f=list[i]; i++){
                 to= e(to, f, options)
             }

@@ -67,7 +67,7 @@ placeHolder=function(){
 getMod=function(url,cb){
     var mod=modules[url]
     if(mod){
-        setTimeout(cb, 0, null, mod) // make sure consistent async behaviour
+        setTimeout(cb||dummyCB, 0, null, mod) // make sure consistent async behaviour
         return mod
     }
     if (cb) return loader(url,cb)
