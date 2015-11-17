@@ -183,6 +183,7 @@ var pico=module[exports]={
             })
         })
     },
+    parse:js,
     import:require,
     export:getMod,
     env:function(k){ return env[k] }

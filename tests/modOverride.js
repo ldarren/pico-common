@@ -8,5 +8,5 @@ module.exports={
     }
 }
 this.load=function(){
-    console.log('modOverride loaded')
+    console.log('modOverride loaded!')
 }
