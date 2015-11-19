@@ -1,4 +1,4 @@
-if('undefined'!==typeof process && process.argv[2]){
+if('object'===typeof process && process.argv && process.argv[2]){
     ajax=function(method, url, params, headers, cb, userData){
         var fs=require('fs')
         fs.readFile(url, {encoding:'utf8'}, function(err, txt){

@@ -4,7 +4,7 @@ dummyLoader=function(){arguments[arguments.length-1]()},
 dummyPico={run:dummyCB,build:dummyCB,define:dummyCB,ajax:dummyLoader,env:dummyCB},
 modules={},
 // module events, e.g. onLoad
-events={},
+events={}, //TODO: should be prototype of event class that support sigslot
 EXT_JS='.js',EXT_JSON='.json',
 DEF="define('URL','FUNC')\n",
 MOD_PREFIX='"use strict";\n',
@@ -163,22 +163,31 @@ var pico=module[exports]={
         })
     },
     build:function(options){
-        var fs=require('fs')
-        fs.unlink(options.output, function(){
-            fs.readFile(options.entry, {encoding:'utf8'}, function(err, txt){
+        var
+        fs=require('fs'),
+        entry=options.entry,
+        output=options.output,
+        exclude=options.exclude
+
+        // overide define to write function
+        define=function(url, func){
+            if(!url)return
+            if (-1 !== exclude.indexOf(url)) return
+            switch(getExt(url)||EXT_JS){
+            case EXT_JS: return fs.appendFile(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
+            case EXT_JSON: return fs.appendFile(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
+            default: return fs.appendFile(output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
+            }
+        }
+
+        fs.unlink(output, function(){
+            fs.readFile(entry, {encoding:'utf8'}, function(err, txt){
                 if (err) return console.error(err)
                 // overide define to write function
-                define=function(url, func){
-                    if(!url)return
-                    switch(getExt(url)||EXT_JS){
-                    case EXT_JS: return fs.appendFile(options.output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
-                    case EXT_JSON: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
-                    default: return fs.appendFile(options.output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
-                    }
-                }
                 var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
+                if (-1 !== exclude.indexOf(entry)) return
                 ran=function(){
-                    fs.appendFile(options.output, DEF.replace('URL',options.entry).replace("'FUNC'",func.toString()))
+                    fs.appendFile(output, DEF.replace('URL',entry).replace("'FUNC'",func.toString()))
                 }
             })
         })
