@@ -3,7 +3,7 @@ modClass=require('modClass'),
 p
 
 exports.a=function(){
-    if (!p) return 'not in node'
+    if (!p) return 'not in node.js'
     return 'modAttach:'+p.argv[0]
 }
 exports.b=function(){

@@ -76,6 +76,21 @@ this.load=function(){
 }
 ```
 to avoid circular dependency, results returned by require() function can't be use in the document scope, they can only be used in function such as this.load
+###Hot reload
+ScriptA
+```javascript
+return {
+    a:function(){return 'Hello World'}
+}
+```
+in runtime
+```javascript
+var scriptA=require('ScriptA')
+console.log(scriptA.a()) // 'Hello World'
+
+pico.reload('ScriptA', "return {a:function(){return 'Hot Reload'}}")
+console.log(scriptA.a()) // 'Hot Reload'
+```
 
 ##Caveat
 The object returns by require() are not the actual object itself but a proxy object. In most cases, you can handle the proxy object just like the actual object except for few cases
@@ -122,7 +137,7 @@ Object.getPrototypeOf(proxy).length // 1
      getMod->placeHolder;
      build->replace_define->compile;
      parse->js;
-     import->require;
+     import->nodejs_require;
      export->getMod;
  }
 )

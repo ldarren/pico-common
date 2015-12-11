@@ -113,18 +113,11 @@ define=function(url, func, base){
         if(o){
             o.prototype=m.prototype
             o.__proto__=m
-            modules[url]=o
-            return o
+            return modules[url]=o
         }
-        modules[url]=m
-        return m
-    case EXT_JSON:
-        var m=JSON.parse(func)
-        modules[url]=m
-        return m
-    default:
-        modules[url]=func
-        return func
+        return modules[url]=m
+    case EXT_JSON: return modules[url]=JSON.parse(func)
+    default: return modules[url]=func
     }
 },
 // js file executer
@@ -193,6 +186,20 @@ var pico=module[exports]={
         })
     },
     reload:function(url, script, cb){
+        if ('function'===typeof script) cb=script
+        cb=cb||dummyCB
+        var o=modules[url]
+        delete modules[url]
+        if (EXT_JS !== (getExt(url)||EXT_JS)) return cb(null, o)
+        var reattach=function(err, m){
+            if (err) return cb(err)
+            if (!o) return cb(null, m)
+            o.prototype=m.prototype
+            o.__proto__=m
+            return cb(null, modules[url]=o)
+        }
+        if ('string'=== typeof script) js(url, script, reattach)
+        else loader(url, reattach)
     },
     parse:js,
     import:require,
