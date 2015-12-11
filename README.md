@@ -109,3 +109,17 @@ proxy('hello pico') // 'hello pico'
 proxy.length // 0
 Object.getPrototypeOf(proxy).length // 1
 ```
+
+##Internal Function Diagram
+![Function diagram](http://g.gravizo.com/g?
+ digraph G {
+   main -> parse -> execute;
+   main -> init;
+   main -> cleanup;
+   execute -> make_string;
+   execute -> printf
+   init -> make_string;
+   main -> printf;
+   execute -> compare;
+ }
+)

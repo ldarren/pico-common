@@ -192,6 +192,8 @@ var pico=module[exports]={
             })
         })
     },
+    reload:function(url, script, cb){
+    },
     parse:js,
     import:require,
     export:getMod,
