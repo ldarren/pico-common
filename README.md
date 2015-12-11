@@ -113,13 +113,16 @@ Object.getPrototypeOf(proxy).length // 1
 ##Internal Function Diagram
 ![Function diagram](http://g.gravizo.com/g?
  digraph G {
-   main -> parse -> execute;
-   main -> init;
-   main -> cleanup;
-   execute -> make_string;
-   execute -> printf
-   init -> make_string;
-   main -> printf;
-   execute -> compare;
+     run->js->compile->linker->define;
+     js->placeHolder;
+     linker->loader->linker;
+     loader->getExt;
+     loader->js;
+     loader->define->getMod;
+     getMod->placeHolder;
+     build->replace_define->compile;
+     parse->js;
+     import->require;
+     export->getMod;
  }
 )
