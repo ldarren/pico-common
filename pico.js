@@ -116,7 +116,9 @@ define=function(url, func, base){
             return modules[url]=o
         }
         return modules[url]=m
-    case EXT_JSON: return modules[url]=JSON.parse(func)
+    case EXT_JSON:
+        try{ return modules[url]=JSON.parse(func) }
+        catch(e){return console.error(url, e.message)}
     default: return modules[url]=func
     }
 },
