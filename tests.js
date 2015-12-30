@@ -110,16 +110,16 @@ this.load=function(){
 
     ensure('ensure options.mergeArr on is working. output should contain[1,2,3] list', function(cb){
         var
-        obj1 = {key1:[1]},
-        obj2 = {key1:[2,3]}
+        obj1 = [1,2],
+        obj2 = [2,3]
 
         cb(null, obj.extend(obj1, obj2, {mergeArr:1}))
     })
 
     ensure('ensure options.mergeArr off is working. output should contain[2,3] list', function(cb){
         var
-        obj1 = {key1:[1]},
-        obj2 = {key1:[2,3]}
+        obj1 = [1,2],
+        obj2 = [2,3]
 
         cb(null, obj.extend(obj1, obj2))
     })

@@ -17,6 +17,7 @@ define('pico/obj',function(){
                 }
             }else{
                 if (options.mergeArr){
+                    // TODO: change unique to Set when is more commonly support on mobile
                     var i, l, unique={}
                     for (i=0,l=to.length; i<l; i++){
                         if (undefined === (value = to[i]) && tidy) continue

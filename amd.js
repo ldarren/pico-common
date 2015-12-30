@@ -79,8 +79,10 @@ compile=function(url,txt,deps,base,me){
     var
     script=url ? MOD_PREFIX+txt+(env.live ? '' : MOD_POSTFIX+url) : txt,
     frequire=function(k){if(!modules[k])deps.push(k);return modules[k]},
-    inherit=function(k){base.unshift(k),frequire(k)},
-    func=Function('exports','require','module','define','inherit','pico',script)
+    inherit=function(k){base.unshift(k),frequire(k)}
+
+    try{ var func=Function('exports','require','module','define','inherit','pico',script) }
+    catch(e){return console.error(url, e.message)}
 
     func.call({}, {},frequire,{},dummyCB,inherit,me)
     return func
