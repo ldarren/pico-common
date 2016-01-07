@@ -2,7 +2,7 @@
 
 var TOOL_PATH= process.argv[2]
 
-if (!TOOL_PATH) return console.log('Usage: '+process.argv[1]+' TOOL_PATH [pico.js]')
+if (!TOOL_PATH) return console.log('Usage: '+process.argv[1]+' TOOL_PATH [OUTPUT_NAME]')
 
 var
 uglify=require('uglify-js'),
@@ -12,7 +12,7 @@ fs = require('fs'),
 path = require('path'),
 stream=require('stream'),
 symPath= process.argv[1],
-dest= process.argv[3] || 'pico.js',
+dest= process.argv[3] || 'pico',
 getPath = function(dir, file){
     if (path.isAbsolute(file)) return file
     return path.resolve(dir,file)
@@ -31,9 +31,9 @@ fs.readlink(symPath, function(err, realPath){
     sd = getPath(wd, TOOL_PATH)
 	dest = getPath(wd, dest)
 	console.log('delete', dest)
-	fs.unlink(dest, function(err){
+	fs.unlink(dest+'.js', function(err){
         console.log('open file', dest)
-        var ws = fs.createWriteStream(dest, {flags:'a'})
+        var ws = fs.createWriteStream(dest+'.js', {flags:'a'})
         pipeStr(PREFIX,ws)
         fs.readdir(getPath(wd, TOOL_PATH), function(err, files){
             if (err) return console.error(err)
@@ -52,10 +52,10 @@ fs.readlink(symPath, function(err, realPath){
                 rs.pipe(ws, {end:false})
             }(function(){
                 ws.on('finish',()=>{
-                    var minify=uglify.minify(dest,{outSourceMap:dest+'.map'})
-                    fs.writeFile(dest, minify.code, 'utf8', (err)=>{
+                    var minify=uglify.minify(dest+'.js',{outSourceMap:dest+'.min.js.map'})
+                    fs.writeFile(dest+'.min.js', minify.code, 'utf8', (err)=>{
                         if (err) return console.error(err)
-                        fs.writeFile(dest+'.map', minify.map, 'utf8', ()=>{
+                        fs.writeFile(dest+'.min.js.map', minify.map, 'utf8', ()=>{
                             if (err) return console.error(err)
                             console.log('Done!')
                         })
