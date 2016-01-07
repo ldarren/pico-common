@@ -44,7 +44,7 @@ fs.readlink(symPath, function(err, realPath){
                 fname = files.shift(),
                 callee = arguments.callee
 
-                if ('.' === fname || '..' === fname) return callee(cb)
+                if ('.' === fname[0]) return callee(cb)
                 console.log('appending', getPath(sd,fname), '...')
                 var rs = fs.createReadStream(getPath(sd,fname))
 
@@ -52,14 +52,14 @@ fs.readlink(symPath, function(err, realPath){
                 rs.pipe(ws, {end:false})
             }(function(){
                 ws.on('finish',()=>{
-                    var minify=uglify.minify(dest+'.js',{outSourceMap:dest+'.min.js.map'})
+/*                    var minify=uglify.minify(dest+'.js',{outSourceMap:dest+'.min.js.map'})
                     fs.writeFile(dest+'.min.js', minify.code, 'utf8', (err)=>{
                         if (err) return console.error(err)
                         fs.writeFile(dest+'.min.js.map', minify.map, 'utf8', ()=>{
-                            if (err) return console.error(err)
+                            if (err) return console.error(err)*/
                             console.log('Done!')
-                        })
-                    })
+                       /* })
+                    })*/
                 })
                 pipeStr(POSTFIX,ws,{end:true});
             })  

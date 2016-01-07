@@ -1,216 +1,4 @@
-(function(module,exports,require){var
-dummyCB=function(){},
-dummyLoader=function(){arguments[arguments.length-1]()},
-dummyPico={run:dummyCB,build:dummyCB,define:dummyCB,ajax:dummyLoader,env:dummyCB},
-modules={},
-// module events, e.g. onLoad
-events={}, //TODO: should be prototype of event class that support sigslot
-EXT_JS='.js',EXT_JSON='.json',
-DEF="define('URL','FUNC')\n",
-MOD_PREFIX='"use strict";\n',
-MOD_POSTFIX='//# sourceURL=',
-PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)',
-// call when pico.run done
-ajax,ran,
-paths={},
-env={},
-preprocessors={},
-getExt=function(url){
-    if (!url)return null
-    var idx=url.lastIndexOf('.')
-    return -1!==idx && -1===url.indexOf('/',idx) ? url.substr(idx) : null
-},
-// link to all deps
-linker=function(deps, cb){
-    if (!deps.length) return cb()
-    loader(deps.shift(),function(err){
-        if (err) return cb(err)
-        linker(deps, cb)
-    })
-},
-// load files, and execute them based on ext
-loader=function(url,cb){
-    if (modules[url])return cb(null, modules[url])
-
-    var
-    ext=getExt(url),
-    symbolIdx=url.indexOf('/'),
-    path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)]
-
-    if (!path){
-        symbolIdx=-1
-        path=paths['*']||''
-    }
-
-    var fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
-
-    if (path instanceof Function){
-        path(fname, function(err, m){
-            if (err) return cb(err)
-            modules[url]=m
-            cb(null, m)
-        })
-    }else{
-        ajax('get',path+fname+(ext?'':EXT_JS),null,null,function(err,state,txt){
-            if (err) return cb(err)
-            if (4!==state) return
-            switch(ext || EXT_JS){
-            case EXT_JS: return js(url,txt,cb)
-            default: return cb(null, define(url,txt))
-            }
-        })
-    }
-},
-placeHolder=function(){
-    return Function(PLACE_HOLDER)
-},
-getMod=function(url,cb){
-    var mod=modules[url]
-    if(mod){
-        setTimeout(cb||dummyCB, 0, null, mod) // make sure consistent async behaviour
-        return mod
-    }
-    if (cb) return loader(url,cb)
-    return modules[url]=placeHolder()
-},
-// do not run the module but getting the deps and inherit
-compile=function(url,txt,deps,base,me){
-    me=me||dummyPico
-    var
-    script=url ? MOD_PREFIX+txt+(env.live ? '' : MOD_POSTFIX+url) : txt,
-    frequire=function(k){if(!modules[k])deps.push(k);return modules[k]},
-    inherit=function(k){base.unshift(k),frequire(k)}
-
-    try{ var func=Function('exports','require','module','define','inherit','pico',script) }
-    catch(e){return console.error(url, e.message)}
-
-    func.call({}, {},frequire,{},dummyCB,inherit,me)
-    return func
-},
-// run the module and register the module output and events
-define=function(url, func, base){
-    var
-    ext=getExt(url)||EXT_JS,
-    pp=preprocessors[ext]
-
-    if (pp) func=pp(url, func)
-
-    switch(ext){
-    case EXT_JS:
-        var
-        module={exports:{}},
-        evt={},
-        m=func.call(evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
-
-        if (base)m.__proto__=base
-
-        if(evt.load)evt.load()
-
-        if (!url) return m
-
-        events[url]=evt
-
-        var o=modules[url]
-
-        if(o){
-            o.prototype=m.prototype
-            o.__proto__=m
-            return modules[url]=o
-        }
-        return modules[url]=m
-    case EXT_JSON:
-        try{ return modules[url]=JSON.parse(func) }
-        catch(e){return console.error(url, e.message)}
-    default: return modules[url]=func
-    }
-},
-// js file executer
-js=function(url,txt,cb){
-    cb=cb||dummyCB
-    if (modules[url])return cb(null, modules[url])
-
-    var
-    deps=[],
-    base=[],
-    func=compile(url,txt,deps,base)
-
-    if(url)modules[url]=placeHolder()
-
-    linker(deps, function(err){
-        if (err) return cb(err)
-        
-        cb(null,define(url,func,modules[base[0]]))
-    })
-}
-
-var pico=module[exports]={
-    run:function(options,func){
-        pico.ajax=ajax=options.ajax||ajax
-        paths=options.paths||paths
-        env=options.env||env
-        preprocessors=options.preprocessors||preprocessors
-
-        ;(options.onLoad||dummyLoader)(function(){
-            var txt=func.toString()
-            js(options.name||null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
-                if (err) return console.error(err)
-                if (main instanceof Function) main()
-                if(ran)ran()
-            })
-        })
-    },
-    build:function(options){
-        var
-        fs=require('fs'),
-        entry=options.entry,
-        output=options.output,
-        exclude=options.exclude
-
-        // overide define to write function
-        define=function(url, func){
-            if(!url)return
-            if (-1 !== exclude.indexOf(url)) return
-            switch(getExt(url)||EXT_JS){
-            case EXT_JS: return fs.appendFile(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
-            case EXT_JSON: return fs.appendFile(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
-            default: return fs.appendFile(output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
-            }
-        }
-
-        fs.unlink(output, function(){
-            fs.readFile(entry, {encoding:'utf8'}, function(err, txt){
-                if (err) return console.error(err)
-                // overide define to write function
-                var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
-                if (-1 !== exclude.indexOf(entry)) return
-                ran=function(){
-                    fs.appendFile(output, DEF.replace('URL',entry).replace("'FUNC'",func.toString()))
-                }
-            })
-        })
-    },
-    reload:function(url, script, cb){
-        if ('function'===typeof script) cb=script
-        cb=cb||dummyCB
-        var o=modules[url]
-        delete modules[url]
-        if (EXT_JS !== (getExt(url)||EXT_JS)) return cb(null, o)
-        var reattach=function(err, m){
-            if (err) return cb(err)
-            if (!o) return cb(null, m)
-            o.prototype=m.prototype
-            o.__proto__=m
-            return cb(null, modules[url]=o)
-        }
-        if ('string'=== typeof script) js(url, script, reattach)
-        else loader(url, reattach)
-    },
-    parse:js,
-    import:require,
-    export:getMod,
-    env:function(k){ return env[k] }
-}
-if('object'===typeof process && process.argv && process.argv[2]){
+(function(module,exports,require){if('object'===typeof process && process.argv && process.argv[2]){
     ajax=function(method, url, params, headers, cb, userData){
         var fs=require('fs')
         fs.readFile(url, {encoding:'utf8'}, function(err, txt){
@@ -475,9 +263,20 @@ define('pico/test',function(){
 })
 define('pico/time',function(){
     var
+    Max=Math.max,
+    Min=Math.min,
+    DAY= 86400000,
     HR = 3600000,
     MIN = 60000,
     SEC = 1000,
+    nearest=function(now, list, max){
+        if (!list) return now
+        if (Max(now, ...list)===now) return now+(max-now)+Min(...list)
+        for(var i=0,l=list.length; i<l; i++){
+            if (list[i]>=now) return list[i]
+        }
+        console.error('not suppose to be here',now, list, max)
+    },
     parseQuark=function(quark, min, max){
         var
         q=quark.split('/'),
@@ -513,6 +312,8 @@ define('pico/time',function(){
             r2=parseQuark(r[1],min,max)
             for(j=r1[0],rm=r2[0],ri=r2[1]||1; j<=rm; j+=ri) ret.add(j);
         }
+        ret=[...ret]
+        ret.sort((a,b)=>{return a-b})
         return ret
     }
 
@@ -538,25 +339,53 @@ define('pico/time',function(){
             return nextTime.getTime()
         },
         // fmt: min, hr, dom, M, dow, yr
-        cron: function(fmt){
+        parse: function(fmt){
             var atoms=fmt.split(' ')
             if (atoms.length < 6) return 0
-            var min=parseAtom(atoms[0], 0, 59)
-            if (null == min) return 0
-            var hr=parseAtom(atoms[1], 0, 23)
-            if (null == hr) return 0
-            var dom=parseAtom(atoms[2], 1, 31)
-            if (null == dom) return 0
-            var mon=parseAtom(atoms[3], 1, 12)
-            if (null == mon) return 0
-            var dow=parseAtom(atoms[4], 0, 6)
-            if (null == dow) return 0
-            var yr=parseAtom(atoms[5], 1970, 3000)
-            if (null == yr) return 0
+            var mins=parseAtom(atoms[0], 0, 59)
+            if (null == mins) return 0
+            var hrs=parseAtom(atoms[1], 0, 23)
+            if (null == hrs) return 0
+            var doms=parseAtom(atoms[2], 1, 31)
+            if (null == doms) return 0
+            var mons=parseAtom(atoms[3], 1, 12)
+            if (null == mons) return 0
+            var dows=parseAtom(atoms[4], 0, 6)
+            if (null == dows) return 0
+            var yrs=parseAtom(atoms[5], 1970, 3000)
+            if (null == yrs) return 0
 
-            var now=Date.now()
+            return [mins, hrs, doms, mons, dows, yrs]
+        },
+        nearest:function(mins, hrs, doms, mons, dows, yrs){
+            var
+            now=new Date(),
+            yr=nearest(now.getFullYear(), yrs, 0),
+            day=now.getDay(),
+            dow=nearest(day, dows, 7),
+            mon=now.getMonth(),
+            dom=now.getDate(),
+            hr=nearest(now.getHours(), hrs, 24),
+            m=nearest(now.getMinutes(), mins, 60)
 
-            return [min, hr, dom, mon, dow, yr]
+            if (day===dow){
+                mon=nearest(mon, mons, 12)
+                dom=nearest(dom, doms, new Date(yr, mon-1, 0).getDate())
+            }else{
+                dom+=(dow-day)
+            }
+
+            if (mon > 12){
+                yr+=Floor(mon/12)
+                mon=mon%12
+            }
+
+            var then=(new Date(yr, mon)).getTime()
+            then+=dom*DAY
+            then+=hr*HR
+            then+=m*MIN
+
+            return then
         }
     }
 })
