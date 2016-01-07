@@ -5,6 +5,7 @@ var TOOL_PATH= process.argv[2]
 if (!TOOL_PATH) return console.log('Usage: '+process.argv[1]+' TOOL_PATH [pico.js]')
 
 var
+uglify=require('uglify-js'),
 PREFIX="(function(module,exports,require){",
 POSTFIX="}).apply(null, 'undefined' === typeof window ? [module, 'exports', require] : [window, 'pico'])",
 fs = require('fs'),
@@ -16,9 +17,9 @@ getPath = function(dir, file){
     if (path.isAbsolute(file)) return file
     return path.resolve(dir,file)
 },
-pipeStr=function(str,w){
+pipeStr=function(str,w,opt){
     var r = new stream.Readable
-    r.pipe(w,{end:false})
+    r.pipe(w,opt||{end:false})
     r.push(str)    // the string you want
     r.push(null)      // indicates end-of-file basically - the end of the stream
 }
@@ -49,7 +50,19 @@ fs.readlink(symPath, function(err, realPath){
 
                 rs.on('close', function(){ callee(cb) })
                 rs.pipe(ws, {end:false})
-            }(function(){ pipeStr(POSTFIX,ws);console.log('Done!')})  
+            }(function(){
+                ws.on('finish',()=>{
+                    var minify=uglify.minify(dest,{outSourceMap:dest+'.map'})
+                    fs.writeFile(dest, minify.code, 'utf8', (err)=>{
+                        if (err) return console.error(err)
+                        fs.writeFile(dest+'.map', minify.map, 'utf8', ()=>{
+                            if (err) return console.error(err)
+                            console.log('Done!')
+                        })
+                    })
+                })
+                pipeStr(POSTFIX,ws,{end:true});
+            })  
         })
 	})
 })              

@@ -1,25 +1,28 @@
 {
-  "name": "pico-common",
-  "version": "0.3.9",
-  "description": "pico common tools",
-  "main": "pico.js",
-  "scripts": {
-    "pretest": "./concat.js plugins pico.js",
-    "test": "node pico.js tests.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ldarren/pico-common.git"
-  },
-  "keywords": [
-    "pico",
-    "commonjs",
-    "requirejs"
-  ],
-  "author": "Darren Liew",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/ldarren/pico-common/issues"
-  },
-  "homepage": "https://github.com/ldarren/pico-common"
+    "name": "pico-common",
+    "version": "0.3.10",
+    "description": "pico common tools",
+    "main": "pico.js",
+    "scripts": {
+        "pretest": "./concat.js plugins pico.js",
+        "test": "node pico.js tests.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/ldarren/pico-common.git"
+    },
+    "keywords": [
+        "pico",
+        "commonjs",
+        "requirejs"
+    ],
+    "author": "Darren Liew",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/ldarren/pico-common/issues"
+    },
+    "homepage": "https://github.com/ldarren/pico-common",
+    "devDependencies": {
+        "uglify-js": "^2.6.1"
+    }
 }

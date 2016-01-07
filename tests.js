@@ -137,6 +137,10 @@ this.load=function(){
         cb(null, (new Date(time.timeOfNext(2, 9))).toUTCString())
     })
 
+    ensure('ensure parse cron correctly', function(cb){
+        cb(null, time.cron('1,2 10-15 1,3-9,11 * * *'))
+    })
+
     ensure('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
         var
         data = JSON.stringify({data:123}),
