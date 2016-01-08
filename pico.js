@@ -1,4 +1,216 @@
-(function(module,exports,require){if('object'===typeof process && process.argv && process.argv[2]){
+(function(module,exports,require){var
+dummyCB=function(){},
+dummyLoader=function(){arguments[arguments.length-1]()},
+dummyPico={run:dummyCB,build:dummyCB,define:dummyCB,ajax:dummyLoader,env:dummyCB},
+modules={},
+// module events, e.g. onLoad
+events={}, //TODO: should be prototype of event class that support sigslot
+EXT_JS='.js',EXT_JSON='.json',
+DEF="define('URL','FUNC')\n",
+MOD_PREFIX='"use strict";\n',
+MOD_POSTFIX='//# sourceURL=',
+PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)',
+// call when pico.run done
+ajax,ran,
+paths={},
+env={},
+preprocessors={},
+getExt=function(url){
+    if (!url)return null
+    var idx=url.lastIndexOf('.')
+    return -1!==idx && -1===url.indexOf('/',idx) ? url.substr(idx) : null
+},
+// link to all deps
+linker=function(deps, cb){
+    if (!deps.length) return cb()
+    loader(deps.shift(),function(err){
+        if (err) return cb(err)
+        linker(deps, cb)
+    })
+},
+// load files, and execute them based on ext
+loader=function(url,cb){
+    if (modules[url])return cb(null, modules[url])
+
+    var
+    ext=getExt(url),
+    symbolIdx=url.indexOf('/'),
+    path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)]
+
+    if (!path){
+        symbolIdx=-1
+        path=paths['*']||''
+    }
+
+    var fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
+
+    if (path instanceof Function){
+        path(fname, function(err, m){
+            if (err) return cb(err)
+            modules[url]=m
+            cb(null, m)
+        })
+    }else{
+        ajax('get',path+fname+(ext?'':EXT_JS),null,null,function(err,state,txt){
+            if (err) return cb(err)
+            if (4!==state) return
+            switch(ext || EXT_JS){
+            case EXT_JS: return js(url,txt,cb)
+            default: return cb(null, define(url,txt))
+            }
+        })
+    }
+},
+placeHolder=function(){
+    return Function(PLACE_HOLDER)
+},
+getMod=function(url,cb){
+    var mod=modules[url]
+    if(mod){
+        setTimeout(cb||dummyCB, 0, null, mod) // make sure consistent async behaviour
+        return mod
+    }
+    if (cb) return loader(url,cb)
+    return modules[url]=placeHolder()
+},
+// do not run the module but getting the deps and inherit
+compile=function(url,txt,deps,base,me){
+    me=me||dummyPico
+    var
+    script=url ? MOD_PREFIX+txt+(env.live ? '' : MOD_POSTFIX+url) : txt,
+    frequire=function(k){if(!modules[k])deps.push(k);return modules[k]},
+    inherit=function(k){base.unshift(k),frequire(k)}
+
+    try{ var func=Function('exports','require','module','define','inherit','pico',script) }
+    catch(e){return console.error(url, e.message)}
+
+    func.call({}, {},frequire,{},dummyCB,inherit,me)
+    return func
+},
+// run the module and register the module output and events
+define=function(url, func, base){
+    var
+    ext=getExt(url)||EXT_JS,
+    pp=preprocessors[ext]
+
+    if (pp) func=pp(url, func)
+
+    switch(ext){
+    case EXT_JS:
+        var
+        module={exports:{}},
+        evt={},
+        m=func.call(evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
+
+        if (base)m.__proto__=base
+
+        if(evt.load)evt.load()
+
+        if (!url) return m
+
+        events[url]=evt
+
+        var o=modules[url]
+
+        if(o){
+            o.prototype=m.prototype
+            o.__proto__=m
+            return modules[url]=o
+        }
+        return modules[url]=m
+    case EXT_JSON:
+        try{ return modules[url]=JSON.parse(func) }
+        catch(e){return console.error(url, e.message)}
+    default: return modules[url]=func
+    }
+},
+// js file executer
+js=function(url,txt,cb){
+    cb=cb||dummyCB
+    if (modules[url])return cb(null, modules[url])
+
+    var
+    deps=[],
+    base=[],
+    func=compile(url,txt,deps,base)
+
+    if(url)modules[url]=placeHolder()
+
+    linker(deps, function(err){
+        if (err) return cb(err)
+        
+        cb(null,define(url,func,modules[base[0]]))
+    })
+}
+
+var pico=module[exports]={
+    run:function(options,func){
+        pico.ajax=ajax=options.ajax||ajax
+        paths=options.paths||paths
+        env=options.env||env
+        preprocessors=options.preprocessors||preprocessors
+
+        ;(options.onLoad||dummyLoader)(function(){
+            var txt=func.toString()
+            js(options.name||null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
+                if (err) return console.error(err)
+                if (main instanceof Function) main()
+                if(ran)ran()
+            })
+        })
+    },
+    build:function(options){
+        var
+        fs=require('fs'),
+        entry=options.entry,
+        output=options.output,
+        exclude=options.exclude
+
+        // overide define to write function
+        define=function(url, func){
+            if(!url)return
+            if (-1 !== exclude.indexOf(url)) return
+            switch(getExt(url)||EXT_JS){
+            case EXT_JS: return fs.appendFile(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
+            case EXT_JSON: return fs.appendFile(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
+            default: return fs.appendFile(output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
+            }
+        }
+
+        fs.unlink(output, function(){
+            fs.readFile(entry, {encoding:'utf8'}, function(err, txt){
+                if (err) return console.error(err)
+                // overide define to write function
+                var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
+                if (-1 !== exclude.indexOf(entry)) return
+                ran=function(){
+                    fs.appendFile(output, DEF.replace('URL',entry).replace("'FUNC'",func.toString()))
+                }
+            })
+        })
+    },
+    reload:function(url, script, cb){
+        if ('function'===typeof script) cb=script
+        cb=cb||dummyCB
+        var o=modules[url]
+        delete modules[url]
+        if (EXT_JS !== (getExt(url)||EXT_JS)) return cb(null, o)
+        var reattach=function(err, m){
+            if (err) return cb(err)
+            if (!o) return cb(null, m)
+            o.prototype=m.prototype
+            o.__proto__=m
+            return cb(null, modules[url]=o)
+        }
+        if ('string'=== typeof script) js(url, script, reattach)
+        else loader(url, reattach)
+    },
+    parse:js,
+    import:require,
+    export:getMod,
+    env:function(k){ return env[k] }
+}
+if('object'===typeof process && process.argv && process.argv[2]){
     ajax=function(method, url, params, headers, cb, userData){
         var fs=require('fs')
         fs.readFile(url, {encoding:'utf8'}, function(err, txt){
@@ -265,18 +477,11 @@ define('pico/time',function(){
     var
     Max=Math.max,
     Min=Math.min,
+    Floor=Math.floor,
     DAY= 86400000,
     HR = 3600000,
     MIN = 60000,
     SEC = 1000,
-    nearest=function(now, list, max){
-        if (!list) return now
-        if (Max(now, ...list)===now) return now+(max-now)+Min(...list)
-        for(var i=0,l=list.length; i<l; i++){
-            if (list[i]>=now) return list[i]
-        }
-        console.error('not suppose to be here',now, list, max)
-    },
     parseQuark=function(quark, min, max){
         var
         q=quark.split('/'),
@@ -297,7 +502,7 @@ define('pico/time',function(){
     parseAtom=function(atom, min, max){
         if ('*'===atom) return 0
         var 
-        ret=new Set(),
+        ret=[]
         list=atom.split(',')
         for(var i=0,l,range,j,r,r1,r2,rm,ri; l=list[i]; i++){
             r=l.split('-')
@@ -305,38 +510,79 @@ define('pico/time',function(){
             r1=parseQuark(r[0],min,max)
             if (1===r.length){
                 ri=r1[1]
-                if (ri) for(j=r1[0]; j<=max; j+=ri) ret.add(j);
-                else ret.add(r1[0])
+                if (ri) for(j=r1[0]; j<=max; j+=ri) ret.push(j);
+                else ret.push(r1[0])
                 continue
             }
             r2=parseQuark(r[1],min,max)
-            for(j=r1[0],rm=r2[0],ri=r2[1]||1; j<=rm; j+=ri) ret.add(j);
+            j=r1[0]
+            rm=r2[0]
+            ri=r2[1]||1
+            if (j>rm){
+                // wrap around
+                for(rm=max; j<=rm; j+=ri) ret.push(j);
+                for(j=min,rm=r2[0]; j<=rm; j+=ri) ret.push(j);
+            }else{
+                for(; j<=rm; j+=ri) ret.push(j);
+            }
         }
-        ret=[...ret]
-        ret.sort((a,b)=>{return a-b})
+        ret.sort(function(a,b){return a-b})
         return ret
+    },
+    nearest=function(now, list, max){
+        if (!list) return now
+        if (Max.apply(Math, list.concat(now))===now) return now+(max-now)+Min.apply(Math, list)
+        for(var i=0,l=list.length; i<l; i++){
+            if (list[i]>=now) return list[i]
+        }
+        console.error('not suppose to be here',now, list, max)
+    },
+    closest=function(now, count, mins, hrs, doms, mons, dows, yrs, cb){
+        if (count++ > 1) return cb(0)
+
+        var
+        min=nearest(now.getMinutes(), mins, 60),
+        hr=nearest(now.getHours()+Floor(min/60), hrs, 24),
+        dom=now.getDate(),
+        mon=now.getMonth(),
+        yr=now.getFullYear(),
+        days=(new Date(yr, mon, 0)).getDate()
+
+        if (dows){
+            // if dow set ignore dom fields
+            var
+            day=now.getDay()+Floor(hr/24),
+            dow=nearest(day, dows, 7)
+            dom+=(dow-day)
+        }else{
+            dom=nearest(dom+Floor(hr/24), doms, days)
+        }
+        mon=nearest(mon+1+Floor(dom/days), mons, 12)
+
+        if (now.getMonth()+1 !== mon) return closest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
+
+        yr=nearest(yr+Floor((mon-1)/12), yrs, 0)
+        if (now.getFullYear() !== yr) return closest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
+
+        var then=(new Date(yr, (mon-1)%12)).getTime()
+        then+=(dom%days-1)*DAY // beginning of day
+        then+=(hr%24)*HR
+        then+=(min%60)*MIN
+
+        return cb(then)
     }
 
     return {
         deltaToNext: function(day, hr, min, sec, msec){
-            hr = hr || 0
-            min = min || 0
-            sec = sec || 0
-            msec = msec || 0
-
             var 
             d = new Date(),
-            remain = (d.getTime() % HR) - (min*MIN + sec*SEC + msec),
-            deltaHr = hr + (24*day) - d.getHours()
+            remain = (d.getTime() % HR) - ((min||0)*MIN + (sec||0)*SEC + (msec||0)),
+            deltaHr = (hr||0) + (24*day) - d.getHours()
 
             return (deltaHr * HR) - remain
         },
         timeOfNext: function(day, hr, min, sec, msec){
-            var
-            delta = this.deltaToNext(day, hr, min, sec, msec),
-            nextTime = new Date(Date.now() + delta)
-
-            return nextTime.getTime()
+            return (new Date(Date.now()+this.deltaToNext(day, hr, min, sec, msec))).getTime()
         },
         // fmt: min, hr, dom, M, dow, yr
         parse: function(fmt){
@@ -352,7 +598,7 @@ define('pico/time',function(){
             if (null == mons) return 0
             var dows=parseAtom(atoms[4], 0, 6)
             if (null == dows) return 0
-            var yrs=parseAtom(atoms[5], 1970, 3000)
+            var yrs=parseAtom(atoms[5], 1975, 2075)
             if (null == yrs) return 0
 
             return [mins, hrs, doms, mons, dows, yrs]
@@ -361,31 +607,13 @@ define('pico/time',function(){
             var
             now=new Date(),
             yr=nearest(now.getFullYear(), yrs, 0),
-            day=now.getDay(),
-            dow=nearest(day, dows, 7),
-            mon=now.getMonth(),
-            dom=now.getDate(),
-            hr=nearest(now.getHours(), hrs, 24),
-            m=nearest(now.getMinutes(), mins, 60)
+            mon=nearest(now.getMonth()+1, mons, 12)-1
 
-            if (day===dow){
-                mon=nearest(mon, mons, 12)
-                dom=nearest(dom, doms, new Date(yr, mon-1, 0).getDate())
-            }else{
-                dom+=(dow-day)
+            if (now.getFullYear()!==yr || now.getMonth()!==mon){
+                now=new Date(yr, mon)
             }
 
-            if (mon > 12){
-                yr+=Floor(mon/12)
-                mon=mon%12
-            }
-
-            var then=(new Date(yr, mon)).getTime()
-            then+=dom*DAY
-            then+=hr*HR
-            then+=m*MIN
-
-            return then
+            return closest(now, 0, mins, hrs, doms, mons, dows, yrs, function(then){ return then })
         }
     }
 })

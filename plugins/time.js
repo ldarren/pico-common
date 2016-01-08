@@ -2,18 +2,11 @@ define('pico/time',function(){
     var
     Max=Math.max,
     Min=Math.min,
+    Floor=Math.floor,
     DAY= 86400000,
     HR = 3600000,
     MIN = 60000,
     SEC = 1000,
-    nearest=function(now, list, max){
-        if (!list) return now
-        if (Max(now, ...list)===now) return now+(max-now)+Min(...list)
-        for(var i=0,l=list.length; i<l; i++){
-            if (list[i]>=now) return list[i]
-        }
-        console.error('not suppose to be here',now, list, max)
-    },
     parseQuark=function(quark, min, max){
         var
         q=quark.split('/'),
@@ -34,7 +27,7 @@ define('pico/time',function(){
     parseAtom=function(atom, min, max){
         if ('*'===atom) return 0
         var 
-        ret=new Set(),
+        ret=[]
         list=atom.split(',')
         for(var i=0,l,range,j,r,r1,r2,rm,ri; l=list[i]; i++){
             r=l.split('-')
@@ -42,38 +35,79 @@ define('pico/time',function(){
             r1=parseQuark(r[0],min,max)
             if (1===r.length){
                 ri=r1[1]
-                if (ri) for(j=r1[0]; j<=max; j+=ri) ret.add(j);
-                else ret.add(r1[0])
+                if (ri) for(j=r1[0]; j<=max; j+=ri) ret.push(j);
+                else ret.push(r1[0])
                 continue
             }
             r2=parseQuark(r[1],min,max)
-            for(j=r1[0],rm=r2[0],ri=r2[1]||1; j<=rm; j+=ri) ret.add(j);
+            j=r1[0]
+            rm=r2[0]
+            ri=r2[1]||1
+            if (j>rm){
+                // wrap around
+                for(rm=max; j<=rm; j+=ri) ret.push(j);
+                for(j=min,rm=r2[0]; j<=rm; j+=ri) ret.push(j);
+            }else{
+                for(; j<=rm; j+=ri) ret.push(j);
+            }
         }
-        ret=[...ret]
-        ret.sort((a,b)=>{return a-b})
+        ret.sort(function(a,b){return a-b})
         return ret
+    },
+    nearest=function(now, list, max){
+        if (!list) return now
+        if (Max.apply(Math, list.concat(now))===now) return now+(max-now)+Min.apply(Math, list)
+        for(var i=0,l=list.length; i<l; i++){
+            if (list[i]>=now) return list[i]
+        }
+        console.error('not suppose to be here',now, list, max)
+    },
+    closest=function(now, count, mins, hrs, doms, mons, dows, yrs, cb){
+        if (count++ > 1) return cb(0)
+
+        var
+        min=nearest(now.getMinutes(), mins, 60),
+        hr=nearest(now.getHours()+Floor(min/60), hrs, 24),
+        dom=now.getDate(),
+        mon=now.getMonth(),
+        yr=now.getFullYear(),
+        days=(new Date(yr, mon, 0)).getDate()
+
+        if (dows){
+            // if dow set ignore dom fields
+            var
+            day=now.getDay()+Floor(hr/24),
+            dow=nearest(day, dows, 7)
+            dom+=(dow-day)
+        }else{
+            dom=nearest(dom+Floor(hr/24), doms, days)
+        }
+        mon=nearest(mon+1+Floor(dom/days), mons, 12)
+
+        if (now.getMonth()+1 !== mon) return closest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
+
+        yr=nearest(yr+Floor((mon-1)/12), yrs, 0)
+        if (now.getFullYear() !== yr) return closest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
+
+        var then=(new Date(yr, (mon-1)%12)).getTime()
+        then+=(dom%days-1)*DAY // beginning of day
+        then+=(hr%24)*HR
+        then+=(min%60)*MIN
+
+        return cb(then)
     }
 
     return {
         deltaToNext: function(day, hr, min, sec, msec){
-            hr = hr || 0
-            min = min || 0
-            sec = sec || 0
-            msec = msec || 0
-
             var 
             d = new Date(),
-            remain = (d.getTime() % HR) - (min*MIN + sec*SEC + msec),
-            deltaHr = hr + (24*day) - d.getHours()
+            remain = (d.getTime() % HR) - ((min||0)*MIN + (sec||0)*SEC + (msec||0)),
+            deltaHr = (hr||0) + (24*day) - d.getHours()
 
             return (deltaHr * HR) - remain
         },
         timeOfNext: function(day, hr, min, sec, msec){
-            var
-            delta = this.deltaToNext(day, hr, min, sec, msec),
-            nextTime = new Date(Date.now() + delta)
-
-            return nextTime.getTime()
+            return (new Date(Date.now()+this.deltaToNext(day, hr, min, sec, msec))).getTime()
         },
         // fmt: min, hr, dom, M, dow, yr
         parse: function(fmt){
@@ -89,7 +123,7 @@ define('pico/time',function(){
             if (null == mons) return 0
             var dows=parseAtom(atoms[4], 0, 6)
             if (null == dows) return 0
-            var yrs=parseAtom(atoms[5], 1970, 3000)
+            var yrs=parseAtom(atoms[5], 1975, 2075)
             if (null == yrs) return 0
 
             return [mins, hrs, doms, mons, dows, yrs]
@@ -98,31 +132,13 @@ define('pico/time',function(){
             var
             now=new Date(),
             yr=nearest(now.getFullYear(), yrs, 0),
-            day=now.getDay(),
-            dow=nearest(day, dows, 7),
-            mon=now.getMonth(),
-            dom=now.getDate(),
-            hr=nearest(now.getHours(), hrs, 24),
-            m=nearest(now.getMinutes(), mins, 60)
+            mon=nearest(now.getMonth()+1, mons, 12)-1
 
-            if (day===dow){
-                mon=nearest(mon, mons, 12)
-                dom=nearest(dom, doms, new Date(yr, mon-1, 0).getDate())
-            }else{
-                dom+=(dow-day)
+            if (now.getFullYear()!==yr || now.getMonth()!==mon){
+                now=new Date(yr, mon)
             }
 
-            if (mon > 12){
-                yr+=Floor(mon/12)
-                mon=mon%12
-            }
-
-            var then=(new Date(yr, mon)).getTime()
-            then+=dom*DAY
-            then+=hr*HR
-            then+=m*MIN
-
-            return then
+            return closest(now, 0, mins, hrs, doms, mons, dows, yrs, function(then){ return then })
         }
     }
 })

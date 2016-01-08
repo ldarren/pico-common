@@ -137,11 +137,12 @@ this.load=function(){
         cb(null, (new Date(time.timeOfNext(2, 9))).toUTCString())
     })
 
-    ensure('ensure parse cron(1,2 10-15 1,3-9,11 2-10/2 */2 *) correctly', function(cb){
-        cb(null, time.parse('1,2 10-15 1,3-9,11 2-10/2 */2 *'))
+    var cron='5-20/6 */9 5/5 6/3 6-0 *'
+    ensure(`ensure parse cron(${cron}) correctly`, function(cb){
+        cb(null, time.parse(cron))
     })
     ensure('ensure get nearest cron(MIN HR DOM MON DOW YR) correctly', function(cb){
-        cb(null, (new Date(time.nearest(...time.parse('1,2 10-15 1,3-9,11 2-10/2 */2 *')))).toUTCString())
+        cb(null, (new Date(time.nearest(...time.parse(cron)))).toUTCString())
     })
 
     ensure('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
