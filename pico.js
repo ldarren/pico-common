@@ -611,6 +611,9 @@ define('pico/time',function(){
 
             if (now.getFullYear()!==yr || now.getMonth()!==mon){
                 now=new Date(yr, mon)
+            }else{
+                var time=now.getTime()
+                now=new Date(time+MIN)// round up sec n msec
             }
 
             return closest(now, 0, mins, hrs, doms, mons, dows, yrs, function(then){ return then })
