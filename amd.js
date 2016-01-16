@@ -1,7 +1,7 @@
 var
 dummyCB=function(){},
 dummyLoader=function(){arguments[arguments.length-1]()},
-dummyPico={run:dummyCB,build:dummyCB,define:dummyCB,ajax:dummyLoader,env:dummyCB},
+dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},
 modules={},
 // module events, e.g. onLoad
 events={}, //TODO: should be prototype of event class that support sigslot
