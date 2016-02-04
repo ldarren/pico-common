@@ -647,29 +647,29 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         if (err) {
             // network or auth error, return error to callbacks
             if (4 !== readyState) return
-            var header={error:'Network error'}
+            var reqId, cb
             if (responseText){
-                try{ header=JSON.parse(responseText) }
+                try{ reqId=JSON.parse(responseText).reqId }
                 catch(exp){ return console.error(exp) }
-                return // server error, dun reset all pending requests
+                cb=net.callbacks[reqId]
+                if (cb){
+                    delete net.callbacks[reqId]
+                    cb(err)
+                }
+                return
             }
             var
             reqs = net.reqs,
-            sep = net.delimiter,
-            reqId, cb, r
+            sep = net.delimiter
             for (var i=0,l=reqs.length,r; i<l; i++){
                 r = reqs[i]
                 if (!r) continue
-                try{
-                    reqId = JSON.parse(r.split(sep)[0]).reqId
-                    cb = net.callbacks[reqId]
-                    if (!cb) continue
-                    delete net.callbacks[reqId]
-                    cb(header.error)
-                }catch(exp){
-                    console.error(exp)
-                    continue
-                }
+                try{ reqId = JSON.parse(r.split(sep)[0]).reqId }
+                catch(exp){ console.error(exp); continue }
+                cb = net.callbacks[reqId]
+                if (!cb) continue
+                delete net.callbacks[reqId]
+                cb(err)
             }
             reqs.length = 0
             return timeSync(net) // sync time, in case it was due to time error
