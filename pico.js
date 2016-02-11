@@ -88,7 +88,7 @@ compile=function(url,txt,deps,base,me){
     return func
 },
 // run the module and register the module output and events
-define=function(url, func, base){
+define=function(url, func, base, mute){
     var
     ext=getExt(url)||EXT_JS,
     pp=preprocessors[ext]
@@ -104,6 +104,7 @@ define=function(url, func, base){
 
         if (base)m.__proto__=base
 
+        if(mute)evt={}
         if(evt.load)evt.load()
 
         if (!url) return m
@@ -164,27 +165,32 @@ var pico=module[exports]={
         fs=require('fs'),
         entry=options.entry,
         output=options.output,
-        exclude=options.exclude
+        exclude=options.exclude,
+        orgDefine=define
 
         // overide define to write function
-        define=function(url, func){
+        define=function(url, func, base){
+            orgDefine(url, func, base, true)
             if(!url)return
             if (-1 !== exclude.indexOf(url)) return
+            // TODO why appendFile not working?
             switch(getExt(url)||EXT_JS){
-            case EXT_JS: return fs.appendFile(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
-            case EXT_JSON: return fs.appendFile(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
-            default: return fs.appendFile(output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
+            case EXT_JS: return fs.appendFileSync(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
+            case EXT_JSON: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
+            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
             }
         }
 
         fs.unlink(output, function(){
-            fs.readFile(entry, {encoding:'utf8'}, function(err, txt){
+            fs.readFile(entry, 'utf8', function(err, txt){
                 if (err) return console.error(err)
                 // overide define to write function
                 var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
                 if (-1 !== exclude.indexOf(entry)) return
                 ran=function(){
-                    fs.appendFile(output, DEF.replace('URL',entry).replace("'FUNC'",func.toString()))
+                    fs.appendFileSync(output, DEF.replace('URL',entry).replace("'FUNC'",func.toString()))
+                    // TODO why need to kill?
+                    process.exit()
                 }
             })
         })
@@ -210,15 +216,19 @@ var pico=module[exports]={
     export:getMod,
     env:function(k){ return env[k] }
 }
-if('object'===typeof process && process.argv && process.argv[2]){
-    ajax=function(method, url, params, headers, cb, userData){
-        var fs=require('fs')
-        fs.readFile(url, {encoding:'utf8'}, function(err, txt){
+if('object'===typeof process){
+    ajax=ajax||function(method, url, params, headers, cb, userData){
+        /* TODO why readfile not working?
+        require('fs').readFile(url, 'utf8', function(err, txt){
             if (err) return cb(err,2,null,userData)
             cb(null,4,txt,userData)
         })
+        */
+        var txt = require('fs').readFileSync(url, 'utf8')
+        if (txt) return process.nextTick(cb, null, 4, txt, userData)
+        process.nextTick(cb, 'failed', 2, null, userData)
     }
-    loader(process.argv[2],dummyCB)
+    if(process.argv[2])loader(process.argv[2],dummyCB)
 }
 define('pico/obj',function(){
     var allows = ['object','function']
