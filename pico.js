@@ -2,6 +2,7 @@
 dummyCB=function(){},
 dummyLoader=function(){arguments[arguments.length-1]()},
 dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},
+htmlescape= { '&':'&amp;', "'":'&#039;', '\n':'\\n','\r':'\\n' },
 modules={},
 // module events, e.g. onLoad
 events={}, //TODO: should be prototype of event class that support sigslot
@@ -15,6 +16,9 @@ ajax,ran,
 paths={},
 env={},
 preprocessors={},
+funcBody=function(func){
+    return func.substring(func.indexOf('{')+1,func.lastIndexOf('}'))
+},
 getExt=function(url){
     if (!url)return null
     var idx=url.lastIndexOf('.')
@@ -100,11 +104,10 @@ define=function(url, func, base, mute){
         var
         module={exports:{}},
         evt={},
-        m=func.call(evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
+        m=func.call(mute?{}:evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
 
         if (base)m.__proto__=base
 
-        if(mute)evt={}
         if(evt.load)evt.load()
 
         if (!url) return m
@@ -152,8 +155,7 @@ var pico=module[exports]={
         preprocessors=options.preprocessors||preprocessors
 
         ;(options.onLoad||dummyLoader)(function(){
-            var txt=func.toString()
-            js(options.name||null,txt.substring(txt.indexOf('{')+1,txt.lastIndexOf('}')),function(err,main){
+            js(options.name||null,funcBody(func.toString()),function(err,main){
                 if (err) return console.error(err)
                 if (main instanceof Function) main()
                 if(ran)ran()
@@ -166,7 +168,19 @@ var pico=module[exports]={
         entry=options.entry,
         output=options.output,
         exclude=options.exclude,
-        orgDefine=define
+        orgDefine=define,
+        addDeps=function(output, deps){
+            if (!deps || !deps.length) return
+            fs.appendFileSync(output, fs.readFileSync(deps.shift()))
+            fs.appendFileSync(output, '\n')
+            addDeps(output, deps)
+        },
+        addInclude=function(include, cb){
+            if (!include || !include.length) return cb()
+            loader(include.shift(), function(err){
+                addInclude(include, cb)
+            })
+        }
 
         // overide define to write function
         define=function(url, func, base){
@@ -177,20 +191,24 @@ var pico=module[exports]={
             switch(getExt(url)||EXT_JS){
             case EXT_JS: return fs.appendFileSync(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
             case EXT_JSON: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
-            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(/[\n\r]/g, '\\n')))
+            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(/[&'\n\r]/g, function(m){return htmlescape[m]})))
             }
         }
 
         fs.unlink(output, function(){
+            addDeps(output, options.deps)
             fs.readFile(entry, 'utf8', function(err, txt){
                 if (err) return console.error(err)
                 // overide define to write function
                 var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
                 if (-1 !== exclude.indexOf(entry)) return
                 ran=function(){
-                    fs.appendFileSync(output, DEF.replace('URL',entry).replace("'FUNC'",func.toString()))
                     // TODO why need to kill?
-                    process.exit()
+                    addInclude(options.include, function(err){
+                        if (err) console.error(err)
+                        fs.appendFileSync(output, funcBody(func.toString()))
+                        process.exit()
+                    })
                 }
             })
         })
