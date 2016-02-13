@@ -1,10 +1,11 @@
 var
-web= require('pico/web'),
-obj= require('pico/obj'),
-str= require('pico/str'),
-time= require('pico/time'),
-test= require('pico/test'),
-_=define('underscore',function(exports,require,module,define,inherit,pico){
+pico=require('./pico'),
+web= pico.export('pico/web'),
+obj= pico.export('pico/obj'),
+str= pico.export('pico/str'),
+time= pico.export('pico/time'),
+test= pico.export('pico/test'),
+_=pico.define('underscore',function(exports,require,module,define,inherit,pico){
 (function() {
   var root = this;
 
@@ -33,7 +34,6 @@ _=define('underscore',function(exports,require,module,define,inherit,pico){
 }.call(this));
 })
 
-this.load=function(){
     var ensure=test.ensure
 
     ensure('ensure pico has loaded correctly', function(cb){
@@ -71,7 +71,7 @@ this.load=function(){
     ensure('ensure pico.parse define text to module', function(cb){
         pico.parse(null, "define('testMod345',function(){return {value:345}})", function(err){
             if (err) return cb(err)
-            var testMod345=require('testMod345')
+            var testMod345=pico.export('testMod345')
             cb(null, 345===testMod345.value)
         })
     })
@@ -161,4 +161,3 @@ this.load=function(){
         str.error('str.error test')
         cb(null, true)
     })
-}

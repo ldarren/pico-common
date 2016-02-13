@@ -10,5 +10,4 @@ if('object'===typeof process){
         if (txt) return process.nextTick(cb, null, 4, txt, userData)
         process.nextTick(cb, 'failed', 2, null, userData)
     }
-    if(process.argv[2])loader(process.argv[2],dummyCB)
 }

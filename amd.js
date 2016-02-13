@@ -1,13 +1,13 @@
 var
 dummyCB=function(){},
 dummyLoader=function(){arguments[arguments.length-1]()},
-dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},
+dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},
 htmlescape= { '&':'&amp;', "'":'&#039;', '\n':'\\n','\r':'\\n' },
 modules={},
 // module events, e.g. onLoad
 events={}, //TODO: should be prototype of event class that support sigslot
 EXT_JS='.js',EXT_JSON='.json',
-DEF="define('URL','FUNC')\n",
+DEF="pico.define('URL','FUNC')\n",
 MOD_PREFIX='"use strict";\n',
 MOD_POSTFIX='//# sourceURL=',
 PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)',
@@ -154,6 +154,12 @@ var pico=module[exports]={
         env=options.env||env
         preprocessors=options.preprocessors||preprocessors
 
+        var pp
+        for(var url in modules){
+            pp=preprocessors[getExt(url)||EXT_JS]
+            if (pp) modules[url]=pp(url, modules[url])
+        }
+
         ;(options.onLoad||dummyLoader)(function(){
             js(options.name||null,funcBody(func.toString()),function(err,main){
                 if (err) return console.error(err)
@@ -203,10 +209,10 @@ var pico=module[exports]={
                 var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
                 if (-1 !== exclude.indexOf(entry)) return
                 ran=function(){
-                    // TODO why need to kill?
+                    fs.appendFileSync(output, funcBody(func.toString()))
                     addInclude(options.include, function(err){
                         if (err) console.error(err)
-                        fs.appendFileSync(output, funcBody(func.toString()))
+                        // TODO why need to kill?
                         process.exit()
                     })
                 }
@@ -230,6 +236,7 @@ var pico=module[exports]={
         else loader(url, reattach)
     },
     parse:js,
+    define:define,
     import:require,
     export:getMod,
     env:function(k){ return env[k] }

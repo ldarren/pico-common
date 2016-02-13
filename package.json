@@ -1,11 +1,11 @@
 {
     "name": "pico-common",
-    "version": "0.4.1",
+    "version": "0.5.0",
     "description": "pico common tools",
     "main": "pico.js",
     "scripts": {
-        "pretest": "./concat.js plugins pico.js",
-        "test": "node pico.js tests.js"
+        "pretest": "./concat.js plugins",
+        "test": "node tests.js"
     },
     "repository": {
         "type": "git",
