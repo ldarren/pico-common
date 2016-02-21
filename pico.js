@@ -2,7 +2,7 @@
 dummyCB=function(){},
 dummyLoader=function(){arguments[arguments.length-1]()},
 dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},
-htmlescape= { '&':'&amp;', "'":'&#039;', '\n':'\\n','\r':'\\n' },
+htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
 modules={},
 // module events, e.g. onLoad
 events={}, //TODO: should be prototype of event class that support sigslot
@@ -197,7 +197,7 @@ var pico=module[exports]={
             switch(getExt(url)||EXT_JS){
             case EXT_JS: return fs.appendFileSync(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
             case EXT_JSON: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
-            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(/[&'\n\r]/g, function(m){return htmlescape[m]})))
+            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(/['\n\r]/g, function(m){return htmlescape[m]})))
             }
         }
 
