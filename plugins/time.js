@@ -159,6 +159,9 @@ define('pico/time',function(){
         },
 		daynum:daynum,
 		weeknum:weeknum,
+		// node.js should compile with
+		// ./configure --with-intl=full-icu --download=all
+		// ./configure --with-intl=small-icu --download=all
 		day: function(date, locale){
 			var
 			now=new Date(),
