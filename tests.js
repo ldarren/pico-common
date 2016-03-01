@@ -144,6 +144,12 @@ _=pico.define('underscore',function(exports,require,module,define,inherit,pico){
     ensure('ensure get nearest cron(MIN HR DOM MON DOW YR) correctly', function(cb){
         cb(null, (new Date(time.nearest(...time.parse(cron)))).toUTCString())
     })
+    ensure('ensure weeknum of 1/Mar/2016 is 9', function(cb){
+        cb(null, (time.weeknum(new Date(2016,0,1,0,0,0))))
+    })
+    ensure('ensure yesterday is yesterday', function(cb){
+        cb(null, (time.day(new Date(time.timeOfNext(-1)))))
+    })
 
     ensure('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
         var

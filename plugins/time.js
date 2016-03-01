@@ -3,10 +3,24 @@ define('pico/time',function(){
     Max=Math.max,
     Min=Math.min,
     Floor=Math.floor,
+    Ceil=Math.ceil,
     DAY= 86400000,
     HR = 3600000,
     MIN = 60000,
     SEC = 1000,
+	daynum=function(end,start){
+		return (end-start) / DAY
+	},
+	weeknum=function(date, us, yearoff){
+	    var
+		offset=us?1:0,
+		jan1= new Date(date.getFullYear()+(yearoff||0), 0, 1),
+		day1=((7-jan1.getDay())%7 + offset),
+		days=daynum(date, jan1)
+
+		if (days > day1) return Ceil((days - day1)/7)
+		return weeknum(date, us, -1)
+	},
     parseQuark=function(quark, min, max){
         var
         q=quark.split('/'),
@@ -142,6 +156,24 @@ define('pico/time',function(){
             }
 
             return closest(now, 0, mins, hrs, doms, mons, dows, yrs, function(then){ return then })
-        }
+        },
+		daynum:daynum,
+		weeknum:weeknum,
+		day: function(date, locale){
+			var
+			now=new Date(),
+			mid=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12,0,0),
+			diff=mid-date,
+			DAY15=DAY*1.5
+			if ((diff >= 0 && diff <= DAY15) || (diff <= 0 && diff > -DAY15)){
+				if (now.getDate()===date.getDate())return'Today'
+				if (now > date) return 'Yesterday'
+				return 'Tomorrow'
+			}
+
+			locale=locale||'en-US'
+			if (now.getFullYear()===date.getFullYear() && weeknum(now)===weeknum(date)) return date.toLocaleDateString(locale, {weekday:'long'})
+			return date.toLocaleDateString(locale,{weekday: 'short', month: 'short', day: 'numeric'})
+		}
     }
 })
