@@ -7,7 +7,7 @@ if('object'===typeof process){
         })
         */
         var txt = require('fs').readFileSync(url, 'utf8')
-        if (txt) return process.nextTick(cb, null, 4, txt, userData)
-        process.nextTick(cb, 'failed', 2, null, userData)
+        if (txt) return setImmediate(cb, null, 4, txt, userData)
+        setImmediate(cb, 'failed', 2, null, userData)
     }
 }

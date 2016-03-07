@@ -4,8 +4,7 @@ dummyLoader=function(){arguments[arguments.length-1]()},
 dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},
 htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
 modules={},
-// module events, e.g. onLoad
-events={}, //TODO: should be prototype of event class that support sigslot
+updates=[],
 EXT_JS='.js',EXT_JSON='.json',
 DEF="pico.define('URL','FUNC')\n",
 MOD_PREFIX='"use strict";\n',
@@ -16,6 +15,15 @@ ajax,ran,
 paths={},
 env={},
 preprocessors={},
+schedule= (function(){
+    if ('undefined'!==typeof process) return setImmediate 
+    return  requestAnimationFrame       ||
+            webkitRequestAnimationFrame ||
+            mozRequestAnimationFrame    ||
+            oRequestAnimationFrame      ||
+            msRequestAnimationFrame     ||
+            function(cb){ return setTimeout(cb, 50) }
+})(),
 funcBody=function(func){
     return func.substring(func.indexOf('{')+1,func.lastIndexOf('}'))
 },
@@ -91,7 +99,7 @@ compile=function(url,txt,deps,base,me){
     func.call({}, {},frequire,{},dummyCB,inherit,me)
     return func
 },
-// run the module and register the module output and events
+// run the module and register the module output
 define=function(url, func, base, mute){
     var
     ext=getExt(url)||EXT_JS,
@@ -109,10 +117,10 @@ define=function(url, func, base, mute){
         if (base)m.__proto__=base
 
         if(evt.load)evt.load()
+        if ('function'===typeof evt.update)updates.push(evt.update)
 
         if (!url) return m
 
-        events[url]=evt
 
         var o=modules[url]
 
@@ -145,7 +153,15 @@ js=function(url,txt,cb){
         
         cb(null,define(url,func,modules[base[0]]))
     })
+},
+tick=function(timestamp){
+	schedule(tick)
+	for(var i=0,f; f=updates[i]; i++){
+		f(timestamp)
+	}
 }
+
+schedule(tick)
 
 var pico=module[exports]={
     run:function(options,func){
