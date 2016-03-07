@@ -161,8 +161,6 @@ tick=function(timestamp){
 	}
 }
 
-schedule(tick)
-
 var pico=module[exports]={
     run:function(options,func){
         pico.ajax=ajax=options.ajax||ajax
@@ -181,6 +179,8 @@ var pico=module[exports]={
                 if (err) return console.error(err)
                 if (main instanceof Function) main()
                 if(ran)ran()
+
+				schedule(tick)
             })
         })
     },
