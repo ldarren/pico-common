@@ -204,6 +204,9 @@ var pico=module[exports]={
             })
         }
 
+        // overide tick to write function
+        tick=dummyCB
+
         // overide define to write function
         define=function(url, func, base){
             orgDefine(url, func, base, true)
