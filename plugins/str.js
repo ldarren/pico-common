@@ -9,18 +9,14 @@ define('pico/str', function(){
     }
     return {
         codec: function(num, str){
-            var ret=''
-            for(var i=0,c; c=str.charCodeAt(i); i++){
+            for(var i=0,ret='',c; c=str.charCodeAt(i); i++){
                 ret += String.fromCharCode(c ^ num)
             }
             return ret
         },
         hash: function(str){
-            var h = 0
-
-            for (var i=0,c; c=str.charCodeAt(i); i++) {
-                h = ((h<<5)-h)+c
-                h = h & h // Convert to 32bit integer
+            for (var i=0,h=0,c; c=str.charCodeAt(i); i++) {
+				h = (h * 31 + c) | 0 // same as h = ((h<<5)-h)+c;  h = h | 0 or h = h & h <= Convert to 32bit integer
             }
             return h
         },
