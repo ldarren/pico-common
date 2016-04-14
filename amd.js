@@ -16,13 +16,7 @@ paths={},
 env={},
 preprocessors={},
 schedule= (function(){
-    if ('undefined'!==typeof process) return setImmediate 
-    return  requestAnimationFrame       ||
-            webkitRequestAnimationFrame ||
-            mozRequestAnimationFrame    ||
-            oRequestAnimationFrame      ||
-            msRequestAnimationFrame     ||
-            function(cb){ return setTimeout(cb, 50) }
+	return ('undefined'===typeof requestAnimationFrame) ? function(cb){ return setTimeout(cb, 100) }: requestAnimationFrame
 })(),
 funcBody=function(func){
     return func.substring(func.indexOf('{')+1,func.lastIndexOf('}'))
