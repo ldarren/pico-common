@@ -117,9 +117,9 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
                     }
                     if (head.len)
                         head.data = JSON.parse(body[0], function(k, v){
-                            switch(k){
-                            case 'json': return JSON.parse(body[v])
-                            case 'blob': return body[v]
+                            switch(k[0]){
+                            case '$': return JSON.parse(body[v])
+                            case '_': return body[v]
                             default: return v
                             }
                         })
@@ -301,9 +301,9 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 
             if (data){
                 dataList.unshift(JSON.stringify(data, function(k, v){
-                    switch(k){
-                    case 'json': return dataList.push(JSON.stringify(v))
-                    case 'blob': return dataList.push(v)
+                    switch(k[0]){
+                    case '$': return dataList.push(JSON.stringify(v))
+                    case '_': return dataList.push(v)
                     default: return v
                     }
                 }))
