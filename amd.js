@@ -3,6 +3,7 @@ dummyCB=function(){},
 dummyLoader=function(){arguments[arguments.length-1]()},
 dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},
 htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
+esc=function(m){return htmlescape[m]},
 modules={},
 updates=[],
 EXT_JS='.js',EXT_JSON='.json',
@@ -209,8 +210,8 @@ var pico=module[exports]={
             // TODO why appendFile not working?
             switch(getExt(url)||EXT_JS){
             case EXT_JS: return fs.appendFileSync(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
-            case EXT_JSON: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func))))
-            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(/['\n\r]/g, function(m){return htmlescape[m]})))
+            case EXT_JSON: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func)).replace(/['\n\r]/g, esc)))
+            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(/['\n\r]/g, esc)))
             }
         }
 
