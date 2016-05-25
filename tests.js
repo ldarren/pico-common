@@ -124,8 +124,12 @@ ensure('ensure options.mergeArr off is working. output should contain[2,3] list'
 	cb(null, obj.extend(obj1, obj2))
 })
 
-ensure('ensure parseInts is working, ["1", "2"] should parse to [1, 2]', function(cb){
+ensure('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', function(cb){
 	cb(null, obj.parseInts(['1','2']))
+})
+
+ensure('ensure obj.group is working, group [{key:1,value:1},{key:2,value:2},{key:1,value:3}] by key', function(cb){
+	cb(null, obj.group([{key:1,value:1},{key:2,value:2},{key:1,value:3}],'key'))
 })
 
 ensure('ensure deltaToNext 5 sec is not more than 5000', function(cb){

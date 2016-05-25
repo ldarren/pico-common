@@ -98,19 +98,20 @@ define('pico/obj',function(){
             }
             return arr
         },
-        // group([{k:1, v:5},{k:1, v:6}], {1:'key1', 2:'key2'}, 'k') = {key1:[{k:1,v:5},{k:1,v:6}]}
-        group: function(arr, keys, K){
-            var output = {}, k
-            for(var i=0,a; a=arr[i]; i++){
-                k = a[K]
-                k = keys[k] || k
-                output[k] = output[k] || []
-                output[k].push(a)
+        // group([{k:1, v:5},{k:1, v:6}], 'k', {1:'key1', 2:'key2'}) = {key1:[{k:1,v:5},{k:1,v:6}]}
+        group: function(arr, K, keys){
+            var output = {}
+            keys=keys||{}
+            for(var i=0,a,v; a=arr[i]; i++){
+                v = a[K]
+                v = keys[v] || v
+                output[v] = output[v] || []
+                output[v].push(a)
             }
             return output
         },
-        // values(['key1','key2'], {key1:1, key2:2}) = [1,2]
-        values: function(keys, kv){
+        // values({key1:1, key2:2}, ['key1','key2']) = [1,2]
+        values: function(kv, keys){
             var output = []
             for(var i=0,k; k=keys[i]; i++){
                 output.push(kv[k])
@@ -128,7 +129,7 @@ define('pico/obj',function(){
         },
         // mergeByKey({key1:1, key2:2}, {key1:2, key3:3}, {key1:1, key3:4}, 'key1') = [{key1:1,key2:2,key3:4},{key1:2,key3:3}]
         mergeByKey: function(arr1, arr2, KEY){
-            var m=module.exports.merge,k, obj={}, arr=[]
+            var m=this.merge,k, obj={}, arr=[]
             if (arr1){
                 for(var i=0,a1; a1=arr1[i]; i++){
                     k = a1[KEY]
@@ -161,7 +162,7 @@ define('pico/obj',function(){
         },
         // insert([{key2:2}, {key3:3}, {key1:3}], {key4:4,key5:5}) = [{key2:2,key4:4,key5:5},{key3:3,key4:4,key5:5},{key1:3,key4:4,key5:5}]
         insert: function(arr, obj){
-            var m = module.exports.merge
+            var m = this.merge
             for(var i=0,a; a=arr[i]; i++){
                 a = m(a, obj)
             }
