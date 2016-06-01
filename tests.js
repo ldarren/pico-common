@@ -92,6 +92,29 @@ ensure('ensure obj1 merges with obj2. output should contain key1 and key2', func
 	cb(null, obj.extend(obj1, obj2))
 })
 
+ensure('compare extend to assign performance', function(cb){
+	var
+	obj1 = {k1:1,k2:2,k3:3},
+	obj2 = {v1:1,v2:2,v3:3},
+    t=Date.now(),
+    t1,t2
+
+    for(var i=0; i<10000; i++){
+        obj.extend(obj1,obj2)
+    }
+    t1=Date.now()-t
+
+	obj1 = {k1:1,k2:2,k3:3}
+    t=Date.now()
+
+    for(var i=0; i<10000; i++){
+        Object.assign(obj1,obj2)
+    }
+    t2=Date.now()-t
+
+	cb(null, [t1,t2])
+})
+
 ensure('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
 	var
 	obj1 = {key1:1},
