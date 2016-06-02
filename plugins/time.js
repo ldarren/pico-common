@@ -114,7 +114,7 @@ define('pico/time',function(){
     return {
         deltaToNext: function(day, hr, min, sec, msec){
             var 
-            d = new Date(),
+            d = new Date,
             remain = (d.getTime() % HR) - ((min||0)*MIN + (sec||0)*SEC + (msec||0)),
             deltaHr = (hr||0) + (24*day) - d.getHours()
 
@@ -144,7 +144,7 @@ define('pico/time',function(){
         },
         nearest:function(mins, hrs, doms, mons, dows, yrs){
             var
-            now=new Date(),
+            now=new Date,
             yr=nearest(now.getFullYear(), yrs, 0),
             mon=nearest(now.getMonth()+1, mons, 12)-1
 
@@ -164,7 +164,7 @@ define('pico/time',function(){
 		// ./configure --with-intl=small-icu --download=all
 		day: function(date, locale){
 			var
-			now=new Date(),
+			now=new Date,
 			mid=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12,0,0),
 			diff=mid-date,
 			DAY15=DAY*1.5
