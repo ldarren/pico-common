@@ -6,8 +6,8 @@ define('pico/test',function(){
     return {
         ensure: function(msg, task){
             task(function(err, result){
-                if (err) return console.error(msg+':'+str.tab(msg,100,'-')+err)
-                console.log(msg+':'+str.tab(msg,100,'.')+format(result,{colors:true}))
+                if (err) return console.error(msg+':'+str.pad(msg,100,'-')+err)
+                console.log(msg+':'+str.pad(msg,100,'.')+format(result,{colors:true}))
             })
         }
     }

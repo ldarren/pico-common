@@ -23,12 +23,8 @@ define('pico/str', function(){
         rand: function(){
             return Random().toString(36).substr(2)
         },
-        tab: function(col1, spaces, c){
-            var ret='', l=spaces-col1.length
-            if (!l || l<1) return ret
-            c=c||' '
-            for(var i=0; i<l; i++) ret+=c
-            return ret
+        pad:function(val,n,str){
+            return Array(n-String(val).length+1).join(str||'0')+val;
         },
         log: function(){
             var
