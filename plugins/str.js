@@ -24,7 +24,7 @@ define('pico/str', function(){
             return Random().toString(36).substr(2)
         },
         pad:function(val,n,str){
-            return Array(n-String(val).length+1).join(str||'0')+val;
+            return Array(n-String(val).length+1).join(str||'0')
         },
         log: function(){
             var

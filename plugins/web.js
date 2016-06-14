@@ -1,5 +1,6 @@
 define('pico/web',function(exports,require,module,define,inherit,pico){
     var
+    PJSON=require('pico/json'),
     Abs = Math.abs,Floor=Math.floor,Random=Math.random,
     API_ACK = 'ack',
     PT_HEAD = 1,
@@ -115,14 +116,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
                             return 
                         }
                     }
-                    if (head.len)
-                        head.data = JSON.parse(body[0], function(k, v){
-                            switch(k[0]){
-                            case '$': return JSON.parse(body[v])
-                            case '_': return body[v]
-                            default: return v
-                            }
-                        })
+                    if (head.len) head.data = PJSON.parse(body,true) 
                     net.inbox.push(head)
                     net.head = null
                 }
@@ -297,17 +291,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
                 this.callbacks[reqId] = cb
             }
 
-            var dataList=[]
-
-            if (data){
-                dataList.unshift(JSON.stringify(data, function(k, v){
-                    switch(k[0]){
-                    case '$': return dataList.push(JSON.stringify(v))
-                    case '_': return dataList.push(v)
-                    default: return v
-                    }
-                }))
-            }
+            var dataList=data?PJSON.stringify(data,true):[]
 
             if (dataList.length && this.secretKey){
                 var
