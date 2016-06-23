@@ -184,16 +184,16 @@ ensure('ensure codec encode string "{"data":123}" and decode to the same', funct
 	key = parseInt('100007900715391')
 	cb(null, str.codec(key, str.codec(key, data)))
 })
-
 ensure('ensure hash password "password123" to 32bit int', function(cb){
 	cb(null, str.hash('password123'))
 })
-
+ensure('ensure left pad 8 for a number', function(cb){
+	cb(null, str.pad(19,8))
+})
 ensure('ensure str.log works', function(cb){
 	str.log('str.log test')
 	cb(null, true)
 })
-
 ensure('ensure str.error works', function(cb){
 	str.error('str.error test')
 	cb(null, true)
