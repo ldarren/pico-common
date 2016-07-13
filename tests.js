@@ -76,6 +76,25 @@ ensure('ensure pico.parse define text to module', function(cb){
 	})
 })
 
+ensure('ensure pico.reload does js hot-loading', function(cb){
+	pico.reload('testMod345', "return {value:789}", function(err){
+		if (err) return cb(err)
+		var testMod345=pico.export('testMod345')
+		cb(null, 789===testMod345.value)
+	})
+})
+
+ensure('ensure pico.reload does text hot-loading', function(cb){
+	var
+	testMod=pico.define('testMod.txt','Hello there'),
+	newText='Hello yourself'
+	pico.reload('testMod.txt', newText, function(err){
+		if (err) return cb(err)
+		testMod=pico.export('testMod.txt')
+		cb(null, newText===testMod)
+	})
+})
+
 ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
 	var
 	obj1 = {key1:1},
