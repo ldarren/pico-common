@@ -11,24 +11,23 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
     appendObj = function(obj, name, value){ obj[name] = value },
     timeSync = function(net, cb){
         cb = cb || stdCB
-        ajax('get', net.url, null, null, function(err, readyState, responseText){
+        ajax('get', net.url, null, null, function(err, readyState, response){
             if (4 !== readyState) return
             if (err) return cb(err)
-            var st = parseInt(responseText)
+            var st = parseInt(response)
             if (isNaN(st)) return cb('invalid timesync response')
             net.serverTime = st
             net.serverTimeAtClient = Date.now()
-            net.beatId = setInterval(onBeat, net.beatRate, net)
             cb()
         })
     },
-    onResponse = function(err, readyState, responseText, net){
+    onResponse = function(err, readyState, response, net){
         if (err) {
             // network or auth error, return error to callbacks
             if (4 !== readyState) return
             var reqId, cb
-            if (responseText){
-                try{ reqId=JSON.parse(responseText).reqId }
+            if (response){
+                try{ reqId=JSON.parse(response).reqId }
                 catch(exp){ return console.error(exp) }
                 cb=net.callbacks[reqId]
                 if (cb){
@@ -59,10 +58,10 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         case 2: // send() and header received
             net.head = null
             net.currPT = PT_HEAD
+			net.resEndPos = 0
             break
         case 3: break // body loading 
         case 4: // body received
-            if (!net.beatId) net.beatId = setInterval(onBeat, net.beatRate, net)
             break
         }
 
@@ -75,17 +74,17 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 
         try{
             while(true){
-                endPos = responseText.indexOf(sep, startPos)
+                endPos = response.indexOf(sep, startPos)
                 if (-1 === endPos) break
 
                 switch(net.currPT){
                 case PT_HEAD:
-                    net.head = JSON.parse(responseText.substring(startPos, endPos))
+                    net.head = JSON.parse(response.substring(startPos, endPos))
                     body.length = 0
                     net.currPT = PT_BODY
                     break
                 case PT_BODY:
-                    body.push(responseText.substring(startPos, endPos))
+                    body.push(response.substring(startPos, endPos))
                     break
                 }
                 head = net.head
@@ -129,41 +128,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         }
         net.resEndPos = startPos
     },
-    onBeat = function(net){
-        if (net.inbox.length){
-            var
-            inbox = net.inbox,
-            callbacks = net.callbacks,
-            reqId, cb
-
-            for(var res; res=inbox.pop();){
-                reqId = res.reqId
-                cb = callbacks[reqId]
-                if (cb){
-                    delete callbacks[reqId]
-                    cb(res.error, res.data)
-                }
-            }
-        }
-
-        // post update tasks, buffer data in memory network if offline
-        if (isOnline && (net.uploads.length || net.outbox.length || net.acks.length)){
-
-            net.resEndPos = 0
-
-            if (net.uploads.length){
-                ajax('post', net.url, net.uploads.shift(), null, onResponse, net)
-            }else{
-                var reqs = net.reqs = net.acks.concat(net.outbox)
-                net.acks.length = net.outbox.length = 0
-
-                ajax('post', net.url, reqs.join(net.delimiter)+net.delimiter, null, onResponse, net)
-            }
-            clearInterval(net.beatId)
-            net.beatId = 0
-            return
-        }
-    },
     formation = function(form, addon, dst, prefix){
         prefix = prefix || ''
 
@@ -192,7 +156,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         net.secretKey = cfg.secretKey || net.secretKey
         net.cullAge = cfg.cullAge || net.cullAge || 0
         net.delimiter = cfg.delimiter ? JSON.stringify(cfg.delimiter) : net.delimiter || JSON.stringify(['&'])
-        net.beatRate = !cfg.beatRate || cfg.beatRate < 100 ? net.beatRate || 5000 : cfg.beatRate
     },
     netReset = function(net){
         net.resEndPos = net.outbox.length = net.acks.length = 0
@@ -216,10 +179,40 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         this.currPT = PT_HEAD,
         this.serverTime = 0
         this.serverTimeAtClient = 0
-        this.beatId = 0
     }
 
     Net.prototype = {
+		beat: function(){
+			if (this.inbox.length){
+				var
+				inbox = this.inbox,
+				callbacks = this.callbacks,
+				reqId, cb
+
+				for(var res; res=inbox.pop();){
+					reqId = res.reqId
+					cb = callbacks[reqId]
+					if (cb){
+						delete callbacks[reqId]
+						cb(res.error, res.data)
+					}
+				}
+			}
+
+			// post update tasks, buffer data in memory network if offline
+			if (isOnline && (this.uploads.length || this.outbox.length || this.acks.length)){
+				var uploads=this.uploads,outbox=this.outbox,acks=this.acks
+
+				if (uploads.length){
+					ajax('post', this.url, uploads.shift(), null, onResponse, this)
+				}else{
+					var reqs = this.reqs = acks.concat(outbox)
+					acks.length = outbox.length = 0
+
+					ajax('post', this.url, reqs.join(this.delimiter)+this.delimiter, null, onResponse, this)
+				}
+			}
+		},
         reconnect: function(cfg, cb){
             netConfig(this, cfg)
             netReset(this)
@@ -243,7 +236,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             fd.append('reqId', reqId)
 
             this.uploads.push(fd)
-            if (!this.beatId) this.beatId = setInterval(onBeat, this.beatRate, this)
         },
         // data: optional, usually api specific data
         // addon: optional, usually common data for every api
@@ -318,8 +310,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
                 }))
             }
             queue.push(dataList.join(this.delimiter))
-
-            if (!this.beatId) this.beatId = setInterval(onBeat, this.beatRate, this)
         },
         getServerTime: function(){
             return this.serverTime + (Date.now() - this.serverTimeAtClient)

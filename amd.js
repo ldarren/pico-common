@@ -5,7 +5,7 @@ dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB
 htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
 esc=function(m){return htmlescape[m]},
 modules={},
-updates=[],
+updates={},
 EXT_JS='.js',EXT_JSON='.json',
 DEF="pico.define('URL','FUNC')\n",
 MOD_PREFIX='"use strict";\n',
@@ -111,8 +111,8 @@ define=function(url, func, base, mute){
 
         if (base)m.__proto__=base
 
-        if(evt.load)evt.load()
-        if ('function'===typeof evt.update)updates.push(evt.update)
+        if(evt.load)evt.load(m)
+        if ('function'===typeof evt.update)updates[url]=[evt.update,m]
 
         if (!url) return m
 
@@ -151,8 +151,8 @@ js=function(url,txt,cb){
 },
 tick=function(timestamp){
 	schedule(tick)
-	for(var i=0,f; f=updates[i]; i++){
-		f(timestamp)
+	for(var i=0,keys=Object.keys(updates),f; f=updates[keys[i]]; i++){
+		f[0](f[1],timestamp)
 	}
 }
 
