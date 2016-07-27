@@ -7,8 +7,6 @@ lib-cov
 *.pid
 *.gz
 output.js
-pico.*
-*.min.*
 
 pids
 logs

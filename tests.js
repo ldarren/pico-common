@@ -77,16 +77,16 @@ ensure('ensure pico.parse define text to module', function(cb){
 })
 
 ensure('ensure pico.reload does js hot-loading', function(cb){
-	pico.reload('testMod345', "return {value:789}", function(err){
-		if (err) return cb(err)
-		var testMod345=pico.export('testMod345')
-		cb(null, 789===testMod345.value)
-	})
+	pico.parse('ScriptA','return {a:function(){return "hello world"}}')
+	
+	pico.reload('ScriptA','return {a:function(){return "hot reload"}}')
+	var scriptA=pico.export('ScriptA')
+	cb(null,'hot reload'===scriptA.a())
 })
 
 ensure('ensure pico.reload does text hot-loading', function(cb){
 	var
-	testMod=pico.define('testMod.txt','Hello there'),
+	testMod=pico.parse('testMod.txt','Hello there'),
 	newText='Hello yourself'
 	pico.reload('testMod.txt', newText, function(err){
 		if (err) return cb(err)
