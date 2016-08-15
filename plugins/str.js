@@ -80,6 +80,7 @@ define('pico/str', function(){
 		// precedence | / * $ %
 		compileRest:function(list, output){
 			output=output||[]
+			list=list.charAt?[list]:list
 			for(var i=0,route; route=list[i]; i++){
 				if (-1 === route.search('[|*$%]')) continue
 				compileRestOptional(route.split('|'),[route],function(err,codes){
