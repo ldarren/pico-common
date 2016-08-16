@@ -78,16 +78,13 @@ define('pico/str', function(){
             return Array(n-String(val).length+1).join(str||'0')
 		},
 		// precedence | / * $ %
-		compileRest:function(list, output){
+		compileRest:function(rest, output){
 			output=output||[]
-			list=list.charAt?[list]:list
-			for(var i=0,route; route=list[i]; i++){
-				if (-1 === route.search('[|*$%]')) continue
-				compileRestOptional(route.split('|'),[route],function(err,codes){
-					if (err) throw err
-					output.push(codes)
-				})
-			}
+			if (-1 === rest.search('[|*$%]')) return output
+			compileRestOptional(rest.split('|'),[rest],function(err,codes){
+				if (err) throw err
+				output.push(codes)
+			})
 			return output
 		},
 		execRest:function(api,build,params){

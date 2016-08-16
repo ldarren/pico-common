@@ -217,34 +217,34 @@ ensure('ensure str.error works', function(cb){
 	str.error('str.error test')
 	cb(null, true)
 })
-ensure('ensure restful params parsing worked, route:url/v%version/pushPackage/$pushId',function(cb){
+ensure('ensure restful params parser, route:url/v%version/pushPackage/$pushId',function(cb){
 	var
-	routes=['url/v%version/pushPackage/$pushId'],
-	build=str.compileRest(routes),
+	route='url/v%version/pushPackage/$pushId',
+	build=str.compileRest(route),
 	params={},
-	route=str.execRest('url/v1/pushPackage/web.com.domain.app',build,params)
-	cb(null, route===routes[0] && 1===params.version && 'web.com.domain.app'===params.pushId)
+	api=str.execRest('url/v1/pushPackage/web.com.domain.app',build,params)
+	cb(null, api===route && 1===params.version && 'web.com.domain.app'===params.pushId)
 })
-ensure('ensure restful wildcard parsing worked, route:url/v%version/path/*path',function(cb){
+ensure('ensure restful wildcard parser, route:url/v%version/path/*path',function(cb){
 	var
-	routes=['url/v%version/path/*path'],
-	build=str.compileRest(routes),
+	route='url/v%version/path/*path',
+	build=str.compileRest(route),
 	params={},
-	route=str.execRest('url/v1/path/web/com/domain/app',build,params)
-	cb(null, route===routes[0] && 1===params.version && 'web/com/domain/app'===params.path)
+	api=str.execRest('url/v1/path/web/com/domain/app',build,params)
+	cb(null, api===route && 1===params.version && 'web/com/domain/app'===params.path)
 })
-ensure('ensure restful optional parsing worked, route:url/v%version|device/$deviceToken|path/*path',function(cb){
+ensure('ensure restful optional parser, route:url/v%version|device/$deviceToken|path/*path',function(cb){
 	var
-	routes=['url/v%version|device/$deviceToken|path/*path'],
-	build=str.compileRest(routes),
+	route='url/v%version|device/$deviceToken|path/*path',
+	build=str.compileRest(route),
 	params={},
-	route=str.execRest('url/v1/device/ab45/path/web/com/domain/app',build,params)
-	if(route!==routes[0] || 1!==params.version || 'ab45'!==params.deviceToken || 'web/com/domain/app'!==params.path) return cb(null, false)
+	api=str.execRest('url/v1/device/ab45/path/web/com/domain/app',build,params)
+	if(api!==route || 1!==params.version || 'ab45'!==params.deviceToken || 'web/com/domain/app'!==params.path) return cb(null, false)
 	params={}
-	route=str.execRest('url/v1/device/ab45',build,params)
-	if(route!==routes[0] || 1!==params.version || 'ab45'!==params.deviceToken) return cb(null, false)
+	api=str.execRest('url/v1/device/ab45',build,params)
+	if(api!==route || 1!==params.version || 'ab45'!==params.deviceToken) return cb(null, false)
 	params={}
-	route=str.execRest('url/v1',build,params)
-	if(route!==routes[0] || 1!==params.version) return cb(null, false)
+	api=str.execRest('url/v1',build,params)
+	if(api!==route || 1!==params.version) return cb(null, false)
 	cb(null, true)
 })
