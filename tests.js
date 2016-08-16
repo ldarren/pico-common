@@ -217,7 +217,7 @@ ensure('ensure str.error works', function(cb){
 	str.error('str.error test')
 	cb(null, true)
 })
-ensure('ensure restful params parser: url/v%version/pushPackage/:pushId',function(cb){
+ensure('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
 	var
 	route='url/v%version/pushPackage/:pushId',
 	build=str.compileRest(route),
@@ -225,13 +225,25 @@ ensure('ensure restful params parser: url/v%version/pushPackage/:pushId',functio
 	api=str.execRest('url/v1/pushPackage/web.com.domain.app',build,params)
 	cb(null, api===route && 1===params.version && 'web.com.domain.app'===params.pushId)
 })
-ensure('ensure restful wildcard parser: url/v%version/path/#path',function(cb){
+ensure('ensure restful wildcard parser supported: url/ver%version/path/#path',function(cb){
 	var
-	route='url/v%version/path/#path',
+	route='url/ver%version/path/#path',
 	build=str.compileRest(route),
 	params={},
-	api=str.execRest('url/v1/path/web/com/domain/app',build,params)
+	api=str.execRest('url/ver1/path/web/com/domain/app',build,params)
+
 	cb(null, api===route && 1===params.version && 'web/com/domain/app'===params.path)
+})
+ensure('ensure restful multiple build supported: /:appName|#appPath',function(cb){
+	var
+	route='/:appName|#appPath',
+	build=str.compileRest('ERR|*msg'),
+	params={}
+
+	str.compileRest(route, build)
+
+	var api=str.execRest('/msair',build,params)
+	cb(null, api===route && 'msair'===params.appName)
 })
 ensure('ensure restful optional parser: url/v%version|device/:deviceToken|path/#path',function(cb){
 	var

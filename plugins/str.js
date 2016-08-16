@@ -33,12 +33,12 @@ define('pico/str', function(){
 			compileRestOptional(optionals,output,cb)
 		})
 	},
-	parseRestCode=function(code,unit,units,params){
+	parseRestCode=function(code,unit,units,i,params){
 		switch(code[0]){
 		default: return code===unit
 		case '%': params[code.substr(1)]=parseFloat(unit); break
 		case ':': params[code.substr(1)]=unit; break
-		case '#': params[code.substr(1)]=unit+'/'+units.join('/'); break
+		case '#': params[code.substr(1)]=units.slice(i).join('/'); break
 		}
 		return true
 	},
@@ -46,14 +46,15 @@ define('pico/str', function(){
 		if (units.length < codes.length) return false
 		for(var i=0,u,c,l=codes.length; i<l; i++){
 			c=codes[i]
-			u=units.shift()
+			u=units[i]
 			if (Array.isArray(c)){
 				if (0!==u.indexOf(c[0])) return false
-				if (!parseRestCode(c[1],u.substr(1),units,params)) return false
+				if (!parseRestCode(c[1],u.substr(c[0].length),units,i,params)) return false
 			}else{
-				if (!parseRestCode(c,u,units,params)) return false
+				if (!parseRestCode(c,u,units,i,params)) return false
 			}
 		}
+		units.splice(0,l)
 		return true
 	}
 
