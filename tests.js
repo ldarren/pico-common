@@ -217,25 +217,25 @@ ensure('ensure str.error works', function(cb){
 	str.error('str.error test')
 	cb(null, true)
 })
-ensure('ensure restful params parser, route:url/v%version/pushPackage/$pushId',function(cb){
+ensure('ensure restful params parser: url/v%version/pushPackage/:pushId',function(cb){
 	var
-	route='url/v%version/pushPackage/$pushId',
+	route='url/v%version/pushPackage/:pushId',
 	build=str.compileRest(route),
 	params={},
 	api=str.execRest('url/v1/pushPackage/web.com.domain.app',build,params)
 	cb(null, api===route && 1===params.version && 'web.com.domain.app'===params.pushId)
 })
-ensure('ensure restful wildcard parser, route:url/v%version/path/*path',function(cb){
+ensure('ensure restful wildcard parser, route:url/v%version/path/#path',function(cb){
 	var
-	route='url/v%version/path/*path',
+	route='url/v%version/path/#path',
 	build=str.compileRest(route),
 	params={},
 	api=str.execRest('url/v1/path/web/com/domain/app',build,params)
 	cb(null, api===route && 1===params.version && 'web/com/domain/app'===params.path)
 })
-ensure('ensure restful optional parser, route:url/v%version|device/$deviceToken|path/*path',function(cb){
+ensure('ensure restful optional parser, route:url/v%version|device/:deviceToken|path/#path',function(cb){
 	var
-	route='url/v%version|device/$deviceToken|path/*path',
+	route='url/v%version|device/:deviceToken|path/#path',
 	build=str.compileRest(route),
 	params={},
 	api=str.execRest('url/v1/device/ab45/path/web/com/domain/app',build,params)

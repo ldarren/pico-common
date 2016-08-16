@@ -475,7 +475,7 @@ define('pico/str', function(){
             '@'+r.getFileName() + ':' + r.getLineNumber() + ':' + r.getColumnNumber()+']'
     },
 	compileRestUnit=function(unit){
-		var idx=unit.search('[*$%]')
+		var idx=unit.search('[#:%]')
 		switch(idx){
 		case -1:
 		case 0: return unit
@@ -504,12 +504,13 @@ define('pico/str', function(){
 		switch(code[0]){
 		default: return code===unit
 		case '%': params[code.substr(1)]=parseFloat(unit); break
-		case '$': params[code.substr(1)]=unit; break
-		case '*': params[code.substr(1)]=unit+'/'+units.join('/'); break
+		case ':': params[code.substr(1)]=unit; break
+		case '#': params[code.substr(1)]=unit+'/'+units.join('/'); break
 		}
 		return true
 	},
 	matchRestCode=function(units,codes,params){
+		if (units.length < codes.length) return false
 		for(var i=0,u,c; c=codes[i]; i++){
 			u=units.shift()
 			if (Array.isArray(c)){
@@ -544,10 +545,10 @@ define('pico/str', function(){
 		tab:function(val,n,str){
             return Array(n-String(val).length+1).join(str||'0')
 		},
-		// precedence | / * $ %
+		// precedence | / # : %
 		compileRest:function(rest, output){
 			output=output||[]
-			if (-1 === rest.search('[|*$%]')) return output
+			if (-1 === rest.search('[|#:%]')) return output
 			compileRestOptional(rest.split('|'),[rest],function(err,codes){
 				if (err) throw err
 				output.push(codes)
