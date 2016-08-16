@@ -225,7 +225,7 @@ ensure('ensure restful params parser: url/v%version/pushPackage/:pushId',functio
 	api=str.execRest('url/v1/pushPackage/web.com.domain.app',build,params)
 	cb(null, api===route && 1===params.version && 'web.com.domain.app'===params.pushId)
 })
-ensure('ensure restful wildcard parser, route:url/v%version/path/#path',function(cb){
+ensure('ensure restful wildcard parser: url/v%version/path/#path',function(cb){
 	var
 	route='url/v%version/path/#path',
 	build=str.compileRest(route),
@@ -233,7 +233,7 @@ ensure('ensure restful wildcard parser, route:url/v%version/path/#path',function
 	api=str.execRest('url/v1/path/web/com/domain/app',build,params)
 	cb(null, api===route && 1===params.version && 'web/com/domain/app'===params.path)
 })
-ensure('ensure restful optional parser, route:url/v%version|device/:deviceToken|path/#path',function(cb){
+ensure('ensure restful optional parser: url/v%version|device/:deviceToken|path/#path',function(cb){
 	var
 	route='url/v%version|device/:deviceToken|path/#path',
 	build=str.compileRest(route),
@@ -247,4 +247,12 @@ ensure('ensure restful optional parser, route:url/v%version|device/:deviceToken|
 	api=str.execRest('url/v1',build,params)
 	if(api!==route || 1!==params.version) return cb(null, false)
 	cb(null, true)
+})
+ensure('ensure restful optional parser2: /:appName|#appPath',function(cb){
+	var
+	route='/:appName|#appPath',
+	build=str.compileRest(route),
+	params={},
+	api=str.execRest('/msair',build,params)
+	cb(null, api===route && 'msair'===params.appName)
 })

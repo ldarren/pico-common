@@ -511,7 +511,8 @@ define('pico/str', function(){
 	},
 	matchRestCode=function(units,codes,params){
 		if (units.length < codes.length) return false
-		for(var i=0,u,c; c=codes[i]; i++){
+		for(var i=0,u,c,l=codes.length; i<l; i++){
+			c=codes[i]
 			u=units.shift()
 			if (Array.isArray(c)){
 				if (0!==u.indexOf(c[0])) return false
