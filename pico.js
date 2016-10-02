@@ -116,7 +116,6 @@ define=function(url, func, base, mute){
 
         if (!url) return m
 
-
         var o=modules[url]
 
         if(o){
@@ -927,8 +926,9 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         }
         net.resEndPos = startPos
     },
-    formation = function(form, addon, dst, prefix){
-        prefix = prefix || ''
+    formation = function(dst, form, cred, prefix_form, prefix_cred){
+        prefix_form = prefix_form || ''
+        prefix_cred = prefix_cred || ''
 
         var
         append = dst instanceof FormData ? appendFD : appendObj,
@@ -939,12 +939,12 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             if (!field.hasAttribute('name')) continue
             fieldType = field.hasAttribute('type') ? field.getAttribute('type').toUpperCase() : 'TEXT'
             if (fieldType === 'FILE') {
-                for (f = 0, fl=field.files.length; f<fl; append(dst, prefix+field.name, field.files[f++]));
+                for (f = 0, fl=field.files.length; f<fl; append(dst, prefix_form+field.name, field.files[f++]));
             } else if ((fieldType !== 'RADIO' && fieldType !== 'CHECKBOX') || field.checked) {
-                append(dst, prefix+field.name, field.value)
+                append(dst, prefix_form+field.name, field.value)
             }//TODO: implement checkbox and radio
         }
-        for (var k in addon) { append(dst, prefix+k, addon[k]) }
+        if (cred) for (var k in cred) { append(dst, prefix_cred+k, cred[k]) }
 
         uri = uri.substring(0, uri.lastIndexOf('/')+1)
 
@@ -1019,7 +1019,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
                 cb(err, this)
             })
         },
-        submit: function(form, addon, cb){
+        submit: function(form, cred, cb){
             if ('undefined'===typeof window || !form || !(form instanceof HTMLFormElement)) return console.error('No HTMLFormElement submitted')
 
             var reqId = 0
@@ -1031,26 +1031,26 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 
             var fd = new FormData()
 
-            fd.append('api', formation(form, addon, fd, 'data/'))
+            fd.append('api', formation(fd, form, cred, 'data/', 'cred/'))
             fd.append('reqId', reqId)
 
             this.uploads.push(fd)
         },
         // data: optional, usually api specific data
-        // addon: optional, usually common data for every api
+        // cred: optional, usually common data for every api such as credential or session info
         // cb: optional, without cb, reqId will be 0
-        request: function(api, data, addon, cb){
+        request: function(api, data, cred, cb){
             switch(arguments.length){
             case 2:
                 if (data instanceof Function){
                     cb = data
-                    data = addon = undefined
+                    data = cred = undefined
                 }
                 break
             case 3:
-                if (addon instanceof Function){
-                    cb = addon 
-                    addon = undefined
+                if (cred instanceof Function){
+                    cb = cred 
+                    cred = undefined
                 }
                 break
             case 4: break
@@ -1058,10 +1058,8 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             }
             if ('undefined'!==typeof window && data instanceof HTMLFormElement){
                 var obj = {}
-                api = formation(data, addon, obj)
+                api = formation(obj, data)
                 data = obj
-            }else if(addon){
-                for (var k in addon) { data[k] = addon[k] }
             }
             if (!api) return console.error('Missing api,  data['+JSON.stringify(data)+']')
 
@@ -1083,6 +1081,8 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             }
 
             var dataList=data?PJSON.stringify(data,true):[]
+
+			dataList.unshift(JSON.stringify(cred))
 
             if (dataList.length && this.secretKey){
                 var
