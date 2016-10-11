@@ -40,7 +40,6 @@ loader=function(url,cb){
     if (modules[url])return cb(null, modules[url])
 
     var
-    ext=getExt(url),
     symbolIdx=url.indexOf('/'),
     path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)]
 
@@ -58,13 +57,10 @@ loader=function(url,cb){
             cb(null, m)
         })
     }else{
-        ajax('get',path+fname+(ext?'':EXT_JS),null,null,function(err,state,txt){
+        ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,null,function(err,state,txt){
             if (err) return cb(err)
             if (4!==state) return
-            switch(ext || EXT_JS){
-            case EXT_JS: return js(url,txt,cb)
-            default: return cb(null, define(url,txt))
-            }
+			js(url,txt,cb)
         })
     }
 },
@@ -74,7 +70,7 @@ placeHolder=function(){
 getMod=function(url,cb){
     var mod=modules[url]
     if(mod){
-        setTimeout(cb||dummyCB, 0, null, mod) // make sure consistent async behaviour
+        if (cb)setTimeout(cb, 0, null, mod) // make sure consistent async behaviour
         return mod
     }
     if (cb) return loader(url,cb)
@@ -133,7 +129,8 @@ define=function(url, func, base, mute){
 // js file executer
 js=function(url,txt,cb){
     cb=cb||dummyCB
-    if (modules[url])return cb(null, modules[url])
+    if(modules[url]) return cb(null, modules[url])
+	if(EXT_JS !== (getExt(url)||EXT_JS)) return cb(null, define(url,txt))
 
     var
     deps=[],
@@ -235,18 +232,18 @@ var pico=module[exports]={
     reload:function(url, script, cb){
         if ('function'===typeof script) cb=script
         cb=cb||dummyCB
-        var o=modules[url]
-        delete modules[url]
-        if (EXT_JS !== (getExt(url)||EXT_JS)) return cb(null, o)
-        var reattach=function(err, m){
+        var
+		o=modules[url],
+        reattach=function(err, m){
             if (err) return cb(err)
-            if (!o) return cb(null, m)
+            if (!o || 'function'!==typeof o) return cb(null, m)
             o.prototype=m.prototype
             o.__proto__=m
             return cb(null, modules[url]=o)
         }
-        if ('string'=== typeof script) js(url, script, reattach)
-        else loader(url, reattach)
+        delete modules[url]
+        if (cb===script) loader(url, reattach)
+		else js(url, script, reattach)
     },
     parse:js,
     define:define,

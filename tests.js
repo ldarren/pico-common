@@ -77,21 +77,26 @@ ensure('ensure pico.parse define text to module', function(cb){
 })
 
 ensure('ensure pico.reload does js hot-loading', function(cb){
-	pico.parse('ScriptA','return {a:function(){return "hello world"}}')
-	
-	pico.reload('ScriptA','return {a:function(){return "hot reload"}}')
-	var scriptA=pico.export('ScriptA')
-	cb(null,'hot reload'===scriptA.a())
+	pico.parse('ScriptA','return {a:function(){return "hello world"}}',function(err,mod){
+		if (err) return console.error(err)
+		pico.reload('ScriptA','return {a:function(){return "hot reload"}}',function(err){
+			if (err) return console.error(err)
+			var scriptA=pico.export('ScriptA')
+			cb(null,'hot reload'===scriptA.a())
+		})
+	})
 })
 
 ensure('ensure pico.reload does text hot-loading', function(cb){
 	var
-	testMod=pico.parse('testMod.txt','Hello there'),
+	name='testMod.txt',
 	newText='Hello yourself'
-	pico.reload('testMod.txt', newText, function(err){
-		if (err) return cb(err)
-		testMod=pico.export('testMod.txt')
-		cb(null, newText===testMod)
+	pico.parse(name,'Hello there',function(err,mod){
+		if (err) return console.error(err)
+		pico.reload(name, newText, function(err, mod){
+			if (err) return cb(err)
+			cb(null, newText===pico.export(name))
+		})
 	})
 })
 
@@ -191,7 +196,7 @@ ensure('ensure get nearest cron(MIN HR DOM MON DOW YR) correctly', function(cb){
 	cb(null, (new Date(time.nearest(...time.parse(cron)))).toUTCString())
 })
 ensure('ensure weeknum of 1/Mar/2016 is 9', function(cb){
-	cb(null, (time.weeknum(new Date(2016,0,1,0,0,0))))
+	cb(null, (time.weeknum(new Date(2016,2,1,0,0,0))))
 })
 ensure('ensure yesterday is yesterday', function(cb){
 	cb(null, (time.day(new Date(time.timeOfNext(-1)))))
