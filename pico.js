@@ -389,6 +389,15 @@ define('pico/obj',function(){
             }
             return arr
         },
+        // replaceKey([{k:1, v:5},{k:2, v:6}], 'k', 'key') = [{key:1, v:5},{key:2, v:6}]
+        replaceKey: function(arr, K, key){
+            for(var i=0,a; a=arr[i]; i++){
+				if (!a[K]) continue
+                a[key] = a[K]
+				delete a[K]
+            }
+            return arr
+        },
         // group([{k:1, v:5},{k:1, v:6}], 'k', {1:'key1', 2:'key2'}) = {key1:[{k:1,v:5},{k:1,v:6}]}
         group: function(arr, K, keys){
             var output = {}
@@ -409,18 +418,9 @@ define('pico/obj',function(){
             }
             return output
         },
-        // merge({key1:1, key2:2}, {key3:3, key4:4}) = {key1:1,key2:2,key3:3,key4:4}
-        merge: function(obj1, obj2){
-            if (!obj1) return obj2
-            if (!obj2) return obj1
-            for(var i=0,keys = Object.keys(obj2),k; k=keys[i]; i++){
-                obj1[k] = obj2[k]
-            }
-            return obj1
-        },
         // mergeByKey({key1:1, key2:2}, {key1:2, key3:3}, {key1:1, key3:4}, 'key1') = [{key1:1,key2:2,key3:4},{key1:2,key3:3}]
         mergeByKey: function(arr1, arr2, KEY){
-            var m=this.merge,k, obj={}, arr=[]
+            var m=Object.assign,k, obj={}, arr=[]
             if (arr1){
                 for(var i=0,a1; a1=arr1[i]; i++){
                     k = a1[KEY]
@@ -453,7 +453,7 @@ define('pico/obj',function(){
         },
         // insert([{key2:2}, {key3:3}, {key1:3}], {key4:4,key5:5}) = [{key2:2,key4:4,key5:5},{key3:3,key4:4,key5:5},{key1:3,key4:4,key5:5}]
         insert: function(arr, obj){
-            var m = this.merge
+            var m = Object.assign
             for(var i=0,a; a=arr[i]; i++){
                 a = m(a, obj)
             }
