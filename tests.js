@@ -1,4 +1,4 @@
-var
+const
 pico=require('./pico'),
 web= pico.export('pico/web'),
 obj= pico.export('pico/obj'),
@@ -32,9 +32,8 @@ _=pico.define('underscore',function(exports,require,module,define,inherit,pico){
     });
   }
 }.call(this));
-})
-
-var ensure=test.ensure
+}),
+ensure=test.ensure
 
 ensure('ensure pico has loaded correctly', function(cb){
 	cb(null, obj !== undefined)

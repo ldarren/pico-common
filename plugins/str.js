@@ -78,7 +78,8 @@ define('pico/str', function(){
 			return this.tab(val,n,str)+val
         },
 		tab:function(val,n,str){
-            return Array(n-String(val).length+1).join(str||'0')
+			var c=n-String(val).length+1
+            return Array(c>0?c:0).join(str||'0')
 		},
 		// precedence | / # : %
 		compileRest:function(rest, output){
