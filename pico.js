@@ -1,7 +1,7 @@
 (function(module,exports,require){var
 dummyCB=function(){},
 dummyLoader=function(){arguments[arguments.length-1]()},
-dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},
+dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},//TODO: proxy
 htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
 esc=function(m){return htmlescape[m]},
 modules={},
@@ -12,7 +12,7 @@ MOD_PREFIX='"use strict";\n',
 MOD_POSTFIX='//# sourceURL=',
 PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)',
 // call when pico.run done
-ajax,ran,
+ajax,ran,importRule,
 paths={},
 env={},
 preprocessors={},
@@ -158,6 +158,7 @@ var pico=module[exports]={
         paths=options.paths||paths
         env=options.env||env
         preprocessors=options.preprocessors||preprocessors
+		importRule=options.importRule
 
         var pp
         for(var url in modules){
@@ -247,7 +248,10 @@ var pico=module[exports]={
     },
     parse:js,
     define:define,
-    import:require,
+    import:function(url){
+		if (Array.isArray(importRule) && -1===importRule.indexOf(url)) return
+		return require(url)
+	},
     export:getMod,
     env:function(k){ return env[k] }
 }
