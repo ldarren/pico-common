@@ -210,6 +210,16 @@ ensure('ensure codec encode string "{"data":123}" and decode to the same', funct
 ensure('ensure hash password "password123" to 32bit int', function(cb){
 	cb(null, str.hash('password123'))
 })
+ensure('ensure codec time based string', (cb)=>{
+	const
+	key='00mjvyn50022oq0000zbpt6c000014k2',
+	secret='3zuklpkl6k905e5kryoiozuxrkjhunr26vjnlaao',
+	now=Math.floor(Date.now()/(5*60*1000)),
+	hash=now+str.hash(secret),
+	token=str.codec(hash,key)
+	console.log(`hash[${hash}] token[${token}]`)
+	cb(null, str.codec(key, str.codec(hash, token)))
+})
 ensure('ensure left pad 8 for a number', function(cb){
 	cb(null, str.pad(19,8))
 })

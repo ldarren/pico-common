@@ -123,7 +123,7 @@ define('pico/time',function(){
         timeOfNext: function(day, hr, min, sec, msec){
             return (new Date(Date.now()+this.deltaToNext(day, hr, min, sec, msec))).getTime()
         },
-        // fmt: min, hr, dom, M, dow, yr
+        // fmt: min hr dom M dow yr
         parse: function(fmt){
             var atoms=fmt.split(' ')
             if (atoms.length < 6) return 0
