@@ -5,7 +5,7 @@ define('pico/str', function(){
         var r = stack[0]
         return '['+
             (r.getFunctionName() || r.getTypeName()+'.'+r.getMethodName())+
-            '@'+r.getFileName() + ':' + r.getLineNumber() + ':' + r.getColumnNumber()+']'
+            '@'+(r.isEval()?r.getEvalOrigin():r.getFileName()) + ':' + r.getLineNumber() + ':' + r.getColumnNumber()+']'
     },
 	compileRestUnit=function(unit){
 		var idx=unit.search('[#:%]')
