@@ -36,6 +36,8 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             break
         }
 
+		if (!response) return
+
         var
         startPos = net.resEndPos, endPos = -1,
         sep = net.delimiter,

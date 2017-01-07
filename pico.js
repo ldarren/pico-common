@@ -296,19 +296,22 @@ define('pico/json',function(exports,require,module,define,inherit,pico){
 define('pico/obj',function(){
     var allows = ['object','function']
     return  {
-        extend: function(to, from, options){
+        extend: function extend(to, from, options){
             var tf=allows.indexOf(typeof to)
             if (-1 === tf) return from
             var ft=allows.indexOf(typeof from)
             if (-1 === ft)return to
-            if (1===ft && ft===tf) return from
+            if (1===ft && ft===tf){
+				from.prototype=to
+				return from
+			}
             options=options||{}
-            var tidy = options.tidy, callee=arguments.callee,key, value
+            var tidy = options.tidy, key, value
             if (1===ft || undefined === from.length){ // function or object (non array)
                 for (key in from){
                     value = from[key]
                     if (undefined === value && tidy) continue
-                    to[key] = callee(to[key], value, options)
+                    to[key] = extend(to[key], value, options)
                 }
             }else{
                 if (options.mergeArr){
@@ -570,7 +573,7 @@ define('pico/str', function(){
 			}
 			return null
 		},
-        log: function(){
+        log: function callee(){
             var
             orgPrepare = Error.prepareStackTrace,
             orgCount = Error.stackTraceLimit
@@ -579,22 +582,22 @@ define('pico/str', function(){
             Error.stackTraceLimit = 1
 
             var err = new Error
-            Error.captureStackTrace(err, arguments.callee)
+            Error.captureStackTrace(err, arguments[0]||callee)
             var params = [(new Date).toISOString(), err.stack]
-            console.log.apply(console, params.concat(Array.prototype.slice.call(arguments)))
+            console.log.apply(console, params.concat(Array.prototype.slice.call(arguments,1)))
 
             Error.prepareStackTrace = orgPrepare
             Error.stackTraceLimit = orgCount
         },
-        error: function(){
+        error: function callee(){
             var orgCount = Error.stackTraceLimit
 
             Error.stackTraceLimit = 4
 
             var err = new Error
-            Error.captureStackTrace(err, arguments.callee)
+            Error.captureStackTrace(err, arguments[0]||callee)
             var params = [(new Date).toISOString()]
-            params = params.concat(Array.prototype.slice.call(arguments))
+            params = params.concat(Array.prototype.slice.call(arguments,1))
             params.push('\n')
             console.error.apply(console, params.concat(err.stack))
 
@@ -835,6 +838,8 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         case 4: // body received
             break
         }
+
+		if (!response) return
 
         var
         startPos = net.resEndPos, endPos = -1,

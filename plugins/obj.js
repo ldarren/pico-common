@@ -1,19 +1,22 @@
 define('pico/obj',function(){
     var allows = ['object','function']
     return  {
-        extend: function(to, from, options){
+        extend: function extend(to, from, options){
             var tf=allows.indexOf(typeof to)
             if (-1 === tf) return from
             var ft=allows.indexOf(typeof from)
             if (-1 === ft)return to
-            if (1===ft && ft===tf) return from
+            if (1===ft && ft===tf){
+				from.prototype=to
+				return from
+			}
             options=options||{}
-            var tidy = options.tidy, callee=arguments.callee,key, value
+            var tidy = options.tidy, key, value
             if (1===ft || undefined === from.length){ // function or object (non array)
                 for (key in from){
                     value = from[key]
                     if (undefined === value && tidy) continue
-                    to[key] = callee(to[key], value, options)
+                    to[key] = extend(to[key], value, options)
                 }
             }else{
                 if (options.mergeArr){

@@ -103,7 +103,7 @@ define('pico/str', function(){
 			}
 			return null
 		},
-        log: function(){
+        log: function callee(){
             var
             orgPrepare = Error.prepareStackTrace,
             orgCount = Error.stackTraceLimit
@@ -112,22 +112,22 @@ define('pico/str', function(){
             Error.stackTraceLimit = 1
 
             var err = new Error
-            Error.captureStackTrace(err, arguments.callee)
+            Error.captureStackTrace(err, arguments[0]||callee)
             var params = [(new Date).toISOString(), err.stack]
-            console.log.apply(console, params.concat(Array.prototype.slice.call(arguments)))
+            console.log.apply(console, params.concat(Array.prototype.slice.call(arguments,1)))
 
             Error.prepareStackTrace = orgPrepare
             Error.stackTraceLimit = orgCount
         },
-        error: function(){
+        error: function callee(){
             var orgCount = Error.stackTraceLimit
 
             Error.stackTraceLimit = 4
 
             var err = new Error
-            Error.captureStackTrace(err, arguments.callee)
+            Error.captureStackTrace(err, arguments[0]||callee)
             var params = [(new Date).toISOString()]
-            params = params.concat(Array.prototype.slice.call(arguments))
+            params = params.concat(Array.prototype.slice.call(arguments,1))
             params.push('\n')
             console.error.apply(console, params.concat(err.stack))
 

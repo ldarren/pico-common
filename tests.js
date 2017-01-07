@@ -169,6 +169,15 @@ ensure('ensure options.mergeArr off is working. output should contain[2,3] list'
 
 	cb(null, obj.extend(obj1, obj2))
 })
+ensure('ensure function extended properly', function(cb){
+	var
+	obj1 = {func:function(){return 1}},
+	obj2 = {func:function(){return arguments.callee.prototype()}},
+	obj3 = {},
+	obj4 = obj.extend(obj3,obj1,obj2)
+
+	cb(null, obj1.func()===obj4.func())
+})
 
 ensure('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', function(cb){
 	cb(null, obj.parseInts(['1','2']))
@@ -224,11 +233,11 @@ ensure('ensure left pad 8 for a number', function(cb){
 	cb(null, str.pad(19,8))
 })
 ensure('ensure str.log works', function(cb){
-	str.log('str.log test')
+	str.log(null,'str.log','test')
 	cb(null, true)
 })
 ensure('ensure str.error works', function(cb){
-	str.error('str.error test')
+	str.error(arguments.callee,'str.error','test')
 	cb(null, true)
 })
 ensure('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
