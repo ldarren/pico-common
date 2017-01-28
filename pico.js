@@ -475,7 +475,7 @@ define('pico/str', function(){
         var r = stack[0]
         return '['+
             (r.getFunctionName() || r.getTypeName()+'.'+r.getMethodName())+
-            '@'+r.getFileName() + ':' + r.getLineNumber() + ':' + r.getColumnNumber()+']'
+            '@'+(r.isEval()?r.getEvalOrigin():r.getFileName()) + ':' + r.getLineNumber() + ':' + r.getColumnNumber()+']'
     },
 	compileRestUnit=function(unit){
 		var idx=unit.search('[#:%]')
@@ -902,7 +902,8 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             // something is wrong
             console.error(exp)
         }
-        net.resEndPos = startPos
+		//readyState 2 may not arrived
+        net.resEndPos = 4===readyState?0:startPos
     },
     formation = function(dst, form, cred, prefix_form, prefix_cred){
         prefix_form = prefix_form || ''
