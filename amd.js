@@ -169,8 +169,9 @@ var pico=module[exports]={
         ;(options.onLoad||dummyLoader)(function(){
             js(options.name||null,funcBody(func.toString()),function(err,main){
                 if (err) return console.error(err)
-                if (main instanceof Function) main()
-                if(ran)ran()
+
+                if (main) main()
+                if (ran)ran()
 
 				schedule(tick)
             })
