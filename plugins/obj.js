@@ -45,9 +45,9 @@ define('pico/obj',function(){
             }
             return to
         },
-        parseInts: function(arr){
+        parseInts: function(arr, radix){
             for(var i=0,l=arr.length; i<l; i++){
-                arr[i] = parseInt(arr[i])
+                arr[i] = parseInt(arr[i], radix)
             }
             return arr
         },
