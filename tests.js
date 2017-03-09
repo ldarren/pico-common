@@ -1,5 +1,5 @@
 const
-pico=require('./pico'),
+pico=require('./pico-cli'),
 web= pico.export('pico/web'),
 obj= pico.export('pico/obj'),
 str= pico.export('pico/str'),
@@ -54,7 +54,7 @@ ensure('ensure pico preprocessors and env work', function(cb){
 		}
 	},function(){
 		var md=require('README.md')
-		this.load=function(){
+		return function(){
 			pico.env('cb')(null, md===1)
 		}
 	})
