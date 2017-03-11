@@ -1,4 +1,8 @@
 define('pico/build',function(){
+	var
+	htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
+	esc=function(m){return htmlescape[m]}
+
     return function(options){
         var
         fs=require('fs'),

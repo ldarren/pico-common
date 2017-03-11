@@ -1,9 +1,7 @@
 var
 dummyCB=function(){},
 dummyLoader=function(){arguments[arguments.length-1]()},
-dummyPico={run:dummyCB,build:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},//TODO: proxy
-htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
-esc=function(m){return htmlescape[m]},
+dummyPico={run:dummyCB,inherit:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},//TODO: proxy
 modules={},
 updates={},
 EXT_JS='.js',EXT_JSON='.json',
@@ -67,6 +65,22 @@ loader=function(url,cb){
 placeHolder=function(url){
 	return Object.defineProperty(Function(PLACE_HOLDER), 'name', { value: url })
 },
+inherit=function(child,ancestor){
+	var isFunc='function'===typeof child
+	switch(typeof ancestor){
+	case 'function':
+		var fn=isFunc ? child : function(){return ancestor.apply(this,arguments)}
+		Object.assign(fn,ancestor)
+		var fnp=fn.prototype=Object.assign(Object.create(ancestor.prototype),isFunc?child.prototype:child)
+		fnp.constructor=fn
+		var cs=child.__super__=ancestor.prototype
+		cs.constructor=ancestor
+		return fn
+	case 'object':
+		isFunc?child.prototype=ancestor:child.__proto__=ancestor
+	default: return child
+	}
+},
 getMod=function(url,cb){
     var mod=modules[url]
     if(mod){
@@ -103,9 +117,9 @@ define=function(url, func, base, mute){
         var
         module={exports:{}},
         evt={},
-        m=func.call(mute?{}:evt,module.exports,getMod,module,define,dummyCB,pico)||module.exports
+        m=func.call(mute?{}:evt,module.exports,getMod,module,define,getMod,pico)||module.exports
 
-        if (base)m.__proto__=base
+        if (base)m=inherit(m,base)
 
         if(evt.load)evt.load(m)
         if ('function'===typeof evt.update)updates[url]=[evt.update,m]

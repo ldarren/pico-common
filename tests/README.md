@@ -1,5 +1,5 @@
 ##PICO AMD Tests
-This is test folder for pico amd system. this is to test amd in browser, node.js enviroment and also compile scripts into single file
+This is a test folder for pico amd system. This amd test can be done in browser and node.js enviroment. This is also a scripts build test to combine scripts
 ###Run in browser
 point your browser to tests/index.html
 ###Run in node.js
