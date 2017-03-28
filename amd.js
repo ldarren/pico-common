@@ -37,16 +37,10 @@ linker=function(deps, cb){
 loader=function(url,cb){
     if (modules[url])return cb(null, modules[url])
 
-    var
-    symbolIdx=url.indexOf('/'),
-    path=paths[-1===symbolIdx?url : url.substr(0,symbolIdx)]
-
-    if (!path){
-        symbolIdx=-1
-        path=paths['*']||''
-    }
-
-    var fname=-1===symbolIdx?url : url.substr(symbolIdx+1)
+	var
+	arr=url.split('/',1),
+	path=paths[arr[0]] || paths['~'] || '',
+	fname= path ? arr[arr.length-1] : url
 
     if (path instanceof Function){
         path(fname, function(err, m){
@@ -56,8 +50,8 @@ loader=function(url,cb){
         })
     }else{
         ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,null,function(err,state,txt){
-            if (err) return cb(err)
             if (4!==state) return
+            if (err) return cb(err)
 			js(url,txt,cb)
         })
     }
