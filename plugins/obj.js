@@ -69,11 +69,11 @@ define('pico/obj',function(){
             }
             return arr
         },
-		dotchain: function callee(obj, p){
+		dotchain: function callee(obj, p, value){
 			if (!p || !p.length) return obj
 			var o = obj[p.shift()]
 			if (o) return callee(o, p)
-			return 0
+			return value
 		}
     }
 })

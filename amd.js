@@ -38,9 +38,11 @@ loader=function(url,cb){
     if (modules[url])return cb(null, modules[url])
 
 	var
-	arr=url.split('/',1),
-	path=paths[arr[0]] || paths['~'] || '',
-	fname= path ? arr[arr.length-1] : url
+	idx=url.indexOf('/'),
+	path=~idx?paths[url.slice(0,idx)]:0,
+	fname= path ? url.slice(idx+1) : url
+
+	path=path || paths['~'] || ''
 
     if (path instanceof Function){
         path(fname, function(err, m){
