@@ -4,10 +4,10 @@ define('pico/time',function(){
     Min=Math.min,
     Floor=Math.floor,
     Ceil=Math.ceil,
-    DAY= 86400000,
-    HR = 3600000,
-    MIN = 60000,
     SEC = 1000,
+    MIN = 60*SEC,
+    HR = 60*MIN,
+    DAY= 24*HR,
 	daynum=function(end,start){
 		return (end-start) / DAY
 	},
@@ -112,17 +112,6 @@ define('pico/time',function(){
     }
 
     return {
-        deltaToNext: function(day, hr, min, sec, msec){
-            var 
-            d = new Date,
-            remain = (d.getTime() % HR) - ((min||0)*MIN + (sec||0)*SEC + (msec||0)),
-            deltaHr = (hr||0) + (24*day) - d.getHours()
-
-            return (deltaHr * HR) - remain
-        },
-        timeOfNext: function(day, hr, min, sec, msec){
-            return (new Date(Date.now()+this.deltaToNext(day, hr, min, sec, msec))).getTime()
-        },
         // fmt: min hr dom M dow yr
         parse: function(fmt){
             var atoms=fmt.split(' ')

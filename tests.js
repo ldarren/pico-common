@@ -183,19 +183,6 @@ ensure('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', fun
 	cb(null, obj.parseInts(['1','2']))
 })
 
-ensure('ensure obj.group is working, group [{key:1,value:1},{key:2,value:2},{key:1,value:3}] by key', function(cb){
-	cb(null, obj.group([{key:1,value:1},{key:2,value:2},{key:1,value:3}],'key'))
-})
-
-ensure('ensure deltaToNext 5 sec is not more than 5000', function(cb){
-	var d = new Date()
-	cb(null, time.deltaToNext(0, d.getHours(), d.getMinutes(), d.getSeconds()+5, d.getMilliseconds()))
-})
-
-ensure('ensure timeOfNext 2days 9am is Xxx, D+2 MM YYYY 09:00:00 GMT', function(cb){
-	cb(null, (new Date(time.timeOfNext(2, 9))).toUTCString())
-})
-
 var cron='5-20/6 */9 5/5 6/3 6-0 *'
 ensure(`ensure parse cron(${cron}) correctly`, function(cb){
 	cb(null, time.parse(cron))
@@ -205,9 +192,6 @@ ensure('ensure get nearest cron(MIN HR DOM MON DOW YR) correctly', function(cb){
 })
 ensure('ensure weeknum of 1/Mar/2016 is 9', function(cb){
 	cb(null, (time.weeknum(new Date(2016,2,1,0,0,0))))
-})
-ensure('ensure yesterday is yesterday', function(cb){
-	cb(null, (time.day(new Date(time.timeOfNext(-1)))))
 })
 
 ensure('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
@@ -239,6 +223,17 @@ ensure('ensure str.log works', function(cb){
 ensure('ensure str.error works', function(cb){
 	str.error(arguments.callee,'str.error','test')
 	cb(null, true)
+})
+ensure('ensure str.template works', function(cb){
+	const
+	tmpl=str.template('<%d.text%>'),
+	obj={text:'Hello World'}
+
+	cb(null, obj.text===tmpl(obj))
+})
+ensure('ensure str.template mix well with js', function(cb){
+	const tmpl=str.template('<%for(var i=0; i<5; i++){%>1<%}%>')
+	cb(null, '11111'===tmpl())
 })
 ensure('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
 	var

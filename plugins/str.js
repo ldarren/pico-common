@@ -81,6 +81,25 @@ define('pico/str', function(){
 			var c=n-String(val).length+1
             return Array(c>0?c:0).join(str||'0')
 		},
+		// src:https://raw.githubusercontent.com/krasimir/absurd/master/lib/processors/html/helpers/TemplateEngine.js
+		template:function(html){
+			var re = /<%(.+?)%>/g, 
+				reExp = /(^( )?(var|if|for|else|switch|case|break|{|}|;))(.*)?/g, 
+				code = 'var r=[];\n', 
+				cursor = 0, 
+				match;
+			var add = function(line, js) {
+				js? (code += line.match(reExp) ? line + '\n' : 'r.push(' + line + ');\n') :
+					(code += line != '' ? 'r.push("' + line.replace(/"/g, '\\"') + '");\n' : '');
+				return add;
+			}
+			while(match = re.exec(html)) {
+				add(html.slice(cursor, match.index))(match[1], true);
+				cursor = match.index + match[0].length;
+			}
+			add(html.substr(cursor, html.length - cursor));
+			return new Function('d', (code + 'return r.join("");').replace(/[\r\t\n]/g, ' '))
+		},
 		// precedence | / # : %
 		compileRest:function(rest, output){
 			output=output||[]
