@@ -1,32 +1,32 @@
-#A Lean Modular System For Browsers and NodeJS
+# A Lean Modular System For Browsers and NodeJS
 A single file solution to use commonjs/nodejs module definition in your browser or server (node.js), it can also compile javascripts into single file. It has tiny footprint, 188 lines of codes (before uglify and minification)
 
-##Why?
+## Why?
 * Work on browsers and NodeJS (Universal Javascript)
 * Same syntax on client and server 
 * Support circular dependency
 * Small footprint
 
-##Features
+## Features
 * Asyncronous Module Definition
 * Build single file from multiple files
 * Plugin system to extend it capabilities
 
-##Installation
+## Installation
 Download just the [pico.js](https://raw.githubusercontent.com/ldarren/pico-common/master/pico.js) or clone github
 ```
 git clone https://github.com/ldarren/pico-common.git pico-common
 ```
-###Browser
+### Browser
 ```html
 <script src=PATH/TO/pico.js></script>
 ```
-###Nodejs
+### Nodejs
 ```javascript
 var pico=require('PATH/TO/pico.js')
 ```
 
-##Configuration
+## Configuration
 It has similar requirejs config but not compatible. To bootstrap the amd
 ```javascript
 pico.run({
@@ -49,8 +49,8 @@ pico.build({
     output:'./output.js'
 })
 ```
-##Examples
-###Circular Dependency
+## Examples
+### Circular Dependency
 Script A
 ```javascript
 var scriptB=require('scriptB')
@@ -76,7 +76,63 @@ this.load=function(){
 }
 ```
 to avoid circular dependency, results returned by require() function can't be use in the document scope, they can only be used in function such as this.load
-###Hot reload
+### Inheritance
+child object can inherit properties of one parent object but declare it in child script
+```javascript
+// parent script
+function Parent(){
+}
+Parent.prototype={
+	do:function(){
+		console.log("parent do something");
+	}
+}
+return Parent
+```
+```javascript
+// child script
+inherit(PATH/TO/PARENT)
+
+return {
+	start:function(){
+		this.do()
+	}
+}
+```
+This can be done in backbone way
+```javascript
+// parent script
+function Parent(){
+}
+Parent.prototype={
+	do:function(){
+		console.log("parent do something");
+	}
+}
+return Parent
+```
+```javascript
+// child script
+return {
+	start:function(){
+		this.do()
+	}
+}
+```
+```javascript
+// somewhere else 
+var parent=require("PATH/TO/PARENT")
+var child=require("PATH/TO/CHILD")
+
+return {
+	run:function(){
+		var obj= new (parent.extend(child))
+		obj.do();
+	}
+}
+```
+Important to take note, parent must be a function/constructor when inherit with extend, child can be object or function/constructor
+### Hot reload
 ScriptA
 ```javascript
 return {
@@ -92,7 +148,7 @@ pico.reload('ScriptA', "return {a:function(){return 'Hot Reload'}}")
 console.log(scriptA.a()) // 'Hot Reload'
 ```
 
-##Caveat
+## Caveat
 The object returns by require() are not the actual object itself but a proxy object. In most cases, you can handle the proxy object just like the actual object except for few cases
 ```javascript
 // obj.js
@@ -124,20 +180,3 @@ proxy('hello pico') // 'hello pico'
 proxy.length // 0
 Object.getPrototypeOf(proxy).length // 1
 ```
-
-##Internal Function Diagram
-![Function diagram](http://g.gravizo.com/g?
- digraph G {
-     run->js->compile->linker->define;
-     js->placeHolder;
-     linker->loader->linker;
-     loader->getExt;
-     loader->js;
-     loader->define->getMod;
-     getMod->placeHolder;
-     build->replace_define->compile;
-     parse->js;
-     import->nodejs_require;
-     export->getMod;
- }
-)

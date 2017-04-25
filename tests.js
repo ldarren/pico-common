@@ -39,6 +39,61 @@ ensure('ensure pico has loaded correctly', function(cb){
 	cb(null, obj !== undefined)
 })
 
+ensure('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
+	pico.parse('ancestor0'," return {say:function(txt){return txt}}",function(err, ancestor){
+		if (err) return cb(err)
+		pico.parse('child0', "inherit('ancestor0'); return {bark:function(){return this.say('hello')}}",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'hello'===child.bark())
+		})
+	})
+})
+ensure('ensure inherit work with child(function) and ancestor(obj)', function(cb){
+	pico.parse('ancestor1'," return {say:function(txt){return txt}}",function(err, ancestor){
+		if (err) return cb(err)
+		pico.parse('child1', "inherit('ancestor1'); function Child(){this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.postfix)}}; return Child",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'child'===(new child).bark())
+		})
+	})
+})
+ensure('ensure inherit work with child(obj) and ancestor(function)', function(cb){
+	pico.parse('ancestor2'," function Ancestor(){this.prefix='ancestor'}; Ancestor.prototype={say:function(txt){return txt}}; return Ancestor;",function(err, ancestor){
+		if (err) return cb(err)
+		pico.parse('child2', "inherit('ancestor2'); return {bark:function(){return this.say(this.prefix)}}",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'ancestor'===(new child).bark())
+		})
+	})
+})
+ensure('ensure inherit work with child(function) and ancestor(function)', function(cb){
+	pico.parse('ancestor3'," function Ancestor(){this.prefix='ancestor'}; Ancestor.prototype={say:function(txt){return txt}}; return Ancestor;",function(err, ancestor){
+		if (err) return cb(err)
+		pico.parse('child3', "inherit('ancestor3'); function Child(){Child.__super__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'ancestorchild'===(new child).bark())
+		})
+	})
+})
+ensure('ensure extend work with child(obj) and ancestor(function)', function(cb){
+	pico.parse('ancestor4'," function Ancestor(){this.prefix='ancestor'}; Ancestor.prototype={say:function(txt){return txt}}; return Ancestor;",function(err, ancestor){
+		if (err) return cb(err)
+		pico.parse('child4', "return {bark:function(){return this.say(this.prefix)}}",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'ancestor'===(new (ancestor.extend(child))).bark())
+		})
+	})
+})
+ensure('ensure extend work with child(function) and ancestor(function)', function(cb){
+	pico.parse('ancestor5'," function Ancestor(){this.prefix='ancestor'}; Ancestor.prototype={say:function(txt){return txt}}; return Ancestor;",function(err, ancestor){
+		if (err) return cb(err)
+		pico.parse('child5', "function Child(){Child.__super__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'ancestorchild'===(new (ancestor.extend(child))).bark())
+		})
+	})
+})
+
 ensure('ensure underscore loaded correctly, VER should be 1.8.3',function(cb){
 	//cb(null, require('backbone').VERSION)
 	cb(null, _.VERSION)

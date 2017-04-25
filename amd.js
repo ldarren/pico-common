@@ -61,20 +61,42 @@ loader=function(url,cb){
 placeHolder=function(url){
 	return Object.defineProperty(Function(PLACE_HOLDER), 'name', { value: url })
 },
-inherit=function(child,ancestor){
-	var isFunc='function'===typeof child
+extend=function(classMod,staticMod) {
+	if (!classMod) return this
+	return inherit(classMod.__proto__, this, staticMod ? staticMod.__proto__ : null)
+},
+inherit=function(child,mod,obj){
+	var ancestor=mod.__proto__
+	switch(typeof child){
+	case 'function':
+		var fn=child
+		var props=child.prototype
+		break
+	case 'object':
+		var fn= function(){return ancestor.apply(this,arguments)}
+		var props=child
+		var isObj=true
+		break
+	default: return child 
+	}
+	Object.assign(fn,ancestor,obj)
 	switch(typeof ancestor){
 	case 'function':
-		var fn=isFunc ? child : function(){return ancestor.apply(this,arguments)}
-		Object.assign(fn,ancestor)
-		var fnp=fn.prototype=Object.assign(Object.create(ancestor.prototype),isFunc?child.prototype:child)
+		var fnp=fn.prototype=Object.assign(Object.create(ancestor.prototype),props)
 		fnp.constructor=fn
 		var cs=child.__super__=ancestor.prototype
 		cs.constructor=ancestor
 		return fn
 	case 'object':
-		isFunc?child.prototype=ancestor:child.__proto__=ancestor
-	default: return child
+		if (isObj){
+			child.__proto__=ancestor
+			return child
+		}
+		var fnp=fn.prototype=Object.assign(Object.create(ancestor),props)
+		fnp.constructor=fn
+		child.__super__=ancestor
+		return fn
+	default: return child 
 	}
 },
 getMod=function(url,cb){
@@ -115,19 +137,19 @@ define=function(url, func, base, mute){
         evt={},
         m=func.call(mute?{}:evt,module.exports,getMod,module,define,getMod,pico)||module.exports
 
-        if (base)m=inherit(m,base)
-
-        if(evt.load)evt.load(m)
-        if ('function'===typeof evt.update)updates[url]=[evt.update,m]
+        if (base) m=inherit(m,base)
+        if (evt.load) evt.load(m)
+        if (evt.update) updates[url]=[evt.update,m]
+		if ('function' === typeof m) m.extend=extend
 
         if (!url) return m
 
         var o=modules[url]
 
-        if(o){
+        if (o){
             o.prototype=m.prototype
             o.__proto__=m
-            return modules[url]=o
+            return o
         }
         return modules[url]=m
     case EXT_JSON:
