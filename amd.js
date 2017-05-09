@@ -124,7 +124,7 @@ inherit=function(mod1,mod2,mod3){
 },
 getMod=function(url,cb){
     var mod=modules[url]
-    if(mod){
+    if(undefined!==mod){
         if (cb)setTimeout(cb, 0, null, mod) // make sure consistent async behaviour
         return mod
     }
