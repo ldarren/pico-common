@@ -1,42 +1,17 @@
 const
+globalKeys=Object.keys(global),
 pico=require('./pico-cli'),
 web= pico.export('pico/web'),
 obj= pico.export('pico/obj'),
 str= pico.export('pico/str'),
 time= pico.export('pico/time'),
-test= pico.export('pico/test'),
-_=pico.define('underscore',function(exports,require,module,define,inherit,pico){
-(function() {
-  var root = this;
-
-  var _ = function(obj) {
-    if (obj instanceof _) return obj;
-    if (!(this instanceof _)) return new _(obj);
-    this._wrapped = obj;
-  };
-
-  if (typeof exports !== 'undefined') {
-    if (typeof module !== 'undefined' && module.exports) {
-      exports = module.exports = _;
-    }
-    exports._ = _;
-  } else {
-    root._ = _;
-  }
-
-  _.VERSION = '1.8.3';
-
-  if (typeof define === 'function' && define.amd) {
-    define('underscore', [], function() {
-      return _;
-    });
-  }
-}.call(this));
-}),
-ensure=test.ensure
+ensure= pico.export('pico/test').ensure
 
 ensure('ensure pico has loaded correctly', function(cb){
 	cb(null, obj !== undefined)
+})
+ensure('ensure pico properties no leak', function(cb){
+	cb(null, globalKeys.length === Object.keys(global).length)
 })
 
 ensure('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
@@ -78,9 +53,38 @@ ensure('ensure extend work with child(function) and ancestor(function)', functio
 	})
 })
 
-ensure('ensure underscore loaded correctly, VER should be 1.8.3',function(cb){
-	//cb(null, require('backbone').VERSION)
-	cb(null, _.VERSION)
+ensure('ensure underscore can be loaded',function(cb){
+	const 
+	V='1.8.3',
+	_=pico.define('underscore',function(exports,require,module,define,inherit,pico){
+		(function() {
+		  var root = this;
+
+		  var _ = function(obj) {
+			if (obj instanceof _) return obj;
+			if (!(this instanceof _)) return new _(obj);
+			this._wrapped = obj;
+		  };
+
+		  if (typeof exports !== 'undefined') {
+			if (typeof module !== 'undefined' && module.exports) {
+			  exports = module.exports = _;
+			}
+			exports._ = _;
+		  } else {
+			root._ = _;
+		  }
+
+		  _.VERSION = V;
+
+		  if (typeof define === 'function' && define.amd) {
+			define('underscore', [], function() {
+			  return _;
+			});
+		  }
+		}.call(this));
+	})
+	cb(null, V===_.VERSION)
 })
 
 ensure('ensure pico preprocessors and env work', function(cb){
@@ -230,30 +234,11 @@ ensure('ensure get nearest cron(MIN HR DOM MON DOW YR) correctly', function(cb){
 	cb(null, (new Date(time.nearest(...time.parse(cron)))).toUTCString())
 })
 ensure('ensure weeknum of 1/Mar/2016 is 9', function(cb){
-	cb(null, (time.weeknum(new Date(2016,2,1,0,0,0))))
+	cb(null, 9===time.weeknum(new Date(2016,2,1,0,0,0)))
 })
 
-ensure('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
-	var
-	data = JSON.stringify({data:123}),
-	key = parseInt('100007900715391')
-	cb(null, str.codec(key, str.codec(key, data)))
-})
-ensure('ensure hash password "password123" to 32bit int', function(cb){
-	cb(null, str.hash('password123'))
-})
-ensure('ensure codec time based string', (cb)=>{
-	const
-	key='00mjvyn50022oq0000zbpt6c000014k2',
-	secret='3zuklpkl6k905e5kryoiozuxrkjhunr26vjnlaao',
-	now=Math.floor(Date.now()/(5*60*1000)),
-	hash=now+str.hash(secret),
-	token=str.codec(hash,key)
-	console.log(`hash[${hash}] token[${token}]`)
-	cb(null, str.codec(key, str.codec(hash, token)))
-})
 ensure('ensure left pad 8 for a number', function(cb){
-	cb(null, str.pad(19,8))
+	cb(null, '00000019'===str.pad(19,8))
 })
 ensure('ensure str.log works', function(cb){
 	str.log(null,'str.log','test')
@@ -324,4 +309,51 @@ ensure('ensure restful optional parser2: /:appName|#appPath',function(cb){
 	params={},
 	api=str.execRest('/msair',build,params)
 	cb(null, api===route && 'msair'===params.appName)
+})
+ensure('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
+	var
+	data = JSON.stringify({data:123}),
+	key = parseInt('100007900715391')
+	cb(null, data===str.codec(key, str.codec(key, data)))
+})
+ensure('ensure codec work on time based string', (cb)=>{
+	const
+	key='00mjvyn50022oq0000zbpt6c000014k2',
+	secret='3zuklpkl6k905e5kryoiozuxrkjhunr26vjnlaao',
+	now=Math.floor(Date.now()/(5*60*1000)),
+	hash=now+str.hash(secret),
+	token=str.codec(hash,key)
+	cb(null, key===str.codec(key, str.codec(hash, token)))
+})
+ensure('ensure hash password to 32bit int', function(cb){
+	cb(null, str.hash('免费服务会立即翻译英文和英文之间的单词'))
+})
+ensure('ensure hash dont collide in repeating char x9999', function(cb){
+	var
+	s='p',
+	hist=[],
+	l=9999,
+	n=Date.now()
+	for(var i=0,h; i<l; i++){
+		h=str.hash(s)
+		if (~hist.indexOf(h)) break
+		hist.push(h)
+		s+='p'
+	}
+	console.log('perf',Date.now()-n,hist.length)
+	cb(null, l===hist.length)
+})
+ensure('ensure hash dont collide in uuid x99999', function(cb){
+	var
+	uuid=require('uuid/v4'),
+	hist=[],
+	l=99999,
+	n=Date.now()
+	for(var i=0,h; i<l; i++){
+		h=str.hash(uuid())
+		if (~hist.indexOf(h)) break
+		hist.push(h)
+	}
+	console.log('perf',Date.now()-n,hist.length)
+	cb(null, l===hist.length)
 })

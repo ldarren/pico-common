@@ -67,7 +67,8 @@ define('pico/str', function(){
         },
         hash: function(str){
             for (var i=0,h=0,c; c=str.charCodeAt(i); i++) {
-				h = (h * 31 + c) | 0 // same as h = ((h<<5)-h)+c;  h = h | 0 or h = h & h <= Convert to 32bit integer
+				// same as h = ((h<<5)-h)+c;  h = h | 0 or h = h & h <= Convert to 32bit integer
+				h = (h<<3)-h+c | 0
             }
             return h
         },

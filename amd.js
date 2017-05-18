@@ -67,7 +67,7 @@ placeHolder=function(url){
 },
 isPlaceHolder=function(obj){
 	return 'function' === typeof obj && uuid===obj.i
-}
+},
 wrap=function(mod, obj){
 	if (!mod) return obj
 	if (mod===obj) return mod

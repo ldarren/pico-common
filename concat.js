@@ -29,6 +29,7 @@ readdirs=function(wd,dirs,output,cb){
 	fs.readdir(srcDir, (err, files)=>{
 		if (err) return cb(err)
 		for(let i=0,f; f=files[i]; i++){
+			if ('.'===f.charAt(0)) continue
 			output.push(path.join(srcDir,f))
 		}
 		readdirs(wd,dirs,output,cb)
