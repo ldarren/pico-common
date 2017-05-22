@@ -1,6 +1,6 @@
 var
 fs=require('fs'),
-pico=require('../pico-cli')
+pico=require('../bin/pico-cli')
 
 pico.run({
     ajax:function(method, url, params, headers, cb, userData){

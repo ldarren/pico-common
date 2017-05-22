@@ -1,6 +1,6 @@
 const
 globalKeys=Object.keys(global),
-pico=require('./pico-cli'),
+pico=require('./bin/pico-cli'),
 web= pico.export('pico/web'),
 obj= pico.export('pico/obj'),
 str= pico.export('pico/str'),

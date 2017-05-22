@@ -1,1 +1,1 @@
-../pico.js
+../bin/pico.js

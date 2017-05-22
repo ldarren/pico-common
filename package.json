@@ -2,10 +2,10 @@
     "name": "pico-common",
     "version": "0.7.9",
     "description": "pico common tools",
-    "main": "pico.js",
+    "main": "bin/pico.js",
     "scripts": {
-		"install":"./concat.js plugins; ./concat.js plugins,cli pico-cli",
-        "pretest": "./concat.js plugins,cli pico-cli",
+		"prepublish":"./concat.js src/plugins; ./concat.js src/plugins,src/cli bin/pico-cli",
+        "pretest": "./concat.js src/plugins,src/cli bin/pico-cli",
         "test": "node tests.js"
     },
     "repository": {
@@ -24,7 +24,7 @@
         "url": "https://github.com/ldarren/pico-common/issues"
     },
     "homepage": "https://github.com/ldarren/pico-common",
-    "dependencies": {
+    "devDependencies": {
         "uglify-js": "*"
     }
 }

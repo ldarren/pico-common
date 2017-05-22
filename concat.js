@@ -5,6 +5,8 @@ const origDirs= (process.argv[2] || '').split(',')
 if (!origDirs[0]) return console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS [OUTPUT_NAME]')
 
 const
+BIN='bin',
+SRC='src',
 PREFIX="(function(module,exports,require){",
 POSTFIX="}).apply(null, 'undefined' === typeof window ? [module, 'exports', require] : [window, 'pico'])",
 uglify=require('uglify-js'),
@@ -36,20 +38,20 @@ readdirs=function(wd,dirs,output,cb){
 	})
 }
 
-let dest= process.argv[3] || 'pico'
+let dest= process.argv[3] || path.join(BIN,'pico')
 
 fs.readlink(symPath, (err, realPath)=>{
 	if (err) realPath = symPath
 	const wd = path.dirname(realPath)
 	dest = getPath(wd, dest)
-	console.log('delete', dest)
+	console.log('deleting', dest)
 	fs.unlink(dest+'.js', (err)=>{
         console.log('open file', dest)
         const ws = fs.createWriteStream(dest+'.js', {flags:'a'})
         pipeStr(PREFIX,ws)
         readdirs(wd, origDirs, [], (err, files)=>{
             if (err) return console.error(err)
-            files.unshift(path.join(wd,'amd.js'))
+            files.unshift(path.join(wd,SRC,'amd.js'))
             !function(cb){
                 if (!files.length) return cb()
                 const 
