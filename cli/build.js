@@ -44,7 +44,7 @@ define('pico/build',function(){
             fs.readFile(entry, 'utf8', function(err, txt){
                 if (err) return console.error(err)
                 // overide define to write function
-                var func=compile(null,txt,[],[],pico) // since no define, compile with real pico
+                var func=compile(null,txt,[],pico) // since no define, compile with real pico
                 if (-1 !== exclude.indexOf(entry)) return
                 ran=function(){
                     fs.appendFileSync(output, funcBody(func.toString()))
