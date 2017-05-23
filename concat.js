@@ -7,6 +7,9 @@ if (!origDirs[0]) return console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS
 const
 BIN='bin',
 SRC='src',
+JS='.js',
+MIN_JS='.min.js',
+MIN_MAP=MIN_JS+'.map',
 PREFIX="(function(module,exports,require){",
 POSTFIX="}).apply(null, 'undefined' === typeof window ? [module, 'exports', require] : [window, 'pico'])",
 uglify=require('uglify-js'),
@@ -43,11 +46,11 @@ let dest= process.argv[3] || path.join(BIN,'pico')
 fs.readlink(symPath, (err, realPath)=>{
 	if (err) realPath = symPath
 	const wd = path.dirname(realPath)
-	dest = getPath(wd, dest)
-	console.log('deleting', dest)
-	fs.unlink(dest+'.js', (err)=>{
-        console.log('open file', dest)
-        const ws = fs.createWriteStream(dest+'.js', {flags:'a'})
+	const destAbs = getPath(wd, dest)
+	console.log('deleting', destAbs)
+	fs.unlink(destAbs+JS, (err)=>{
+        console.log('open file', destAbs)
+        const ws = fs.createWriteStream(destAbs+JS, {flags:'a'})
         pipeStr(PREFIX,ws)
         readdirs(wd, origDirs, [], (err, files)=>{
             if (err) return console.error(err)
@@ -65,14 +68,17 @@ fs.readlink(symPath, (err, realPath)=>{
                 rs.pipe(ws, {end:false})
             }(()=>{
                 ws.on('finish',()=>{
-                    const minify=uglify.minify(dest+'.js',{outSourceMap:dest+'.min.js.map'})
-                    fs.writeFile(dest+'.min.js', minify.code, 'utf8', (err)=>{
-                        if (err) return console.error(err)
-                        fs.writeFile(dest+'.min.js.map', minify.map, 'utf8', ()=>{
-                            if (err) return console.error(err)
-                            console.log('Done!')
-                        })
-                    })
+					fs.readFile(destAbs+JS,'utf8',(err,code)=>{
+						if (err) return console.error(err)
+						const minify=uglify.minify(code,{sourceMap:{filename:dest+MIN_JS,url:dest+MIN_MAP}})
+						fs.writeFile(destAbs+MIN_JS, minify.code, 'utf8', (err)=>{
+							if (err) return console.error(err)
+							fs.writeFile(destAbs+MIN_MAP, minify.map, 'utf8', ()=>{
+								if (err) return console.error(err)
+								console.log('Done!')
+							})
+						})
+					})
                 })
                 pipeStr(POSTFIX,ws,{end:true});
             })  

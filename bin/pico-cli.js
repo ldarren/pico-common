@@ -1011,7 +1011,7 @@ define('pico/build',function(){
         addDeps=function(output, deps){
             if (!deps || !deps.length) return
             fs.appendFileSync(output, fs.readFileSync(deps.shift()))
-            fs.appendFileSync(output, ';')
+            fs.appendFileSync(output, ';\n')
             addDeps(output, deps)
         },
         addInclude=function(include, cb){
