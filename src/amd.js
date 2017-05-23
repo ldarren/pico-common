@@ -69,8 +69,7 @@ isPlaceHolder=function(obj){
 	return 'function' === typeof obj && uuid===obj.i
 },
 wrap=function(mod, obj){
-	if (!mod) return obj
-	if (mod===obj) return mod
+	if (!mod || mod===obj) return obj
 	if (isPlaceHolder(mod)) mod.prototype=obj.prototype
 	mod.__proto__=obj
 	return mod
@@ -210,16 +209,15 @@ var pico=module[exports]={
 
         var pp
         for(var url in modules){
-            pp=preprocessors[getExt(url)||EXT_JS]
-            if (pp) modules[url]=pp(url, modules[url])
+            (pp=preprocessors[getExt(url)||EXT_JS]) && (modules[url]=pp(url, modules[url]))
         }
 
         ;(options.onLoad||dummyLoader)(function(){
             js(options.name||null,funcBody(func.toString()),function(err,main){
                 if (err) return console.error(err)
 
-                if (main) main()
-                if (ran)ran()
+                main && main()
+                ran && ran()
 
 				schedule(tick)
             })
