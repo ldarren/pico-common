@@ -1,10 +1,11 @@
 define('pico/build',function(){
-	var
+	const
+	CR=/['\n\r]/g,
 	htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
-	esc=function(m){return htmlescape[m]}
+	esc=(m)=>{return htmlescape[m]}
 
     return function(options){
-        var
+        const
         fs=require('fs'),
         entry=options.entry,
         output=options.output,
@@ -13,7 +14,7 @@ define('pico/build',function(){
         addDeps=function(output, deps){
             if (!deps || !deps.length) return
             fs.appendFileSync(output, fs.readFileSync(deps.shift()))
-            fs.appendFileSync(output, '\n')
+            fs.appendFileSync(output, ';')
             addDeps(output, deps)
         },
         addInclude=function(include, cb){
@@ -34,21 +35,21 @@ define('pico/build',function(){
             // TODO why appendFile not working?
             switch(getExt(url)||EXT_JS){
             case EXT_JS: return fs.appendFileSync(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
-            case EXT_JSON: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func)).replace(/['\n\r]/g, esc)))
-            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(/['\n\r]/g, esc)))
+            case EXT_JSON: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func)).replace(CR, esc)))
+            default: return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC',func.replace(CR, esc)))
             }
         }
 
-        fs.unlink(output, function(){
-            addDeps(output, options.deps)
-            fs.readFile(entry, 'utf8', function(err, txt){
+        fs.unlink(output, ()=>{
+            addDeps(output, [...options.deps])
+            fs.readFile(entry, 'utf8', (err, txt)=>{
                 if (err) return console.error(err)
                 // overide define to write function
                 var func=compile(null,txt,[],pico) // since no define, compile with real pico
                 if (-1 !== exclude.indexOf(entry)) return
                 ran=function(){
                     fs.appendFileSync(output, funcBody(func.toString()))
-                    addInclude(options.include, function(err){
+                    addInclude([...options.include], (err)=>{
                         if (err) console.error(err)
                         // TODO why need to kill?
                         process.exit()
