@@ -220,13 +220,13 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             case 2:
                 if (data instanceof Function){
                     cb = data
-                    data = cred = undefined
+                    data = cred = void 0
                 }
                 break
             case 3:
                 if (cred instanceof Function){
                     cb = cred 
-                    cred = undefined
+                    cred = void 0
                 }
                 break
             case 4: break

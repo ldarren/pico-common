@@ -12,10 +12,10 @@ define('pico/obj',function(){
 			}
             options=options||{}
             var tidy = options.tidy, key, value
-            if (1===ft || undefined === from.length){ // function or object (non array)
+            if (1===ft || void 0 === from.length){ // function or object (non array)
                 for (key in from){
                     value = from[key]
-                    if (undefined === value && tidy) continue
+                    if (void 0 === value && tidy) continue
                     to[key] = extend(to[key], value, options)
                 }
             }else{
@@ -23,11 +23,11 @@ define('pico/obj',function(){
                     // TODO: change unique to Set when is more commonly support on mobile
                     var i, l, unique={}
                     for (i=0,l=to.length; i<l; i++){
-                        if (undefined === (value = to[i]) && tidy) continue
+                        if (void 0 === (value = to[i]) && tidy) continue
                         unique[value] = value
                     }
                     for (i=0,l=from.length; i<l; i++){
-                        if (undefined === (value = from[i]) && tidy) continue
+                        if (void 0 === (value = from[i]) && tidy) continue
                         unique[value] = value
                     }
                     to = []
@@ -60,7 +60,7 @@ define('pico/obj',function(){
                     obj = objs[i]
                     if (!obj) continue
                     id = obj[key]
-                    if (undefined === id) continue
+                    if (void 0 === id) continue
                     map[id] = id
                 }
                 for(k in map){

@@ -123,12 +123,12 @@ inherit=function(mod1,mod2,mod3){
 },
 getMod=function(url,cb){
     var mod=modules[url]
-    if(undefined!==mod){
-        if (cb)setTimeout(cb, 0, null, mod) // make sure consistent async behaviour
-        return mod
+    if(void 0===mod){
+		if (cb) return loader(url,cb)
+		return modules[url]=placeHolder(url)
     }
-    if (cb) return loader(url,cb)
-    return modules[url]=placeHolder(url)
+	cb && setTimeout(cb, 0, null, mod) // make sure consistent async behaviour
+	return mod
 },
 // do not run the module but getting the deps and inherit
 compile=function(url,txt,deps,me){
