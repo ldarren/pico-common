@@ -123,12 +123,12 @@ inherit=function(mod1,mod2,mod3){
 },
 getMod=function(url,cb){
     var mod=modules[url]
-    if(undefined!==mod){
-        if (cb)setTimeout(cb, 0, null, mod) // make sure consistent async behaviour
-        return mod
+    if(void 0===mod){
+		if (cb) return loader(url,cb)
+		return modules[url]=placeHolder(url)
     }
-    if (cb) return loader(url,cb)
-    return modules[url]=placeHolder(url)
+	cb && setTimeout(cb, 0, null, mod) // make sure consistent async behaviour
+	return mod
 },
 // do not run the module but getting the deps and inherit
 compile=function(url,txt,deps,me){
@@ -193,10 +193,10 @@ js=function(url,txt,cb){
     })
 },
 tick=function(timestamp){
-	schedule(tick)
 	for(var i=0,keys=Object.keys(updates),f; f=updates[keys[i]]; i++){
 		f[0](f[1],timestamp)
 	}
+	schedule(tick)
 }
 
 var pico=module[exports]={
@@ -282,10 +282,10 @@ define('pico/obj',function(){
 			}
             options=options||{}
             var tidy = options.tidy, key, value
-            if (1===ft || undefined === from.length){ // function or object (non array)
+            if (1===ft || void 0 === from.length){ // function or object (non array)
                 for (key in from){
                     value = from[key]
-                    if (undefined === value && tidy) continue
+                    if (void 0 === value && tidy) continue
                     to[key] = extend(to[key], value, options)
                 }
             }else{
@@ -293,11 +293,11 @@ define('pico/obj',function(){
                     // TODO: change unique to Set when is more commonly support on mobile
                     var i, l, unique={}
                     for (i=0,l=to.length; i<l; i++){
-                        if (undefined === (value = to[i]) && tidy) continue
+                        if (void 0 === (value = to[i]) && tidy) continue
                         unique[value] = value
                     }
                     for (i=0,l=from.length; i<l; i++){
-                        if (undefined === (value = from[i]) && tidy) continue
+                        if (void 0 === (value = from[i]) && tidy) continue
                         unique[value] = value
                     }
                     to = []
@@ -330,7 +330,7 @@ define('pico/obj',function(){
                     obj = objs[i]
                     if (!obj) continue
                     id = obj[key]
-                    if (undefined === id) continue
+                    if (void 0 === id) continue
                     map[id] = id
                 }
                 for(k in map){
@@ -897,13 +897,13 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
             case 2:
                 if (data instanceof Function){
                     cb = data
-                    data = cred = undefined
+                    data = cred = void 0
                 }
                 break
             case 3:
                 if (cred instanceof Function){
                     cb = cred 
-                    cred = undefined
+                    cred = void 0
                 }
                 break
             case 4: break

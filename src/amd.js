@@ -193,10 +193,10 @@ js=function(url,txt,cb){
     })
 },
 tick=function(timestamp){
-	schedule(tick)
 	for(var i=0,keys=Object.keys(updates),f; f=updates[keys[i]]; i++){
 		f[0](f[1],timestamp)
 	}
+	schedule(tick)
 }
 
 var pico=module[exports]={
