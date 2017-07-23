@@ -193,8 +193,9 @@ js=function(url,txt,cb){
     })
 },
 tick=function(timestamp){
-	for(var i=0,keys=Object.keys(updates),f; f=updates[keys[i]]; i++){
-		f[0](f[1],timestamp)
+	var f
+	for (var k in updates) {
+		(f = updates[k]) && f[0](f[1], timestamp)
 	}
 	schedule(tick)
 }
