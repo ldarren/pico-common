@@ -807,8 +807,8 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
     netConfig = function(net, cfg){
         net.url = cfg.url || net.url
         net.secretKey = cfg.secretKey || net.secretKey
-        net.cullAge = cfg.cullAge || net.cullAge || 0
-        net.delimiter = cfg.delimiter ? JSON.stringify(cfg.delimiter) : net.delimiter || JSON.stringify(['&'])
+        net.cullAge = cfg.cullAge || net.cullAge
+        net.delimiter = cfg.delimiter ? JSON.stringify(cfg.delimiter) : net.delimiter
     },
     netReset = function(net){
         net.resEndPos = net.outbox.length = net.acks.length = 0
@@ -818,7 +818,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 
     function Net(cfg){
         if (!cfg.url) return console.error('url is not set')
-        netConfig(this, cfg)
+        netConfig(this, Object.assign({cullAge:0, delimiter:['&']}, cfg))
         this.reqId = 1 + Floor(Random() * 1000)
         this.inbox = []
         this.outbox = []
@@ -966,15 +966,17 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
         },
         getServerTime: function(){
             return this.serverTime + (Date.now() - this.serverTimeAtClient)
-        }
+        },
+		test: function(cb){
+			timeSync(this, cb)
+		}
     }
 
     return {
         create: function(cfg, cb){
-            var net= new Net(cfg)
-            timeSync(net, function(err){
-                cb(err, net)
-            })
+			var net= new Net(cfg)
+			timeSync(net, function(err){ cb && cb(err, net) })
+			return net
         },
         ajax:ajax,
         //window.addEventListener('online', online)
