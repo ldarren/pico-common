@@ -74,6 +74,77 @@ define('pico/obj',function(){
 			var o = obj[p.shift()]
 			if (o) return callee(o, p)
 			return value
+		},
+		jsonpath: function(json){
+			let current = json
+
+			function unwrap(arr, i) { return i < 0 ? (arr.length || 0) + i : i }
+
+			function search(key, obj) {
+				if (!obj) return
+				if (obj[key]) return obj[key]
+				return Object.keys(obj).reduce( (acc, k) => {
+					const found = search(key, obj[k])
+					if (found) {
+						Array.isArray(found) ? acc.push(...found) : acc.push(found)
+					}
+					return acc
+				}, [])
+			}
+
+			function jwalk(){
+				if (!arguments.length) return current
+				const isArr = Array.isArray(current)
+
+				switch(typeof arguments[0]){
+				case 'string':
+					const str = arguments[0]
+
+					switch(str){
+					default:
+						if (isArr){
+							if (!current[0][str]) break
+							current = current.map( o => o[str] )
+						}else{
+							if (!current[str]) break
+							current = current[str]
+						}
+						break
+					case '>|':
+						current = search(arguments[1], current) || current
+						break
+					case '*':
+						if (isArr) break
+						current = Object.keys(current).map( k => current[k] )
+						break
+					}
+					break
+				case 'object':
+					const arr = arguments[0]
+					if (!Array.isArray(arr)) break
+					current = arr.map( i => current[unwrap(current, i)] )
+					break
+				case 'number':
+					const start = unwrap(current, arguments[0])
+					const end = unwrap(current, arguments[1]) || current.length-1 || 0
+					const interval = arguments[2] || 1
+					const next = []
+					const a = []
+					for (let i=start; i <= end; i+=interval){
+						next.push(current[i])
+						a.push(i)
+					}
+					current = next
+					break
+				case 'function':
+					const cb = arguments[0]
+					current = isArr ? current.map( o => cb(o) ) : cb(current)
+					break
+				}
+				if (1 === current.length) current = current.pop()
+				return jwalk
+			}
+			return jwalk
 		}
     }
 })

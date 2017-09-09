@@ -226,6 +226,28 @@ ensure('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', fun
 	cb(null, obj.parseInts(['1','2']))
 })
 
+ensure('ensure obj.jsonpath work', function(cb){
+	var json = {
+		store: {
+			book: [
+				{price: 10},
+				{price: 20},
+				{price: 30},
+				{price: 40}
+			],
+			bycycle: [
+				{price: 50},
+				{price: 60},
+				{price: 70},
+				{price: 80}
+			]
+		}
+	}
+	var total = 0
+	obj.jsonpath(json)('*')('>|','price')((price)=>{total+=price; return price})()
+	cb(null, total === 360)
+})
+
 var cron='5-20/6 */9 5/5 6/3 6-0 *'
 ensure(`ensure parse cron(${cron}) correctly`, function(cb){
 	cb(null, time.parse(cron))
