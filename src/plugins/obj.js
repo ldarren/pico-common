@@ -79,17 +79,20 @@ define('pico/obj',function(){
 			let current = json
 
 			function unwrap(arr, i) { return i < 0 ? (arr.length || 0) + i : i }
-
+			
 			function search(key, obj) {
 				if (!obj) return
+				if (obj.charAt) return
 				if (obj[key]) return obj[key]
-				return Object.keys(obj).reduce( (acc, k) => {
-					const found = search(key, obj[k])
-					if (found) {
-						Array.isArray(found) ? acc.push(...found) : acc.push(found)
-					}
-					return acc
-				}, [])
+
+				const ret = []
+				let found
+				const ks = Object.keys(obj)
+				for(let i=0,k; k=ks[i]; i++){
+					found = search(key, obj[k])
+					found && Array.isArray(found) ? ret.push(...found) : ret.push(found)
+				}
+				return ret
 			}
 
 			function jwalk(){
@@ -139,6 +142,7 @@ define('pico/obj',function(){
 				case 'function':
 					const cb = arguments[0]
 					current = isArr ? current.map( o => cb(o) ) : cb(current)
+					isArr && (current = current.filter( o => (void 0 != o) ))
 					break
 				}
 				if (1 === current.length) current = current.pop()
