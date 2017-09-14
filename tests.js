@@ -367,12 +367,11 @@ ensure('ensure hash dont collide in repeating char x9999', function(cb){
 })
 ensure('ensure hash dont collide in uuid x99999', function(cb){
 	var
-	uuid=require('uuid/v4'),
 	hist=[],
 	l=99999,
 	n=Date.now()
 	for(var i=0,h; i<l; i++){
-		h=str.hash(uuid())
+		h=str.hash(str.rand())
 		if (~hist.indexOf(h)) break
 		hist.push(h)
 	}

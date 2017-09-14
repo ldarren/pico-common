@@ -71,6 +71,7 @@ fs.readlink(symPath, (err, realPath)=>{
 					fs.readFile(destAbs+JS,'utf8',(err,code)=>{
 						if (err) return console.error(err)
 						const minify=uglify.minify(code,{sourceMap:{filename:dest+MIN_JS,url:dest+MIN_MAP}})
+						if (minify.error) return console.error(minify.error)
 						fs.writeFile(destAbs+MIN_JS, minify.code, 'utf8', (err)=>{
 							if (err) return console.error(err)
 							fs.writeFile(destAbs+MIN_MAP, minify.map, 'utf8', ()=>{

@@ -1,6 +1,6 @@
 {
     "name": "pico-common",
-    "version": "0.8.2",
+    "version": "0.8.3",
     "description": "pico common tools",
     "main": "bin/pico.js",
     "scripts": {
@@ -25,6 +25,6 @@
     },
     "homepage": "https://github.com/ldarren/pico-common",
     "devDependencies": {
-        "uglify-js": "*"
+        "uglify-js": "^3.1.0"
     }
 }
