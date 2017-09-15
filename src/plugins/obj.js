@@ -113,7 +113,7 @@ define('pico/obj',function(){
 							current = current[str]
 						}
 						break
-					case '>|':
+					case '..':
 						current = search(arguments[1], current) || current
 						break
 					case '*':

@@ -244,8 +244,8 @@ ensure('ensure obj.jsonpath work', function(cb){
 		}
 	}
 	var total = 0
-	obj.jsonpath(json)('*')('>|','price')((price)=>{total+=price; return price})()
-	cb(null, total === 360)
+	obj.jsonpath(json)('..','price')((price)=>{total+=price; return price})()
+	cb(null, 360 === total)
 })
 
 var cron='5-20/6 */9 5/5 6/3 6-0 *'

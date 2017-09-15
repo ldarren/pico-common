@@ -1,11 +1,11 @@
 define('pico/build',function(){
-	const
+	var
 	CR=/['\n\r]/g,
 	htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
-	esc=(m)=>{return htmlescape[m]}
+	esc=function(m){return htmlescape[m]}
 
     return function(options){
-        const
+        var
         fs=require('fs'),
         entry=options.entry,
         output=options.output,
@@ -40,16 +40,16 @@ define('pico/build',function(){
             }
         }
 
-        fs.unlink(output, ()=>{
-            addDeps(output, [...options.deps])
-            fs.readFile(entry, 'utf8', (err, txt)=>{
+        fs.unlink(output, function(){
+            addDeps(output, options.deps)
+            fs.readFile(entry, 'utf8', function(err, txt){
                 if (err) return console.error(err)
                 // overide define to write function
                 var func=compile(null,txt,[],pico) // since no define, compile with real pico
                 if (-1 !== exclude.indexOf(entry)) return
                 ran=function(){
                     fs.appendFileSync(output, funcBody(func.toString()))
-                    addInclude([...options.include], (err)=>{
+                    addInclude(options.include, function(err){
                         if (err) console.error(err)
                         // TODO why need to kill?
                         process.exit()
