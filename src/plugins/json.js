@@ -27,8 +27,7 @@ define('pico/json',function(exports,require,module,define,inherit,pico){
 			function unwrap(arr, i) { return i < 0 ? (arr.length || 0) + i : i }
 			
 			function search(key, obj) {
-				if (!obj) return
-				if (obj.charAt) return
+				if (!obj || 'object' !== typeof obj) return
 				if (obj[key]) return obj[key]
 
 				var ret = []

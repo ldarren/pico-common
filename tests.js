@@ -143,19 +143,15 @@ ensure('ensure pico.reload does text hot-loading', function(cb){
 })
 
 ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
-	var
-	obj1 = {key1:1},
-	obj2 = {key1:2}
+	var out = pobj.extend({key1:1},{key1:2})
 
-	cb(null, pobj.extend(obj1, obj2))
+	cb(null, 2 === out.key1)
 })
 
 ensure('ensure obj1 merges with obj2. output should contain key1 and key2', function(cb){
-	var
-	obj1 = {key1:1},
-	obj2 = {key2:2}
+	var out = pobj.extend({key1:1},{key2:2})
 
-	cb(null, pobj.extend(obj1, obj2))
+	cb(null, !!out.key1 && !!out.key2)
 })
 
 ensure('compare extend to assign performance', function(cb){
@@ -166,7 +162,7 @@ ensure('compare extend to assign performance', function(cb){
     t1,t2
 
     for(var i=0; i<10000; i++){
-        pobj.extend(obj1,obj2)
+        Object.assign(obj1,obj2)
     }
     t1=Date.now()-t
 
@@ -174,7 +170,7 @@ ensure('compare extend to assign performance', function(cb){
     t=Date.now()
 
     for(var i=0; i<10000; i++){
-        Object.assign(obj1,obj2)
+        pobj.extend(obj1,obj2)
     }
     t2=Date.now()-t
 
@@ -182,35 +178,27 @@ ensure('compare extend to assign performance', function(cb){
 })
 
 ensure('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
-	var
-	obj1 = {key1:1},
-	obj2 = {key2:undefined}
+	var out = pobj.extend({key1:1}, {key2:void 0}, {tidy:1})
 
-	cb(null, pobj.extend(obj1, obj2, {tidy:1}))
+	cb(null, 1 === Object.keys(out).length)
 })
 
 ensure('ensure options.tidy off is working. output should contain an undefined key', function(cb){
-	var
-	obj1 = {key1:1},
-	obj2 = {key2:undefined}
+	var out = pobj.extend({key1:1}, {key2:void 0})
 
-	cb(null, pobj.extend(obj1, obj2))
+	cb(null, 2 ===  Object.keys(out).length)
 })
 
 ensure('ensure options.mergeArr on is working. output should contain[1,2,3] list', function(cb){
-	var
-	obj1 = [1,2],
-	obj2 = [2,3]
+	var out = pobj.extend([1,2], [2,3], {mergeArr:1})
 
-	cb(null, pobj.extend(obj1, obj2, {mergeArr:1}))
+	cb(null, JSON.stringify([1,2,3]) === JSON.stringify(out))
 })
 
 ensure('ensure options.mergeArr off is working. output should contain[2,3] list', function(cb){
-	var
-	obj1 = [1,2],
-	obj2 = [2,3]
+	var out = pobj.extend([1,2], [2,3])
 
-	cb(null, pobj.extend(obj1, obj2))
+	cb(null, JSON.stringify([2,3]) === JSON.stringify(out))
 })
 ensure('ensure function extended properly', function(cb){
 	var
@@ -223,7 +211,8 @@ ensure('ensure function extended properly', function(cb){
 })
 
 ensure('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', function(cb){
-	cb(null, pobj.parseInts(['1','2']))
+	var out = pobj.parseInts(['1','2'])
+	cb(null, JSON.stringify([1,2])===JSON.stringify(out))
 })
 
 ensure('ensure json.path work', function(cb){
