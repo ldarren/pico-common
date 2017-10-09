@@ -273,7 +273,7 @@ define('pico/json',function(exports,require,module,define,inherit,pico){
 			function unwrap(arr, i) { return i < 0 ? (arr.length || 0) + i : i }
 			
 			function search(key, obj) {
-				if (!key || !obj || 'object' !== typeof obj) return obj
+				if (!key || !obj || 'object' !== typeof obj) return
 				if (obj[key]) return obj[key]
 
 				var ret = []
@@ -281,9 +281,9 @@ define('pico/json',function(exports,require,module,define,inherit,pico){
 				var ks = Object.keys(obj)
 				for(var i=0,k; k=ks[i]; i++){
 					found = search(key, obj[k])
-					found && Array.isArray(found) ? ret.push.apply(ret,found) : ret.push(found)
+					found && (Array.isArray(found) ? ret.push.apply(ret,found) : ret.push(found))
 				}
-				return ret
+				return ret.length ? ret : void 0
 			}
 
 			function jwalk(){
@@ -333,9 +333,9 @@ define('pico/json',function(exports,require,module,define,inherit,pico){
 				case 'function':
 					var cb = arguments[0]
 					current = isArr ? current.map( cb ) : cb(current)
-					isArr && (current = current.filter( function(o) { return void 0 != o } ))
 					break
 				}
+				Array.isArray(current) && (current = current.filter( function(o) { return void 0 != o } ))
 				if (1 === current.length) current = current.pop()
 				return jwalk
 			}
