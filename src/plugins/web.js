@@ -11,7 +11,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
     appendObj = function(obj, name, value){ obj[name] = value },
     timeSync = function(net, cb){
         cb = cb || stdCB
-        ajax('get', net.url, null, null, function(err, readyState, response){
+        pico.ajax('get', net.url, null, null, function(err, readyState, response){
             if (4 !== readyState) return
             if (err) return cb(err)
             var st = parseInt(response)
@@ -179,12 +179,12 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 				var uploads=this.uploads,outbox=this.outbox,acks=this.acks
 
 				if (uploads.length){
-					ajax('post', this.url, uploads.shift(), null, onResponse, this)
+					pico.ajax('post', this.url, uploads.shift(), null, onResponse, this)
 				}else{
 					var reqs = this.reqs = acks.concat(outbox)
 					acks.length = outbox.length = 0
 
-					ajax('post', this.url, reqs.join(this.delimiter)+this.delimiter, null, onResponse, this)
+					pico.ajax('post', this.url, reqs.join(this.delimiter)+this.delimiter, null, onResponse, this)
 				}
 			}
 		},
@@ -300,7 +300,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 			timeSync(net, function(err){ cb && cb(err, net) })
 			return net
         },
-        ajax:ajax,
         //window.addEventListener('online', online)
         online: function(){isOnline=true},
         //window.addEventListener('offline', offlie)

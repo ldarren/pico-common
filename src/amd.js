@@ -11,7 +11,7 @@ MOD_PREFIX='"use strict";\n',
 MOD_POSTFIX='//# sourceURL=',
 PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)', // prevent closure
 // call when pico.run done
-ajax,ran,importRule,
+ran,importRule,
 paths={},
 env={},
 preprocessors={},
@@ -46,13 +46,12 @@ loader=function(url,cb){
 	path=path || paths['~'] || ''
 
     if (path instanceof Function){
-        path(fname, function(err, m){
+        path(fname, function(err, txt){
             if (err) return cb(err)
-            modules[url]=m
-            cb(null, m)
+			js(url,txt,cb)
         })
     }else{
-        ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,null,function(err,state,txt){
+        pico.ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,null,function(err,state,txt){
             if (4!==state) return
             if (err) return cb(err)
 			js(url,txt,cb)
@@ -202,7 +201,7 @@ tick=function(timestamp){
 
 var pico=module[exports]={
     run:function(options,func){
-        pico.ajax=ajax=options.ajax||ajax
+        pico.ajax=options.ajax||pico.ajax
         paths=options.paths||paths
         env=options.env||env
         preprocessors=options.preprocessors||preprocessors
