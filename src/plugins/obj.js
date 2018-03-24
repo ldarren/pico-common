@@ -1,42 +1,48 @@
 define('pico/obj',function(){
     var allows = ['object','function']
+    var specialFunc = ['constructor']
     return  {
         extend: function extend(to, from, options){
-            var tf=allows.indexOf(typeof to)
-            if (-1 === tf) return from
-            var ft=allows.indexOf(typeof from)
-            if (-1 === ft)return to
-            if (1===ft && ft===tf){
-				from.prototype=to
+			var tf=allows.indexOf(typeof to)
+			var ft=allows.indexOf(typeof from)
+			if (1 === tf) tf = allows.indexOf(typeof to.__proto__)
+			if (1 === ft) ft = allows.indexOf(typeof from.__proto__)
+			if (-1 === ft && ft === tf) return from
+			if (-1 === ft) return to
+			if (1===ft) {
+				if(ft === tf)from.prototype=to
 				return from
 			}
-            options=options||{}
-            var tidy = options.tidy, key, value
-            if (1===ft || void 0 === from.length){ // function or object (non array)
-                for (key in from){
-                    value = from[key]
-                    if (void 0 === value && tidy) continue
-                    to[key] = extend(to[key], value, options)
-                }
-            }else{
-                if (options.mergeArr){
-                    // TODO: change unique to Set when is more commonly support on mobile
-                    var i, l, unique={}
-                    for (i=0,l=to.length; i<l; i++){
-                        if (void 0 === (value = to[i]) && tidy) continue
-                        unique[value] = value
-                    }
-                    for (i=0,l=from.length; i<l; i++){
-                        if (void 0 === (value = from[i]) && tidy) continue
-                        unique[value] = value
-                    }
-                    to = []
-                    for (key in unique) to.push(unique[key]);
-                }else{
-                    to = from
-                }
-            }
-            return to
+			if (-1 === tf) tf = 0
+			options=options||{}
+			var tidy = options.tidy, key, value
+			if (Array.isArray(from)){
+				if (options.mergeArr){
+					to = to || []
+					// TODO: change unique to Set when is more commonly support on mobile
+					var i, l, unique={}
+					for (i=0,l=to.length; i<l; i++){
+						if (void 0 === (value = to[i]) && tidy) continue
+						unique[value] = value
+					}
+					for (i=0,l=from.length; i<l; i++){
+						if (void 0 === (value = from[i]) && tidy) continue
+						unique[value] = value
+					}
+					to = []
+					for (key in unique) to.push(unique[key]);
+				}else{
+					to = from
+				}
+			}else{
+				to = to || {}
+				for (key in from){
+					value = from[key]
+					if (specialFunc.includes(key) || (void 0 === value && tidy)) continue
+					to[key] = extend(to[key], value, options)
+				}
+			}
+			return to
         },
         extends: function(to, list, options){
             var e = this.extend

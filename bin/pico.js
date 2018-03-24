@@ -11,7 +11,7 @@ MOD_PREFIX='"use strict";\n',
 MOD_POSTFIX='//# sourceURL=',
 PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)', // prevent closure
 // call when pico.run done
-ajax,ran,importRule,
+ran,importRule,
 paths={},
 env={},
 preprocessors={},
@@ -46,13 +46,12 @@ loader=function(url,cb){
 	path=path || paths['~'] || ''
 
     if (path instanceof Function){
-        path(fname, function(err, m){
+        path(fname, function(err, txt){
             if (err) return cb(err)
-            modules[url]=m
-            cb(null, m)
+			js(url,txt,cb)
         })
     }else{
-        ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,null,function(err,state,txt){
+        pico.ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,null,function(err,state,txt){
             if (4!==state) return
             if (err) return cb(err)
 			js(url,txt,cb)
@@ -202,7 +201,7 @@ tick=function(timestamp){
 
 var pico=module[exports]={
     run:function(options,func){
-        pico.ajax=ajax=options.ajax||ajax
+        pico.ajax=options.ajax||pico.ajax
         paths=options.paths||paths
         env=options.env||env
         preprocessors=options.preprocessors||preprocessors
@@ -347,41 +346,48 @@ define('pico/obj',function(){
     var allows = ['object','function']
     return  {
         extend: function extend(to, from, options){
-            var tf=allows.indexOf(typeof to)
-            if (-1 === tf) return from
-            var ft=allows.indexOf(typeof from)
-            if (-1 === ft)return to
-            if (1===ft && ft===tf){
-				from.prototype=to
-				return from
-			}
-            options=options||{}
-            var tidy = options.tidy, key, value
-            if (1===ft || void 0 === from.length){ // function or object (non array)
-                for (key in from){
-                    value = from[key]
-                    if (void 0 === value && tidy) continue
-                    to[key] = extend(to[key], value, options)
-                }
-            }else{
-                if (options.mergeArr){
-                    // TODO: change unique to Set when is more commonly support on mobile
-                    var i, l, unique={}
-                    for (i=0,l=to.length; i<l; i++){
-                        if (void 0 === (value = to[i]) && tidy) continue
-                        unique[value] = value
-                    }
-                    for (i=0,l=from.length; i<l; i++){
-                        if (void 0 === (value = from[i]) && tidy) continue
-                        unique[value] = value
-                    }
-                    to = []
-                    for (key in unique) to.push(unique[key]);
-                }else{
-                    to = from
-                }
-            }
-            return to
+  var tf=allows.indexOf(typeof to)
+  var ft=allows.indexOf(typeof from)
+  if (1 === tf) tf = allows.indexOf(typeof to.__proto__)
+  if (1 === ft) ft = allows.indexOf(typeof from.__proto__)
+  if (-1 === ft && ft === tf) return from
+  if (-1 === ft) return to
+  if (1===ft) {
+    if(ft === tf)from.prototype=to
+    return from
+  }
+  if (-1 === tf) {
+    tf = 0
+  }
+  options=options||{}
+  var tidy = options.tidy, key, value
+  if (Array.isArray(from)){
+    if (options.mergeArr){
+      to = to || []
+      // TODO: change unique to Set when is more commonly support on mobile
+      var i, l, unique={}
+      for (i=0,l=to.length; i<l; i++){
+        if (void 0 === (value = to[i]) && tidy) continue
+        unique[value] = value
+      }
+      for (i=0,l=from.length; i<l; i++){
+        if (void 0 === (value = from[i]) && tidy) continue
+        unique[value] = value
+      }
+      to = []
+      for (key in unique) to.push(unique[key]);
+    }else{
+      to = from
+    }
+  }else{
+    to = to || {}
+    for (key in from){
+      value = from[key]
+      if ('constructor' === key || (void 0 === value && tidy)) continue
+      to[key] = extend(to[key], value, options)
+    }
+  }
+  return to
         },
         extends: function(to, list, options){
             var e = this.extend
@@ -763,7 +769,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
     appendObj = function(obj, name, value){ obj[name] = value },
     timeSync = function(net, cb){
         cb = cb || stdCB
-        ajax('get', net.url, null, null, function(err, readyState, response){
+        pico.ajax('get', net.url, null, null, function(err, readyState, response){
             if (4 !== readyState) return
             if (err) return cb(err)
             var st = parseInt(response)
@@ -931,12 +937,12 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 				var uploads=this.uploads,outbox=this.outbox,acks=this.acks
 
 				if (uploads.length){
-					ajax('post', this.url, uploads.shift(), null, onResponse, this)
+					pico.ajax('post', this.url, uploads.shift(), null, onResponse, this)
 				}else{
 					var reqs = this.reqs = acks.concat(outbox)
 					acks.length = outbox.length = 0
 
-					ajax('post', this.url, reqs.join(this.delimiter)+this.delimiter, null, onResponse, this)
+					pico.ajax('post', this.url, reqs.join(this.delimiter)+this.delimiter, null, onResponse, this)
 				}
 			}
 		},
@@ -1052,7 +1058,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 			timeSync(net, function(err){ cb && cb(err, net) })
 			return net
         },
-        ajax:ajax,
         //window.addEventListener('online', online)
         online: function(){isOnline=true},
         //window.addEventListener('offline', offlie)

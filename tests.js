@@ -33,7 +33,7 @@ ensure('ensure inherit work with child(obj) and ancestor(function)', function(cb
 	cb(null, 'ancestor'===(new child).bark())
 })
 ensure('ensure inherit work with child(function) and ancestor(function)', function(cb){
-	pico.parse('child3', "inherit('ancestor2'); function Child(){Child.__super__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
+	pico.parse('child3', "inherit('ancestor2'); function Child(){this.__proto__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
 		if (err) return cb(err)
 		cb(null, 'ancestorchild'===(new child).bark())
 	})
@@ -46,7 +46,7 @@ ensure('ensure extend work with child(obj) and ancestor(function)', function(cb)
 	})
 })
 ensure('ensure extend work with child(function) and ancestor(function)', function(cb){
-	pico.parse('child5', "function Child(){Child.__super__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
+	pico.parse('child5', "function Child(){this.__proto__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
 		if (err) return cb(err)
 		var ancestor=pico.export('ancestor2')
 		cb(null, 'ancestorchild'===(new (ancestor.extend(child))).bark())
@@ -140,6 +140,27 @@ ensure('ensure pico.reload does text hot-loading', function(cb){
 			cb(null, newText===pico.export(name))
 		})
 	})
+})
+
+ensure('ensure object.extend compatible with pico module', function(cb){
+	function a(){}
+	a.__proto__ = {
+	  slots: {
+		slotA(){ return 1 },
+		slotC(){ return 3 }
+	  }
+	}
+	function b(){}
+	b.__proto__ = {
+	  slots: {
+		slotB(){ return 2 },
+		slotC: function slotC(){ return 1 + slotC.prototype.call() },
+	  }
+	}
+
+	const res = pobj.extend(pobj.extend({}, a), b)
+
+	cb(null, 1 === res.slots.slotA() && 2 === res.slots.slotB() && 4 ===  res.slots.slotC())
 })
 
 ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){

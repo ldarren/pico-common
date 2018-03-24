@@ -107,15 +107,10 @@ inherit=function(mod1,mod2,mod3){
 	Object.assign(fn,ancestor,unwrap(mod3))
 	switch(aType){
 	case 'function':
-		var fnp=fn.prototype=Object.assign(Object.create(ancestor.prototype),props)
-		fnp.constructor=fn
-		var cs=child.__super__=ancestor.prototype
-		cs.constructor=ancestor
+		fn.prototype=Object.assign(Object.create(ancestor.prototype),props,{constructor: ancestor})
 		return fn
 	case 'object':
-		var fnp=fn.prototype=Object.assign(Object.create(ancestor),props)
-		fnp.constructor=fn
-		child.__super__=ancestor
+		fn.prototype=Object.assign(Object.create(ancestor),props)
 		return fn
 	default: return child 
 	}
