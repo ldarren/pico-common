@@ -1,11 +1,18 @@
-const
-globalKeys=Object.keys(global),
-pico=require('./bin/pico-cli'),
-pobj= pico.export('pico/obj'),
-pjson= pico.export('pico/json'),
-pstr= pico.export('pico/str'),
-ptime= pico.export('pico/time'),
-ensure= pico.export('pico/test').ensure
+const globalKeys = Object.keys(global)
+const pico = require('./bin/pico-cli')
+const pobj = pico.export('pico/obj')
+const pjson = pico.export('pico/json')
+const pstr = pico.export('pico/str')
+const ptime = pico.export('pico/time')
+const { setup, ensure } = pico.export('pico/test')
+
+setup({
+	stdout: true,
+	callback: function(output){
+		//console.log(JSON.stringify(output))
+	},
+	//fname: 'test_result.json'
+})
 
 ensure('ensure pico has loaded correctly', function(cb){
 	cb(null, pobj !== undefined)
@@ -120,9 +127,9 @@ ensure('ensure pico.parse define text to module', function(cb){
 
 ensure('ensure pico.reload does js hot-loading', function(cb){
 	pico.parse('ScriptA','return {a:function(){return "hello world"}}',function(err,mod){
-		if (err) return console.error(err)
+		if (err) return cb(err)
 		pico.reload('ScriptA','return {a:function(){return "hot reload"}}',function(err){
-			if (err) return console.error(err)
+			if (err) return cb(err)
 			var scriptA=pico.export('ScriptA')
 			cb(null,'hot reload'===scriptA.a())
 		})
@@ -134,7 +141,7 @@ ensure('ensure pico.reload does text hot-loading', function(cb){
 	name='testMod.txt',
 	newText='Hello yourself'
 	pico.parse(name,'Hello there',function(err,mod){
-		if (err) return console.error(err)
+		if (err) return cb(err)
 		pico.reload(name, newText, function(err, mod){
 			if (err) return cb(err)
 			cb(null, newText===pico.export(name))
@@ -372,8 +379,7 @@ ensure('ensure hash dont collide in repeating char x9999', function(cb){
 		hist.push(h)
 		s+='p'
 	}
-	console.log('perf',Date.now()-n,hist.length)
-	cb(null, l===hist.length)
+	cb(null, l===hist.length, 'count', hist.length, 'ms', Date.now() - n)
 })
 ensure('ensure hash dont collide in uuid x99999', function(cb){
 	var
@@ -385,6 +391,5 @@ ensure('ensure hash dont collide in uuid x99999', function(cb){
 		if (~hist.indexOf(h)) break
 		hist.push(h)
 	}
-	console.log('perf',Date.now()-n,hist.length)
-	cb(null, l===hist.length)
+	cb(null, l===hist.length, 'count', hist.length, 'ms', Date.now() - n)
 })

@@ -13,6 +13,8 @@ pids
 logs
 results
 build/
+bin/
 node_modules/
 
 npm-debug.log
+test_result.json
