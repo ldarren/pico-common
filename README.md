@@ -180,3 +180,24 @@ proxy('hello pico') // 'hello pico'
 proxy.length // 0
 Object.getPrototypeOf(proxy).length // 1
 ```
+
+## Modules
+### pico/test
+```javascript
+const { setup, ensure } = pico.export('pico/test')
+
+setup({
+	stdout: false, // default: true, toggle standard out
+	fname: 'output.json', // default: undefined, output filename
+	end: result => {} // default: undefined, callback at the end of test
+})
+
+ensure('ensure 1 is true', cb => {
+	cb(null, 1)
+})
+
+// optional remarks
+ensure('ensure "" is false', cb => {
+	cb(null, "", 'optional', 'remark')
+})
+```

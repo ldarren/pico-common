@@ -6,7 +6,7 @@ define('pico/test',function(){
 	var results = []
 	var output = { summary: summary, results: results }
 	var stdout = true
-	var fname, callback
+	var fname, end
 
 	function write(msg, err, result){
 		if (!stdout) return
@@ -28,20 +28,20 @@ define('pico/test',function(){
 		if (summary.total === summary.suceeded + summary.failed + summary.error){
 			if (stdout) console.log('\nSummary:', summary)
 			if (fname) require('fs').writeFileSync(fname, JSON.stringify(output))
-			if (callback) callback(output)
+			if (end) end(output)
 			if (isNode) process.exit(summary.failed + summary.error)
 		}
 	}
 
     return {
 		setup: function(options){
-			callback = options.callback
+			end = options.end
 			stdout = options.stdout
 			fname = isNode && options.fname
 		},
         ensure: function(msg, task){
 			summary.total++
-            setImmediate(task, function(){
+            setTimeout(task, 0, function(){
 				record.apply(msg, arguments)
             })
         }

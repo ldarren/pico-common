@@ -8,8 +8,8 @@ const { setup, ensure } = pico.export('pico/test')
 
 setup({
 	stdout: true,
-	callback: function(output){
-		//console.log(JSON.stringify(output))
+	end: function(result){
+		//console.log(JSON.stringify(result))
 	},
 	//fname: 'test_result.json'
 })
