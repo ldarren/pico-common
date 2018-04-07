@@ -1,7 +1,7 @@
 define('pico/test',function(){
     var pStr = pico.export('pico/str')
 	var isNode = 'undefined' !== typeof require
-	var format = isNode ? JSON.stringify : require('util').inspect
+	var format = isNode ? require('util').inspect : JSON.stringify
 	var summary = { total: 0, suceeded: 0, failed: 0, error: 0 }
 	var results = []
 	var output = { summary: summary, results: results }
