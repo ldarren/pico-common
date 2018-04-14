@@ -1,20 +1,21 @@
 var
 uuid=Date.now(),
-dummyCB=function(){},
-dummyLoader=function(){arguments[arguments.length-1]()},
-dummyPico={run:dummyCB,inherit:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:dummyCB,ajax:dummyCB},//TODO: proxy
 modules={},
 updates={},
+paths={},
+env={},
+preprocessors={},
 EXT_JS='.js',EXT_JSON='.json',
 DEF="pico.define('URL','FUNC')\n",
 MOD_PREFIX='"use strict";\n',
 MOD_POSTFIX='//# sourceURL=',
 PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)', // prevent closure
+getEnv = function(k){ return env[k] },
+dummyCB=function(){},
+dummyLoader=function(){arguments[arguments.length-1]()},
+dummyPico={run:dummyCB,inherit:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:getEnv,ajax:dummyCB},//TODO: proxy
 // call when pico.run done
 ran,importRule,
-paths={},
-env={},
-preprocessors={},
 schedule= (function(){
 	return ('undefined'===typeof requestAnimationFrame) ? function(cb){ return setTimeout(cb, 100) }: requestAnimationFrame
 })(),
@@ -36,7 +37,8 @@ linker=function(deps, cb){
 },
 // load files, and execute them based on ext
 loader=function(url,cb){
-    if (modules[url])return cb(null, modules[url])
+	modules[url] = modules[url] || pico.import(url) // load node module?
+    if (modules[url]) return cb(null, modules[url])
 
 	var
 	idx=url.indexOf('/'),
@@ -232,9 +234,9 @@ var pico=module[exports]={
     parse:js,
     define:define,
     import:function(url){
-		if (Array.isArray(importRule) && -1===importRule.indexOf(url)) return
-		return require(url)
+		if (Array.isArray(importRule) && importRule.some(function(rx){ return rx.match(url)}))
+			return require(url)
 	},
     export:getMod,
-    env:function(k){ return env[k] }
+    env:getEnv
 }
