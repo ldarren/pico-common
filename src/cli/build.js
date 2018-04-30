@@ -10,6 +10,7 @@ define('pico/build',function(){
         entry=options.entry,
         output=options.output,
         exclude=options.exclude,
+		replace=options.replace,
         orgDefine=define,
         addDeps=function(output, deps){
             if (!deps || !deps.length) return
@@ -32,6 +33,7 @@ define('pico/build',function(){
             orgDefine(url, func, base, true)
             if(!url)return
             if (-1 !== exclude.indexOf(url)) return
+            if (replace[url]) return fs.appendFileSync(output, DEF.replace('URL',url).replace('FUNC', replace[url].replace(CR, esc)))
             // TODO why appendFile not working?
             switch(getExt(url)||EXT_JS){
             case EXT_JS: return fs.appendFileSync(output, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
@@ -46,14 +48,14 @@ define('pico/build',function(){
                 if (err) return console.error(err)
                 // overide define to write function
                 var func=compile(null,txt,[],pico) // since no define, compile with real pico
+				addInclude(options.include, function(err){
+					if (err) console.error(err)
+				})
                 if (-1 !== exclude.indexOf(entry)) return
                 ran=function(){
                     fs.appendFileSync(output, funcBody(func.toString()))
-                    addInclude(options.include, function(err){
-                        if (err) console.error(err)
-                        // TODO why need to kill?
-                        process.exit()
-                    })
+					// TODO why need to kill?
+					//process.exit()
                 }
             })
         })
