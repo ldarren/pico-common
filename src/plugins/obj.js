@@ -38,7 +38,7 @@ define('pico/obj',function(){
 				to = to || {}
 				for (key in from){
 					value = from[key]
-					if (specialFunc.includes(key) || (void 0 === value && tidy)) continue
+					if (~specialFunc.indexOf(key) || (void 0 === value && tidy)) continue
 					to[key] = extend(to[key], value, options)
 				}
 			}

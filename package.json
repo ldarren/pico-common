@@ -1,10 +1,10 @@
 {
     "name": "pico-common",
-    "version": "0.9.5",
+    "version": "0.9.6",
     "description": "pico common tools",
     "main": "bin/pico.js",
     "scripts": {
-        "prepublish": "./concat.js src/plugins; ./concat.js src/plugins,src/cli bin/pico-cli",
+        "prepare": "./concat.js src/plugins; ./concat.js src/plugins,src/cli bin/pico-cli",
         "pretest": "./concat.js src/plugins,src/cli bin/pico-cli",
         "test": "node tests.js"
     },
