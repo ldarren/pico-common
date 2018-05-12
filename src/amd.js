@@ -13,7 +13,39 @@ PLACE_HOLDER='return arguments.callee.__proto__.apply(this,arguments)', // preve
 getEnv = function(k){ return env[k] },
 dummyCB=function(){},
 dummyLoader=function(){arguments[arguments.length-1]()},
-dummyPico={run:dummyCB,inherit:dummyCB,reload:dummyCB,parse:dummyCB,define:dummyCB,import:dummyCB,export:dummyCB,env:getEnv,ajax:dummyCB},//TODO: proxy
+// run the module and register the module output
+define=function(url, func, mute){
+	if (modules[url] && !isPlaceHolder(modules[url])) return modules[url]
+    var
+    ext=getExt(url)||EXT_JS,
+    pp=preprocessors[ext]
+
+    if (pp) func=pp(url, func)
+
+    switch(ext){
+    case EXT_JS:
+        var
+        module={exports:{}},
+        evt={},
+		base,
+		getBase=function(k){base=getMod(k); return base},
+        m=func.call(mute?{}:evt,module.exports,getMod,module,define,getBase,pico)||module.exports
+
+        if (base) m=inherit(m,base)
+		if ('function' === typeof m) m.extend=extend
+        if (evt.load) evt.load(m)
+        if (evt.update) updates[url]=[evt.update,m]
+
+        if (!url) return m
+
+        return modules[url]=wrap(modules[url],m)
+    case EXT_JSON:
+        try{ return modules[url]=JSON.parse(func) }
+        catch(e){return console.error(url, e.message)}
+    default: return modules[url]=func
+    }
+},
+dummyPico={run:dummyCB,inherit:dummyCB,reload:dummyCB,parse:dummyCB,define:define,import:dummyCB,export:dummyCB,env:getEnv,ajax:dummyCB},//TODO: proxy
 // call when pico.run done
 ran,importRule,
 schedule= (function(){
@@ -136,39 +168,8 @@ compile=function(url,txt,deps,me){
     try{ var func=Function('exports','require','module','define','inherit','pico',script) }
     catch(e){return console.error(url, e.message)}
 
-    func.call({}, {},frequire,{},dummyCB,frequire,me)
+    func.call({}, {},frequire,{},define,frequire,me)
     return func
-},
-// run the module and register the module output
-define=function(url, func, mute){
-    var
-    ext=getExt(url)||EXT_JS,
-    pp=preprocessors[ext]
-
-    if (pp) func=pp(url, func)
-
-    switch(ext){
-    case EXT_JS:
-        var
-        module={exports:{}},
-        evt={},
-		base,
-		getBase=function(k){base=getMod(k); return base},
-        m=func.call(mute?{}:evt,module.exports,getMod,module,define,getBase,pico)||module.exports
-
-        if (base) m=inherit(m,base)
-		if ('function' === typeof m) m.extend=extend
-        if (evt.load) evt.load(m)
-        if (evt.update) updates[url]=[evt.update,m]
-
-        if (!url) return m
-
-        return modules[url]=wrap(modules[url],m)
-    case EXT_JSON:
-        try{ return modules[url]=JSON.parse(func) }
-        catch(e){return console.error(url, e.message)}
-    default: return modules[url]=func
-    }
 },
 // js file executer
 js=function(url,txt,cb){
