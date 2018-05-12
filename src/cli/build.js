@@ -5,11 +5,11 @@ define('pico/build',function(){
 	esc=function(m){return htmlescape[m]}
 
 	return function(options){
-		const fs=require('fs')
-		const path=require('path')
-		const srcDir = options.shift()
-		const dstDir = options.shift()
-		const orgDefine = define
+		var fs=require('fs')
+		var path=require('path')
+		var srcDir = options.shift()
+		var dstDir = options.shift()
+		var orgDefine = define
 
         // overide tick function
         tick=dummyCB
@@ -23,14 +23,14 @@ define('pico/build',function(){
 
 		function addInclude(include, cb){
 			if (!include || !include.length) return cb()
-			loader(include.shift(), err => {
+			loader(include.shift(), function(err) {
 				if (err) return cb(err)
 				addInclude(include, cb)
 			})
 		}
 
 		function overrideDefine(dst, exclude){
-			define = (url, func, base) => {
+			define = function (url, func, base) {
 				orgDefine(url, func, base, true)
 				if (!url) return
 				if (-1 !== exclude.indexOf(url)) return
@@ -48,21 +48,20 @@ define('pico/build',function(){
 			// reset to main modules state
 			modules = Object.assign({}, mainModules)
 
-			const o = options.shift()
-			const dst = path.join(dstDir, o.entry + EXT_JS)
-			const exclude = o.exclude || []
+			var o = options.shift()
+			var dst = path.join(dstDir, o.entry + EXT_JS)
 
 			// overide define function
-			overrideDefine(dst, exclude)
+			overrideDefine(dst, o.exclude || [])
 
-			fs.unlink(dst, () => {
+			fs.unlink(dst, function() {
 				addDeps(dst, o.deps)
-				addInclude(o.include, (err) => {
+				addInclude(o.include, function(err) {
 					if (err) return console.error(err)
-					const txt = fs.readFileSync(path.join(srcDir, o.entry + EXT_JS))
+					var txt = fs.readFileSync(path.join(srcDir, o.entry + EXT_JS))
 					// since no define, compile with real pico
-					const func = compile(null, txt, [], pico)
-					js(o.entry, txt, (err) => {
+					var func = compile(null, txt, [], pico)
+					js(o.entry, txt, function(err) {
 						if (err) return cb(err)
 						fs.appendFileSync(dst, funcBody(func.toString()))
 						createBundle(options, mainModules, cb)
@@ -71,25 +70,25 @@ define('pico/build',function(){
 			})
 		}
 
-		const mo = options.shift()
-		const dst = path.join(dstDir, mo.entry + EXT_JS)
-		const exclude = mo.exclude || []
+		var mo = options.shift()
+		var dst = path.join(dstDir, mo.entry + EXT_JS)
+		var exclude = mo.exclude || []
 
 		// overide define function
 		overrideDefine(dst, exclude)
 
-		fs.unlink(dst, () => {
+		fs.unlink(dst, function() {
 			addDeps(dst, mo.deps)
-			const txt = fs.readFileSync(path.join(srcDir, mo.entry + EXT_JS))
+			var txt = fs.readFileSync(path.join(srcDir, mo.entry + EXT_JS))
 			// since no define, compile with real pico
-			const func = compile(null, txt, [], pico)
+			var func = compile(null, txt, [], pico)
 			if (~exclude.indexOf(mo.entry)) return
 			ran = function(){
-				addInclude(mo.include, (err) => {
+				addInclude(mo.include, function(err) {
 					if (err) return console.error(err)
 					fs.appendFileSync(dst, funcBody(func.toString()))
 					// TODO why need to kill?
-					createBundle(options, Object.assign({}, modules), () => {
+					createBundle(options, Object.assign({}, modules), function() {
 						process.exit()
 					})
 				})
