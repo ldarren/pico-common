@@ -7,13 +7,11 @@ define('pico/obj',function(){
 			var ft=allows.indexOf(typeof from)
 			if (1 === tf) tf = allows.indexOf(typeof to.__proto__)
 			if (1 === ft) ft = allows.indexOf(typeof from.__proto__)
-			if (-1 === ft && ft === tf) return from
-			if (-1 === ft) return to
+			if (!to || null === from || (-1 === ft && ft === tf)) return void 0 === from ? to : from
 			if (1===ft) {
 				if(ft === tf)from.prototype=to
 				return from
 			}
-			if (-1 === tf) tf = 0
 			options=options||{}
 			var tidy = options.tidy, key, value
 			if (Array.isArray(from)){

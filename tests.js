@@ -228,7 +228,7 @@ ensure('ensure options.mergeArr off is working. output should contain[2,3] list'
 
 	cb(null, JSON.stringify([2,3]) === JSON.stringify(out))
 })
-ensure('ensure function extended properly', function(cb){
+ensure('ensure function extended correctly', function(cb){
 	var
 	obj1 = {func:function(){return 1}},
 	obj2 = {func:function(){return arguments.callee.prototype()}},
@@ -236,6 +236,14 @@ ensure('ensure function extended properly', function(cb){
 	obj4 = pobj.extend(obj3,obj1,obj2)
 
 	cb(null, obj1.func()===obj4.func())
+})
+
+ensure('ensure obj.extend handled null/undefined correctly', function(cb){
+	var outa = pobj.extends({}, [{a: null}, {a: 'a'}])
+	var outb = pobj.extends({}, [{b: 'b'}, {b: null}])
+	var outc = pobj.extends({}, [{c: undefined}, {c: 'c'}])
+	var outd = pobj.extends({}, [{d: 'd'}, {d: undefined}])
+	cb(null, 'a' === outa.a && null === outb.b && 'c' === outc.c && 'd' === outd.d)
 })
 
 ensure('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', function(cb){
