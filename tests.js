@@ -298,6 +298,19 @@ ensure('ensure str.template mix well with js', function(cb){
 	const tmpl=pstr.template('<%for(var i=0; i<5; i++){%>1<%}%>')
 	cb(null, '11111'===tmpl())
 })
+ensure('ensure str.template has pico as argument', function(cb){
+	const env = {
+		secret: 'ise',
+		cb
+	}
+	pico.run({ env }, function(){
+		const pstr = require('pico/str')
+		const tmpl = pstr.template("<%pico.env('secret')%>")
+		return function(){
+			pico.env('cb')(null, pico.env('secret') === tmpl())
+		}
+	})
+})
 ensure('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
 	var
 	route='url/v%version/pushPackage/:pushId',
