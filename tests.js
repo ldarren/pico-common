@@ -4,7 +4,7 @@ const pobj = pico.export('pico/obj')
 const pjson = pico.export('pico/json')
 const pstr = pico.export('pico/str')
 const ptime = pico.export('pico/time')
-const { setup, ensure } = pico.export('pico/test')
+const { setup, ensure } = pico.export('pico/test3')
 
 setup({
 	stdout: true,
