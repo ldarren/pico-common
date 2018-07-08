@@ -4,7 +4,7 @@ const pobj = pico.export('pico/obj')
 const pjson = pico.export('pico/json')
 const pstr = pico.export('pico/str')
 const ptime = pico.export('pico/time')
-const { setup, test } = pico.export('pico/test')
+const { setup, test, series, parallel } = pico.export('pico/test')
 
 setup({
 	stdout: true,
@@ -21,77 +21,79 @@ test('ensure pico properties no leak', function(cb){
 	cb(null, globalKeys.length === Object.keys(global).length)
 })
 
-test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
-	pico.define('ancestor0',function(exports,require,module,define,inherit,pico){return {say:function(txt){return txt}}})
-	pico.parse('child0', "inherit('ancestor0'); return {bark:function(){return this.say('hello')}}",function(err, child){
-		if (err) return cb(err)
-		cb(null, 'hello'===child.bark())
+parallel('pico/obj', function(){
+	this.test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
+		pico.define('ancestor0',function(exports,require,module,define,inherit,pico){return {say:function(txt){return txt}}})
+		pico.parse('child0', "inherit('ancestor0'); return {bark:function(){return this.say('hello')}}",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'hello'===child.bark())
+		})
 	})
-})
-test('ensure inherit work with child(function) and ancestor(obj)', function(cb){
-	pico.parse('child1', "inherit('ancestor0'); function Child(){this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.postfix)}}; return Child",function(err, child){
-		if (err) return cb(err)
-		cb(null, 'child'===(new child).bark())
+	this.test('ensure inherit work with child(function) and ancestor(obj)', function(cb){
+		pico.parse('child1', "inherit('ancestor0'); function Child(){this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.postfix)}}; return Child",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'child'===(new child).bark())
+		})
 	})
-})
-test('ensure inherit work with child(obj) and ancestor(function)', function(cb){
-	pico.define('ancestor2',function(exports,require,module,define,inherit,pico){function Ancestor(){this.prefix='ancestor'}; Ancestor.prototype={say:function(txt){return txt}}; return Ancestor;})
-	var child=pico.define('child2',function(exports,require,module,define,inherit,pico){inherit('ancestor2'); return {bark:function(){return this.say(this.prefix)}}})
-	cb(null, 'ancestor'===(new child).bark())
-})
-test('ensure inherit work with child(function) and ancestor(function)', function(cb){
-	pico.parse('child3', "inherit('ancestor2'); function Child(){this.__proto__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
-		if (err) return cb(err)
-		cb(null, 'ancestorchild'===(new child).bark())
+	this.test('ensure inherit work with child(obj) and ancestor(function)', function(cb){
+		pico.define('ancestor2',function(exports,require,module,define,inherit,pico){function Ancestor(){this.prefix='ancestor'}; Ancestor.prototype={say:function(txt){return txt}}; return Ancestor;})
+		var child=pico.define('child2',function(exports,require,module,define,inherit,pico){inherit('ancestor2'); return {bark:function(){return this.say(this.prefix)}}})
+		cb(null, 'ancestor'===(new child).bark())
 	})
-})
-test('ensure extend work with child(obj) and ancestor(function)', function(cb){
-	pico.parse('child4', "return {bark:function(){return this.say(this.prefix)}}",function(err, child){
-		if (err) return cb(err)
-		var ancestor=pico.export('ancestor2')
-		cb(null, 'ancestor'===(new (ancestor.extend(child))).bark())
+	this.test('ensure inherit work with child(function) and ancestor(function)', function(cb){
+		pico.parse('child3', "inherit('ancestor2'); function Child(){this.__proto__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
+			if (err) return cb(err)
+			cb(null, 'ancestorchild'===(new child).bark())
+		})
 	})
-})
-test('ensure extend work with child(function) and ancestor(function)', function(cb){
-	pico.parse('child5', "function Child(){this.__proto__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
-		if (err) return cb(err)
-		var ancestor=pico.export('ancestor2')
-		cb(null, 'ancestorchild'===(new (ancestor.extend(child))).bark())
+	this.test('ensure extend work with child(obj) and ancestor(function)', function(cb){
+		pico.parse('child4', "return {bark:function(){return this.say(this.prefix)}}",function(err, child){
+			if (err) return cb(err)
+			var ancestor=pico.export('ancestor2')
+			cb(null, 'ancestor'===(new (ancestor.extend(child))).bark())
+		})
 	})
-})
+	this.test('ensure extend work with child(function) and ancestor(function)', function(cb){
+		pico.parse('child5', "function Child(){this.__proto__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
+			if (err) return cb(err)
+			var ancestor=pico.export('ancestor2')
+			cb(null, 'ancestorchild'===(new (ancestor.extend(child))).bark())
+		})
+	})
 
-test('ensure underscore can be loaded',function(cb){
-	const 
-	V='1.8.3',
-	_=pico.define('underscore',function(exports,require,module,define,inherit,pico){
-		(function() {
-		  var root = this;
+	this.test('ensure underscore can be loaded',function(cb){
+		const 
+		V='1.8.3',
+		_=pico.define('underscore',function(exports,require,module,define,inherit,pico){
+			(function() {
+			  var root = this;
 
-		  var _ = function(obj) {
-			if (obj instanceof _) return obj;
-			if (!(this instanceof _)) return new _(obj);
-			this._wrapped = obj;
-		  };
+			  var _ = function(obj) {
+				if (obj instanceof _) return obj;
+				if (!(this instanceof _)) return new _(obj);
+				this._wrapped = obj;
+			  };
 
-		  if (typeof exports !== 'undefined') {
-			if (typeof module !== 'undefined' && module.exports) {
-			  exports = module.exports = _;
-			}
-			exports._ = _;
-		  } else {
-			root._ = _;
-		  }
+			  if (typeof exports !== 'undefined') {
+				if (typeof module !== 'undefined' && module.exports) {
+				  exports = module.exports = _;
+				}
+				exports._ = _;
+			  } else {
+				root._ = _;
+			  }
 
-		  _.VERSION = V;
+			  _.VERSION = V;
 
-		  if (typeof define === 'function' && define.amd) {
-			define('underscore', [], function() {
-			  return _;
-			});
-		  }
-		}.call(this));
+			  if (typeof define === 'function' && define.amd) {
+				define('underscore', [], function() {
+				  return _;
+				});
+			  }
+			}.call(this));
+		})
+		cb(null, V===_.VERSION)
 	})
-	cb(null, V===_.VERSION)
 })
 
 test('ensure pico preprocessors and env work', function(cb){
@@ -305,6 +307,19 @@ test('ensure str.template works', function(cb){
 test('ensure str.template mix well with js', function(cb){
 	const tmpl=pstr.template('<%for(var i=0; i<5; i++){%>1<%}%>')
 	cb(null, '11111'===tmpl())
+})
+test('ensure str.template has pico as argument', function(cb){
+	const env = {
+		secret: 'ise',
+		cb
+	}
+	pico.run({ env }, function(){
+		const pstr = require('pico/str')
+		const tmpl = pstr.template("<%pico.env('secret')%>")
+		return function(){
+			pico.env('cb')(null, pico.env('secret') === tmpl())
+		}
+	})
 })
 test('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
 	var
