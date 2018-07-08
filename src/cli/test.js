@@ -21,60 +21,104 @@ define('pico/test', function(){
 		}
 	}
 
-	function test(runner, msg, task){
+	function test(runner, msg, task, writable){
 		runner.run(runner, task, function(err, result, extra){
+			if (writable) write(msg, err, result, extra)
 			return {msg: msg, error: err, result: result, extra: extra}
 		})
 	}
 
-	function series(runner, msg, group){
+	function spawn(runner, Flow, msg, group){
 		runner.branch()
 
 		function C(){
-
-			Series.call(this, function(output){
+			Flow.call(this, function(output){
 				writeSection(msg, output)
 				runner.merge(output)
 			})
-			Section.call(this)
 			group.call(this)	
 		}
 
-		C.prototype  = Object.create(Object.assign({}, Series.prototype, Section.prototype))
-
+		C.prototype  = Flow.prototype
 
 		setTimeout(function(){ new C }, 0)
 	}
-	
-	function parallel(runner, msg, group){
-		runner.branch()
 
-		function C(){
+	function recur(ctx, funcs, idx, args, cb){
+		if (funcs.length <= idx) return cb()
+		funcs[idx++].apply(ctx, args.concat([function(err, as){
+			if (err) return cb(err)
+			if (as){
+				args.length = as.length
+				for (var i=0, l=args.length; i<l; i++){
+					args[i] = as[i]
+				}
+			}
+			recur(ctx, funcs, idx, args, cb)
+		}]))
+	}
 
-			Parallel.call(this, function(output){
-				writeSection(msg, output)
-				runner.merge(output)
+	function Section(){
+		this.begins = []
+		this.ends = []
+		this.befores = []
+		this.afters = []
+		this.args = []
+	}
+
+	Section.prototype = {
+		begin: function(task){
+			this.begins.push(task)
+		},
+		end: function(task){
+			this.ends.push(task)
+		},
+		before: function(task){
+			this.befores.push(task)
+		},
+		after: function(task){
+			this.afters.push(task)
+		},
+		onBegin: function(total, next){
+			if (total) return next()
+			recur(this, this.begins, 0, this.args, next)
+		},
+		onEnd: function(next){
+			recur(this, this.ends, 0, this.args, next)
+			this.begins.length = 0
+			this.ends.length = 0
+			this.befores.length = 0
+			this.afters.length = 0
+		},
+		onBefore: function(next){
+			var o = this
+			recur(o, o.befores, 0, o.args, function(err){
+				if (err) return console.error(err)
+				next(o.args)
 			})
-			Section.call(this)
-			group.call(this)	
+		},
+		onAfter: function(next){
+			recur(this, this.ends, 0, this.args, next)
+		},
+		test: function(msg, task){
+			test(this, msg, task)
+		},
+		series: function(msg, group){
+			spawn(this, Series, msg, group)
+		},
+		parallel: function(msg, group){
+			spawn(this, Parallel, msg, group)
 		}
-
-		C.prototype  = Object.create(Object.assign({}, Parallel.prototype, Section.prototype))
-
-		setTimeout(function(){ new C }, 0)
 	}
 
 	function Parallel(done){
+		Section.call(this)
 		this.summary = {total: 0, suceeded: 0, failed: 0, error: 0}
 		this.results = []
 		this.done = done
 	}
 
-	Parallel.prototype = {
-		onBegin: function(total, cb){ cb() },
-		onEnd: function(cb){ cb() },
-		onBefore: function(cb){ cb([]) },
-		onAfter: function(cb){ cb() },
+	Parallel.prototype = Object.assign({
 		run: function(ctx, func, cb){
 			var o = this
 			var s = o.summary
@@ -122,21 +166,15 @@ define('pico/test', function(){
 
 			if (s.total === s.suceeded + s.failed + s.error) this.done({summary: s, results: rs})
 		}
-	}
+	}, Section.prototype)
 
 	function Series(done){
-		this.summary = {total: 0, suceeded: 0, failed: 0, error: 0}
-		this.results = []
+		Parallel.call(this, done)
 		this.tasks = []
 		this.running = false
-		this.done = done
 	}
 
-	Series.prototype = {
-		onBegin: function(total, cb){ cb() },
-		onEnd: function(cb){ cb() },
-		onBefore: function(cb){ cb([]) },
-		onAfter: function(cb){ cb() },
+	Series.prototype = Object.assign({
 		run: function(ctx, func, cb, retry){
 			var o = this
 			var ts = o.tasks
@@ -172,97 +210,14 @@ define('pico/test', function(){
 			})
 		},
 		branch: function(){
-			this.summary.total += 1
 			this.running = true
+			Parallel.prototype.branch.call(this)
 		},
 		merge: function(output){
 			this.running = false
-
-			var s = this.summary
-
-			s.total -= 1
-
-			var os = output.summary
-
-			s.total += os.total
-			s.suceeded += os.suceeded
-			s.failed += os.failed
-			s.error += os.error
-
-			var rs = this.results
-			var ors = output.results
-			rs.push.apply(rs, ors)
-
-			if (s.total === s.suceeded + s.failed + s.error) this.done({summary: s, results: rs})
+			Parallel.prototype.merge.call(this, output)
 		}
-	}
-
-	function Section(){
-		this.begins = []
-		this.ends = []
-		this.befores = []
-		this.afters = []
-		this.args = []
-	}
-
-	function recur(ctx, funcs, idx, args, cb){
-		if (funcs.length <= idx) return cb()
-		funcs[idx++].apply(ctx, args.concat([function(err, as){
-			if (err) return cb(err)
-			if (as){
-				args.length = as.length
-				for (var i=0, l=args.length; i<l; i++){
-					args[i] = as[i]
-				}
-			}
-			recur(ctx, funcs, idx, args, cb)
-		}]))
-	}
-
-	Section.prototype = {
-		begin: function(task){
-			this.begins.push(task)
-		},
-		end: function(task){
-			this.ends.push(task)
-		},
-		before: function(task){
-			this.befores.push(task)
-		},
-		after: function(task){
-			this.afters.push(task)
-		},
-		onBegin: function(total, next){
-			if (total) return next()
-			recur(this, this.begins, 0, this.args, next)
-		},
-		onEnd: function(next){
-			recur(this, this.ends, 0, this.args, next)
-			this.begins.length = 0
-			this.ends.length = 0
-			this.befores.length = 0
-			this.afters.length = 0
-		},
-		onBefore: function(next){
-			var o = this
-			recur(o, o.befores, 0, o.args, function(err){
-				if (err) return console.error(err)
-				next(o.args)
-			})
-		},
-		onAfter: function(next){
-			recur(this, this.ends, 0, this.args, next)
-		},
-		test: function(msg, task){
-			test(this, msg, task)
-		},
-		series: function(msg, group){
-			series(this, msg, group)
-		},
-		parallel: function(msg, group){
-			parallel(this, msg, group)
-		}
-	}
+	}, Section.prototype)
 
 	var runner = new Series(function(output){
 		var s = output.summary
@@ -279,13 +234,13 @@ define('pico/test', function(){
 			fname = isNode && options.fname
 		},
 		test: function(msg, task){
-			test(runner, msg, task)
+			test(runner, msg, task, true)
 		},
 		series: function(msg, group){
-			series(runner, msg, group)
+			spawn(runner, Series, msg, group)
 		},
 		parallel: function(msg, group){
-			parallel(runner, msg, group)
+			spawn(runner, Parallel, msg, group)
 		}
 	}
 })

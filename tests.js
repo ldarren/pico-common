@@ -4,7 +4,7 @@ const pobj = pico.export('pico/obj')
 const pjson = pico.export('pico/json')
 const pstr = pico.export('pico/str')
 const ptime = pico.export('pico/time')
-const { setup, ensure } = pico.export('pico/test3')
+const { setup, test } = pico.export('pico/test')
 
 setup({
 	stdout: true,
@@ -14,45 +14,45 @@ setup({
 	//fname: 'test_result.json'
 })
 
-ensure('ensure pico has loaded correctly', function(cb){
+test('ensure pico has loaded correctly', function(cb){
 	cb(null, pobj !== undefined)
 })
-ensure('ensure pico properties no leak', function(cb){
+test('ensure pico properties no leak', function(cb){
 	cb(null, globalKeys.length === Object.keys(global).length)
 })
 
-ensure('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
+test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
 	pico.define('ancestor0',function(exports,require,module,define,inherit,pico){return {say:function(txt){return txt}}})
 	pico.parse('child0', "inherit('ancestor0'); return {bark:function(){return this.say('hello')}}",function(err, child){
 		if (err) return cb(err)
 		cb(null, 'hello'===child.bark())
 	})
 })
-ensure('ensure inherit work with child(function) and ancestor(obj)', function(cb){
+test('ensure inherit work with child(function) and ancestor(obj)', function(cb){
 	pico.parse('child1', "inherit('ancestor0'); function Child(){this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.postfix)}}; return Child",function(err, child){
 		if (err) return cb(err)
 		cb(null, 'child'===(new child).bark())
 	})
 })
-ensure('ensure inherit work with child(obj) and ancestor(function)', function(cb){
+test('ensure inherit work with child(obj) and ancestor(function)', function(cb){
 	pico.define('ancestor2',function(exports,require,module,define,inherit,pico){function Ancestor(){this.prefix='ancestor'}; Ancestor.prototype={say:function(txt){return txt}}; return Ancestor;})
 	var child=pico.define('child2',function(exports,require,module,define,inherit,pico){inherit('ancestor2'); return {bark:function(){return this.say(this.prefix)}}})
 	cb(null, 'ancestor'===(new child).bark())
 })
-ensure('ensure inherit work with child(function) and ancestor(function)', function(cb){
+test('ensure inherit work with child(function) and ancestor(function)', function(cb){
 	pico.parse('child3', "inherit('ancestor2'); function Child(){this.__proto__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
 		if (err) return cb(err)
 		cb(null, 'ancestorchild'===(new child).bark())
 	})
 })
-ensure('ensure extend work with child(obj) and ancestor(function)', function(cb){
+test('ensure extend work with child(obj) and ancestor(function)', function(cb){
 	pico.parse('child4', "return {bark:function(){return this.say(this.prefix)}}",function(err, child){
 		if (err) return cb(err)
 		var ancestor=pico.export('ancestor2')
 		cb(null, 'ancestor'===(new (ancestor.extend(child))).bark())
 	})
 })
-ensure('ensure extend work with child(function) and ancestor(function)', function(cb){
+test('ensure extend work with child(function) and ancestor(function)', function(cb){
 	pico.parse('child5', "function Child(){this.__proto__.constructor();this.postfix='child'}; Child.prototype={bark:function(){return this.say(this.prefix+this.postfix)}}; return Child",function(err, child){
 		if (err) return cb(err)
 		var ancestor=pico.export('ancestor2')
@@ -60,7 +60,7 @@ ensure('ensure extend work with child(function) and ancestor(function)', functio
 	})
 })
 
-ensure('ensure underscore can be loaded',function(cb){
+test('ensure underscore can be loaded',function(cb){
 	const 
 	V='1.8.3',
 	_=pico.define('underscore',function(exports,require,module,define,inherit,pico){
@@ -94,7 +94,7 @@ ensure('ensure underscore can be loaded',function(cb){
 	cb(null, V===_.VERSION)
 })
 
-ensure('ensure pico preprocessors and env work', function(cb){
+test('ensure pico preprocessors and env work', function(cb){
 	pico.run({
 		preprocessors:{
 			'.md':function(){return 1}
@@ -110,14 +110,14 @@ ensure('ensure pico preprocessors and env work', function(cb){
 	})
 })
 
-ensure('ensure pico.parse function text to module', function(cb){
+test('ensure pico.parse function text to module', function(cb){
 	pico.parse('testMod123', "return {value:123}", function(err, mod){
 		if (err) return cb(err)
 		cb(null, 123===mod.value)
 	})
 })
 
-ensure('ensure pico.parse define text to module', function(cb){
+test('ensure pico.parse define text to module', function(cb){
 	pico.parse(null, "define('testMod345',function(){return {value:345}})", function(err){
 		if (err) return cb(err)
 		var testMod345=pico.export('testMod345')
@@ -125,7 +125,7 @@ ensure('ensure pico.parse define text to module', function(cb){
 	})
 })
 
-ensure('ensure pico.reload does js hot-loading', function(cb){
+test('ensure pico.reload does js hot-loading', function(cb){
 	pico.parse('ScriptA','return {a:function(){return "hello world"}}',function(err,mod){
 		if (err) return cb(err)
 		pico.reload('ScriptA','return {a:function(){return "hot reload"}}',function(err){
@@ -136,7 +136,7 @@ ensure('ensure pico.reload does js hot-loading', function(cb){
 	})
 })
 
-ensure('ensure pico.reload does text hot-loading', function(cb){
+test('ensure pico.reload does text hot-loading', function(cb){
 	var
 	name='testMod.txt',
 	newText='Hello yourself'
@@ -149,7 +149,7 @@ ensure('ensure pico.reload does text hot-loading', function(cb){
 	})
 })
 
-ensure('ensure object.extend compatible with pico module', function(cb){
+test('ensure object.extend compatible with pico module', function(cb){
 	function a(){}
 	a.__proto__ = {
 	  slots: {
@@ -170,19 +170,19 @@ ensure('ensure object.extend compatible with pico module', function(cb){
 	cb(null, 1 === res.slots.slotA() && 2 === res.slots.slotB() && 4 ===  res.slots.slotC())
 })
 
-ensure('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
+test('ensure obj2 override obj1. output value of key1 should be 2', function(cb){
 	var out = pobj.extend({key1:1},{key1:2})
 
 	cb(null, 2 === out.key1)
 })
 
-ensure('ensure obj1 merges with obj2. output should contain key1 and key2', function(cb){
+test('ensure obj1 merges with obj2. output should contain key1 and key2', function(cb){
 	var out = pobj.extend({key1:1},{key2:2})
 
 	cb(null, !!out.key1 && !!out.key2)
 })
 
-ensure('compare extend to assign performance', function(cb){
+test('compare extend to assign performance', function(cb){
 	var
 	obj1 = {k1:1,k2:2,k3:3},
 	obj2 = {v1:1,v2:2,v3:3},
@@ -205,30 +205,30 @@ ensure('compare extend to assign performance', function(cb){
 	cb(null, [t1,t2])
 })
 
-ensure('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
+test('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
 	var out = pobj.extend({key1:1}, {key2:void 0}, {tidy:1})
 
 	cb(null, 1 === Object.keys(out).length)
 })
 
-ensure('ensure options.tidy off is working. output should contain an undefined key', function(cb){
+test('ensure options.tidy off is working. output should contain an undefined key', function(cb){
 	var out = pobj.extend({key1:1}, {key2:void 0})
 
 	cb(null, 2 ===  Object.keys(out).length)
 })
 
-ensure('ensure options.mergeArr on is working. output should contain[1,2,3] list', function(cb){
+test('ensure options.mergeArr on is working. output should contain[1,2,3] list', function(cb){
 	var out = pobj.extend([1,2], [2,3], {mergeArr:1})
 
 	cb(null, JSON.stringify([1,2,3]) === JSON.stringify(out))
 })
 
-ensure('ensure options.mergeArr off is working. output should contain[2,3] list', function(cb){
+test('ensure options.mergeArr off is working. output should contain[2,3] list', function(cb){
 	var out = pobj.extend([1,2], [2,3])
 
 	cb(null, JSON.stringify([2,3]) === JSON.stringify(out))
 })
-ensure('ensure function extended correctly', function(cb){
+test('ensure function extended correctly', function(cb){
 	var
 	obj1 = {func:function(){return 1}},
 	obj2 = {func:function(){return arguments.callee.prototype()}},
@@ -238,7 +238,7 @@ ensure('ensure function extended correctly', function(cb){
 	cb(null, obj1.func()===obj4.func())
 })
 
-ensure('ensure obj.extend handled null/undefined correctly', function(cb){
+test('ensure obj.extend handled null/undefined correctly', function(cb){
 	var outa = pobj.extends({}, [{a: null}, {a: 'a'}])
 	var outb = pobj.extends({}, [{b: 'b'}, {b: null}])
 	var outc = pobj.extends({}, [{c: undefined}, {c: 'c'}])
@@ -246,12 +246,12 @@ ensure('ensure obj.extend handled null/undefined correctly', function(cb){
 	cb(null, 'a' === outa.a && null === outb.b && 'c' === outc.c && 'd' === outd.d)
 })
 
-ensure('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', function(cb){
+test('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', function(cb){
 	var out = pobj.parseInts(['1','2'])
 	cb(null, JSON.stringify([1,2])===JSON.stringify(out))
 })
 
-ensure('ensure json.path work', function(cb){
+test('ensure json.path work', function(cb){
 	var json = {
 		store: {
 			book: [
@@ -274,39 +274,39 @@ ensure('ensure json.path work', function(cb){
 })
 
 var cron='5-20/6 */9 5/5 6/3 6-0 *'
-ensure(`ensure parse cron(${cron}) correctly`, function(cb){
+test(`ensure parse cron(${cron}) correctly`, function(cb){
 	cb(null, ptime.parse(cron))
 })
-ensure('ensure get nearest cron(MIN HR DOM MON DOW YR) correctly', function(cb){
+test('ensure get nearest cron(MIN HR DOM MON DOW YR) correctly', function(cb){
 	cb(null, (new Date(ptime.nearest(...ptime.parse(cron)))).toUTCString())
 })
-ensure('ensure weeknum of 1/Mar/2016 is 9', function(cb){
+test('ensure weeknum of 1/Mar/2016 is 9', function(cb){
 	cb(null, 9===ptime.weeknum(new Date(2016,2,1,0,0,0)))
 })
 
-ensure('ensure left pad 8 for a number', function(cb){
+test('ensure left pad 8 for a number', function(cb){
 	cb(null, '00000019'===pstr.pad(19,8))
 })
-ensure('ensure str.log works', function(cb){
+test('ensure str.log works', function(cb){
 	pstr.log(null,'str.log','test')
 	cb(null, true)
 })
-ensure('ensure str.error works', function(cb){
+test('ensure str.error works', function(cb){
 	pstr.error(arguments.callee,'str.error','test')
 	cb(null, true)
 })
-ensure('ensure str.template works', function(cb){
+test('ensure str.template works', function(cb){
 	const
 	tmpl=pstr.template('<%d.text%>'),
 	obj={text:'Hello World'}
 
 	cb(null, obj.text===tmpl(obj))
 })
-ensure('ensure str.template mix well with js', function(cb){
+test('ensure str.template mix well with js', function(cb){
 	const tmpl=pstr.template('<%for(var i=0; i<5; i++){%>1<%}%>')
 	cb(null, '11111'===tmpl())
 })
-ensure('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
+test('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
 	var
 	route='url/v%version/pushPackage/:pushId',
 	build=pstr.compileRest(route),
@@ -314,7 +314,7 @@ ensure('ensure restful params parser supported: url/v%version/pushPackage/:pushI
 	api=pstr.execRest('url/v1/pushPackage/web.com.domain.app',build,params)
 	cb(null, api===route && 1===params.version && 'web.com.domain.app'===params.pushId)
 })
-ensure('ensure restful wildcard parser supported: url/ver%version/path/#path',function(cb){
+test('ensure restful wildcard parser supported: url/ver%version/path/#path',function(cb){
 	var
 	route='url/ver%version/path/#path',
 	build=pstr.compileRest(route),
@@ -323,7 +323,7 @@ ensure('ensure restful wildcard parser supported: url/ver%version/path/#path',fu
 
 	cb(null, api===route && 1===params.version && 'web/com/domain/app'===params.path)
 })
-ensure('ensure restful multiple build supported: /:appName|#appPath',function(cb){
+test('ensure restful multiple build supported: /:appName|#appPath',function(cb){
 	var
 	route='/:appName|#appPath',
 	build=pstr.compileRest('ERR|*msg'),
@@ -334,7 +334,7 @@ ensure('ensure restful multiple build supported: /:appName|#appPath',function(cb
 	var api=pstr.execRest('/msair',build,params)
 	cb(null, api===route && 'msair'===params.appName)
 })
-ensure('ensure restful optional parser: url/v%version|device/:deviceToken|path/#path',function(cb){
+test('ensure restful optional parser: url/v%version|device/:deviceToken|path/#path',function(cb){
 	var
 	route='url/v%version|device/:deviceToken|path/#path',
 	build=pstr.compileRest(route),
@@ -349,7 +349,7 @@ ensure('ensure restful optional parser: url/v%version|device/:deviceToken|path/#
 	if(api!==route || 1!==params.version) return cb(null, false)
 	cb(null, true)
 })
-ensure('ensure restful optional parser2: /:appName|#appPath',function(cb){
+test('ensure restful optional parser2: /:appName|#appPath',function(cb){
 	var
 	route='/:appName|#appPath',
 	build=pstr.compileRest(route),
@@ -357,13 +357,13 @@ ensure('ensure restful optional parser2: /:appName|#appPath',function(cb){
 	api=pstr.execRest('/msair',build,params)
 	cb(null, api===route && 'msair'===params.appName)
 })
-ensure('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
+test('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
 	var
 	data = JSON.stringify({data:123}),
 	key = parseInt('100007900715391')
 	cb(null, data===pstr.codec(key, pstr.codec(key, data)))
 })
-ensure('ensure codec work on time based string', (cb)=>{
+test('ensure codec work on time based string', (cb)=>{
 	const
 	key='00mjvyn50022oq0000zbpt6c000014k2',
 	secret='3zuklpkl6k905e5kryoiozuxrkjhunr26vjnlaao',
@@ -372,10 +372,10 @@ ensure('ensure codec work on time based string', (cb)=>{
 	token=pstr.codec(hash,key)
 	cb(null, key===pstr.codec(key, pstr.codec(hash, token)))
 })
-ensure('ensure hash password to 32bit int', function(cb){
+test('ensure hash password to 32bit int', function(cb){
 	cb(null, pstr.hash('免费服务会立即翻译英文和英文之间的单词'))
 })
-ensure('ensure hash dont collide in repeating char x9999', function(cb){
+test('ensure hash dont collide in repeating char x9999', function(cb){
 	var
 	s='p',
 	hist=[],
@@ -389,7 +389,7 @@ ensure('ensure hash dont collide in repeating char x9999', function(cb){
 	}
 	cb(null, l===hist.length, 'count', hist.length, 'ms', Date.now() - n)
 })
-ensure('ensure hash dont collide in uuid x99999', function(cb){
+test('ensure hash dont collide in uuid x99999', function(cb){
 	var
 	hist=[],
 	l=99999,
