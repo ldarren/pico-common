@@ -1,4 +1,4 @@
-define('pico/test3', function(){
+define('pico/test', function(){
     var pStr = pico.export('pico/str')
 	var isNode = 'undefined' !== typeof require
 	var format = isNode ? require('util').inspect : JSON.stringify
@@ -23,7 +23,6 @@ define('pico/test3', function(){
 
 	function test(runner, msg, task){
 		runner.run(runner, task, function(err, result, extra){
-			write(msg, err, result)
 			return {msg: msg, error: err, result: result, extra: extra}
 		})
 	}
@@ -34,8 +33,8 @@ define('pico/test3', function(){
 		function C(){
 
 			Series.call(this, function(output){
-				runner.merge(output)
 				writeSection(msg, output)
+				runner.merge(output)
 			})
 			Section.call(this)
 			group.call(this)	
@@ -53,8 +52,8 @@ define('pico/test3', function(){
 		function C(){
 
 			Parallel.call(this, function(output){
-				runner.merge(output)
 				writeSection(msg, output)
+				runner.merge(output)
 			})
 			Section.call(this)
 			group.call(this)	
@@ -96,7 +95,6 @@ define('pico/test3', function(){
 					o.onAfter(function(){
 						if (s.total === s.suceeded + s.failed + s.error)
 							return o.onEnd(function(){
-console.log('$$$$$$$$$$$$$ 1', o)
 								o.done({summary: s, results: rs})
 							})
 					})
@@ -236,11 +234,9 @@ console.log('$$$$$$$$$$$$$ 1', o)
 		},
 		onBegin: function(total, next){
 			if (total) return next()
-console.log('onBegin', this.begins)
 			recur(this, this.begins, 0, this.args, next)
 		},
 		onEnd: function(next){
-console.log('onEnd')
 			recur(this, this.ends, 0, this.args, next)
 			this.begins.length = 0
 			this.ends.length = 0
@@ -248,7 +244,6 @@ console.log('onEnd')
 			this.afters.length = 0
 		},
 		onBefore: function(next){
-console.log('onBefore', this.args)
 			var o = this
 			recur(o, o.befores, 0, o.args, function(err){
 				if (err) return console.error(err)
@@ -256,7 +251,6 @@ console.log('onBefore', this.args)
 			})
 		},
 		onAfter: function(next){
-console.log('onAfter')
 			recur(this, this.ends, 0, this.args, next)
 		},
 		test: function(msg, task){
