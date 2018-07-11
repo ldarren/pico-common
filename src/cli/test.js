@@ -57,6 +57,26 @@ define('pico/test', function(){
 			recur(ctx, funcs, idx, args, cb)
 		}]))
 	}
+	function onBegin(ctx, total, next){
+		if (total) return next()
+		recur(ctx, ctx.begins, 0, ctx.args, next)
+	}
+	function onEnd(ctx, next){
+		recur(ctx, ctx.ends, 0, ctx.args, next)
+		ctx.begins.length = 0
+		ctx.ends.length = 0
+		ctx.befores.length = 0
+		ctx.afters.length = 0
+	}
+	function onBefore(ctx, next){
+		recur(ctx, ctx.befores, 0, ctx.args, function(err){
+			if (err) return console.error(err)
+			next(ctx.args)
+		})
+	}
+	function onAfter(ctx, next){
+		recur(ctx, ctx.afters, 0, ctx.args, next)
+	}
 
 	function Section(){
 		this.begins = []
@@ -78,27 +98,6 @@ define('pico/test', function(){
 		},
 		after: function(task){
 			this.afters.push(task)
-		},
-		onBegin: function(total, next){
-			if (total) return next()
-			recur(this, this.begins, 0, this.args, next)
-		},
-		onEnd: function(next){
-			recur(this, this.ends, 0, this.args, next)
-			this.begins.length = 0
-			this.ends.length = 0
-			this.befores.length = 0
-			this.afters.length = 0
-		},
-		onBefore: function(next){
-			var o = this
-			recur(o, o.befores, 0, o.args, function(err){
-				if (err) return console.error(err)
-				next(o.args)
-			})
-		},
-		onAfter: function(next){
-			recur(this, this.ends, 0, this.args, next)
 		},
 		test: function(msg, task){
 			test(this, msg, task)
@@ -124,11 +123,11 @@ define('pico/test', function(){
 			var s = o.summary
 			var rs = o.results
 
-			o.onBegin(s.total, function(){
+			onBegin(o, s.total, function(){
 				s.total++
 
 				setTimeout(function(next){
-					o.onBefore(function(args){
+					onBefore(o, function(args){
 						func.apply(ctx, args.concat([next]))
 					})
 				}, 0, function(err, result){
@@ -136,9 +135,9 @@ define('pico/test', function(){
 
 					if (err) s.error++ 
 					else result ? s.suceeded++ : s.failed++
-					o.onAfter(function(){
+					onAfter(o, function(){
 						if (s.total === s.suceeded + s.failed + s.error)
-							return o.onEnd(function(){
+							return onEnd(o, function(){
 								o.done({summary: s, results: rs})
 							})
 					})
@@ -181,7 +180,7 @@ define('pico/test', function(){
 			var s = o.summary
 			var rs = o.results
 		
-			o.onBegin(s.total, function(){
+			onBegin(o, s.total, function(){
 				s.total += retry ? 0 : 1
 				if (!retry && ts.length) return ts.push([ctx, func, cb, 1])
 				if (o.running) return ts.push([ctx, func, cb, 1])
@@ -190,16 +189,16 @@ define('pico/test', function(){
 
 				// use timeout in case func is blocking
 				setTimeout(function(next){
-					o.onBefore(function(args){
+					onBefore(o, function(args){
 						func.apply(ctx, args.concat([next]))
 					})
 				}, 0, function(err, result){
 					rs.push(cb(err, result, Array.prototype.slice.call(arguments, 2)))
 					if (err) s.error++
 					else result ? s.suceeded++ : s.failed++
-					o.onAfter(function(){
+					onAfter(o, function(){
 						if (s.total === s.suceeded + s.failed + s.error) 
-							return o.onEnd(function(){
+							return onEnd(o, function(){
 								o.done({summary: s, results: rs})
 							})
 
