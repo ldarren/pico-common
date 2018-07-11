@@ -28,6 +28,7 @@ define('pico/test', function(){
 		})
 	}
 
+	// TODO: for series, exec should add to task list
 	function spawn(runner, Flow, msg, group){
 		runner.branch()
 
@@ -41,11 +42,11 @@ define('pico/test', function(){
 
 		C.prototype  = Flow.prototype
 
-		setTimeout(function(){ new C }, 0)
+		runner.exec(function(){ new C })
 	}
 
 	function recur(ctx, funcs, idx, args, cb){
-		if (funcs.length <= idx) return cb()
+		if (funcs.length <= idx) return cb(null, args.slice())
 		funcs[idx++].apply(ctx, args.concat([function(err, as){
 			if (err) return cb(err)
 			if (as){
@@ -58,24 +59,21 @@ define('pico/test', function(){
 		}]))
 	}
 	function onBegin(ctx, total, next){
-		if (total) return next()
+		if (total) return next(null, ctx.args.slice())
 		recur(ctx, ctx.begins, 0, ctx.args, next)
 	}
 	function onEnd(ctx, next){
 		recur(ctx, ctx.ends, 0, ctx.args, next)
 		ctx.begins.length = 0
-		ctx.ends.length = 0
 		ctx.befores.length = 0
 		ctx.afters.length = 0
+		ctx.ends.length = 0
 	}
-	function onBefore(ctx, next){
-		recur(ctx, ctx.befores, 0, ctx.args, function(err){
-			if (err) return console.error(err)
-			next(ctx.args)
-		})
+	function onBefore(ctx, args, next){
+		recur(ctx, ctx.befores, 0, args, next)
 	}
-	function onAfter(ctx, next){
-		recur(ctx, ctx.afters, 0, ctx.args, next)
+	function onAfter(ctx, args, next){
+		recur(ctx, ctx.afters, 0, args, next)
 	}
 
 	function Section(){
@@ -83,7 +81,6 @@ define('pico/test', function(){
 		this.ends = []
 		this.befores = []
 		this.afters = []
-		this.args = []
 	}
 
 	Section.prototype = {
@@ -115,6 +112,7 @@ define('pico/test', function(){
 		this.summary = {total: 0, suceeded: 0, failed: 0, error: 0}
 		this.results = []
 		this.done = done
+		this.args = []
 	}
 
 	Parallel.prototype = Object.assign({
@@ -123,11 +121,12 @@ define('pico/test', function(){
 			var s = o.summary
 			var rs = o.results
 
-			onBegin(o, s.total, function(){
+			onBegin(o, s.total, function(err, args){
+				if (err) return cb(err)
 				s.total++
 
 				setTimeout(function(next){
-					onBefore(o, function(args){
+					onBefore(o, args, function(){
 						func.apply(ctx, args.concat([next]))
 					})
 				}, 0, function(err, result){
@@ -135,7 +134,7 @@ define('pico/test', function(){
 
 					if (err) s.error++ 
 					else result ? s.suceeded++ : s.failed++
-					onAfter(o, function(){
+					onAfter(o, args, function(){
 						if (s.total === s.suceeded + s.failed + s.error)
 							return onEnd(o, function(){
 								o.done({summary: s, results: rs})
@@ -143,6 +142,9 @@ define('pico/test', function(){
 					})
 				})
 			})
+		},
+		exec: function(func){
+			setTimeout(func, 0)
 		},
 		branch: function(){
 			this.summary.total += 1
@@ -180,23 +182,23 @@ define('pico/test', function(){
 			var s = o.summary
 			var rs = o.results
 		
-			onBegin(o, s.total, function(){
+			onBegin(o, s.total, function(err, args){
+				if (err) return cb(err)
 				s.total += retry ? 0 : 1
-				if (!retry && ts.length) return ts.push([ctx, func, cb, 1])
-				if (o.running) return ts.push([ctx, func, cb, 1])
+				if ((!retry && ts.length) || o.running) return ts.push([ctx, func, cb, 1])
 
 				o.running = true
 
 				// use timeout in case func is blocking
 				setTimeout(function(next){
-					onBefore(o, function(args){
+					onBefore(o, args, function(){
 						func.apply(ctx, args.concat([next]))
 					})
 				}, 0, function(err, result){
 					rs.push(cb(err, result, Array.prototype.slice.call(arguments, 2)))
 					if (err) s.error++
 					else result ? s.suceeded++ : s.failed++
-					onAfter(o, function(){
+					onAfter(o, args, function(){
 						if (s.total === s.suceeded + s.failed + s.error) 
 							return onEnd(o, function(){
 								o.done({summary: s, results: rs})
@@ -207,6 +209,12 @@ define('pico/test', function(){
 					})
 				})
 			})
+		},
+		exec: function(func){
+			var o = this
+			var ts = o.tasks
+			if (ts.length) return ts.push([null, func, function(){}, 1])
+			func()
 		},
 		branch: function(){
 			this.running = true
