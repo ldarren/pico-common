@@ -81,6 +81,7 @@ define('pico/test', function(){
 		this.ends = []
 		this.befores = []
 		this.afters = []
+		this.args = []
 	}
 
 	Section.prototype = {
@@ -112,7 +113,6 @@ define('pico/test', function(){
 		this.summary = {total: 0, suceeded: 0, failed: 0, error: 0}
 		this.results = []
 		this.done = done
-		this.args = []
 	}
 
 	Parallel.prototype = Object.assign({
