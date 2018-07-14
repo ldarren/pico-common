@@ -5,44 +5,40 @@ define('pico/test', function(){
 	var stdout = true
 	var fname, end
 
-	function write(msg, err, result){
-		if (!stdout) return
+	function write(writable, msg, err, result){
+		if (!writable) return
 		console.log(msg + ':' + pStr.tab(msg, 100, '.') + format(result, {colors:true}))
 		if (err) console.error(err)
 	}
 
-	function writeSection(msg, output){
-		if (stdout) {
-			console.log(msg)
-			//console.log('Summary:', output.summary)
-			output.results.forEach(function(r){
-				write(r.msg, r.err, r.result)
-			})
-		}
+	function writeSection(writable, output, level){
+		if (!writable) return
+		output.forEach(function(r){
+			if (Array.isArray(r)) return writeSection(writable, r, level+1)
+			if (null == r.result) return console.log(pStr.pad(r.msg, level + r.msg.length, '#'))
+			write(writable, r.msg, r.err, r.result)
+		})
 	}
 
 	function test(runner, msg, task, writable){
 		runner.run(runner, task, function(err, result, extra){
-			if (writable) write(msg, err, result, extra)
+			write(writable, msg, err, result)
 			return {msg: msg, error: err, result: result, extra: extra}
 		})
 	}
 
-	// TODO: for series, exec should add to task list
-	function spawn(runner, Flow, msg, group){
-		runner.branch()
+	function spawn(runner, Runner, msg, group, writable){
 
-		function C(){
-			Flow.call(this, function(output){
-				writeSection(msg, output)
-				runner.merge(output)
+		function R(){
+			Runner.call(this, function(output){
+				runner.merge(msg, output, writable)
 			})
 			group.call(this)	
 		}
 
-		C.prototype  = Flow.prototype
+		R.prototype  = Runner.prototype
 
-		runner.exec(function(){ new C })
+		runner.branch(function(){ new R })
 	}
 
 	function recur(ctx, funcs, idx, args, cb){
@@ -131,9 +127,9 @@ define('pico/test', function(){
 					})
 				}, 0, function(err, result){
 					rs.push(cb(err, result, Array.prototype.slice.call(arguments, 2)))
-
 					if (err) s.error++ 
 					else result ? s.suceeded++ : s.failed++
+
 					onAfter(o, args, function(){
 						if (s.total === s.suceeded + s.failed + s.error)
 							return onEnd(o, function(){
@@ -143,13 +139,11 @@ define('pico/test', function(){
 				})
 			})
 		},
-		exec: function(func){
+		branch: function(func){
+			this.summary.total += 1
 			setTimeout(func, 0)
 		},
-		branch: function(){
-			this.summary.total += 1
-		},
-		merge: function(output){
+		merge: function(msg, output, writable){
 			var s = this.summary
 
 			s.total -= 1
@@ -163,7 +157,9 @@ define('pico/test', function(){
 
 			var rs = this.results
 			var ors = output.results
-			rs.push.apply(rs, ors)
+			output.results.unshift({msg: msg})
+			writeSection(writable, output.results, 0)
+			rs.push(ors)
 
 			if (s.total === s.suceeded + s.failed + s.error) this.done({summary: s, results: rs})
 		}
@@ -171,21 +167,21 @@ define('pico/test', function(){
 
 	function Series(done){
 		Parallel.call(this, done)
-		this.tasks = []
+		this.queue = []
 		this.running = false
 	}
 
 	Series.prototype = Object.assign({
 		run: function(ctx, func, cb, retry){
 			var o = this
-			var ts = o.tasks
+			var q = o.queue
 			var s = o.summary
 			var rs = o.results
 		
 			onBegin(o, s.total, function(err, args){
 				if (err) return cb(err)
 				s.total += retry ? 0 : 1
-				if ((!retry && ts.length) || o.running) return ts.push([ctx, func, cb, 1])
+				if ((!retry && q.length) || o.running) return q.push([ctx, func, cb, 1])
 
 				o.running = true
 
@@ -205,28 +201,25 @@ define('pico/test', function(){
 							})
 
 						o.running = false
-						o.run.apply(o, ts.shift())
+						o.run.apply(o, q.shift())
 					})
 				})
 			})
 		},
-		exec: function(func){
-			var o = this
-			var ts = o.tasks
-			if (ts.length) return ts.push([null, func, function(){}, 1])
-			func()
-		},
-		branch: function(){
+		branch: function(func){
+			this.summary.total += 1
+			var q = this.queue
+			if (this.running) return q.push([null, func, function(){}, 1])
 			this.running = true
-			Parallel.prototype.branch.call(this)
+			setTimeout(func, 0)
 		},
-		merge: function(output){
+		merge: function(msg, output, writable){
 			this.running = false
-			Parallel.prototype.merge.call(this, output)
+			Parallel.prototype.merge.call(this, msg, output, writable)
 		}
 	}, Section.prototype)
 
-	var runner = new Series(function(output){
+	var runner = new Parallel(function(output){
 		var s = output.summary
 		if (stdout) console.log('\nSummary:', s)
 		if (fname) require('fs').writeFileSync(fname, JSON.stringify(output))
@@ -241,13 +234,13 @@ define('pico/test', function(){
 			fname = isNode && options.fname
 		},
 		test: function(msg, task){
-			test(runner, msg, task, true)
+			test(runner, msg, task, stdout)
 		},
 		series: function(msg, group){
-			spawn(runner, Series, msg, group)
+			spawn(runner, Series, msg, group, stdout)
 		},
 		parallel: function(msg, group){
-			spawn(runner, Parallel, msg, group)
+			spawn(runner, Parallel, msg, group, stdout)
 		}
 	}
 })
