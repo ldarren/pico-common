@@ -21,7 +21,9 @@ define('pico/test', function(){
 	}
 
 	function test(runner, msg, task, writable){
+		var now = Date.now()
 		runner.run(runner, task, function(err, result, extra){
+			extra.push(Date.now() - now)
 			write(writable, msg, err, result)
 			return {msg: msg, error: err, result: result, extra: extra}
 		})
