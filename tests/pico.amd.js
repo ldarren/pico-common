@@ -2,6 +2,7 @@ const pico = require('../bin/pico-cli')
 const { setup, test, series, parallel } = pico.export('pico/test')
 
 parallel('pico', function(){
+/*
 	this.test('ensure pico preprocessors and env work', function(cb){
 		pico.run({
 			preprocessors:{
@@ -17,7 +18,7 @@ parallel('pico', function(){
 			}
 		})
 	})
-
+*/
 	this.test('ensure pico.parse function text to module', function(cb){
 		pico.parse('testMod123', "return {value:123}", function(err, mod){
 			if (err) return cb(err)
@@ -45,9 +46,8 @@ parallel('pico', function(){
 	})
 
 	this.test('ensure pico.reload does text hot-loading', function(cb){
-		var
-		name='testMod.txt',
-		newText='Hello yourself'
+		var name='testMod.txt'
+		var newText='Hello yourself'
 		pico.parse(name,'Hello there',function(err,mod){
 			if (err) return cb(err)
 			pico.reload(name, newText, function(err, mod){

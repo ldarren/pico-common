@@ -2,7 +2,7 @@ const globalKeys = Object.keys(global)
 const pico = require('../bin/pico-cli')
 const {setup, series, parallel, test} = pico.export('pico/test')
 
-parallel('parallel 1', function() {
+parallel('pico/test parallel', function() {
 	this.begin(next => {
 		next(null, ['hel', 'wor'])
 	})
@@ -65,7 +65,7 @@ parallel('parallel 1', function() {
 		})
 	})
 })
-series('series 1', function() {
+series('pico/test series', function() {
 	this.begin(next => {
 		next(null, ['hel', 'wor'])
 	})
