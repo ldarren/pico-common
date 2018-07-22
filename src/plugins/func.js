@@ -24,12 +24,12 @@ define('pico/func',function(exports,require,module,define,inherit,pico){
 	}
 
     return {
-        reflect: function callee(func){
+        reflect: function callee(func, limit){
 			var orgPrepare = Error.prepareStackTrace
 			var orgCount = Error.stackTraceLimit
 
 			Error.prepareStackTrace = callerFormat
-			Error.stackTraceLimit = 1
+			Error.stackTraceLimit = limit || 1
 
 			var err = new Error
 			Error.captureStackTrace(err, func || callee)

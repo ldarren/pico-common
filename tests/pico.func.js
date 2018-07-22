@@ -14,4 +14,9 @@ parallel('pico/func', function(){
 		const f = callee2()
 		cb(null, 'callee' === f.functionName)
 	})
+	this.test('ensure func.reflect create trace based on limit', function callee(cb){
+		const limit = 5
+		const f = pfunc.reflect(null, limit) 
+		cb(null, limit === f.trace.length)
+	})
 })
