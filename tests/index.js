@@ -18,6 +18,7 @@ test('ensure pico properties no leak', function(cb){
 })
 
 require('./pico.amd.js')
+require('./pico.func.js')
 require('./pico.json.js')
 require('./pico.obj.js')
 require('./pico.str.js')

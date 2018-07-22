@@ -1,4 +1,3 @@
-
 define('pico/json',function(exports,require,module,define,inherit,pico){
     return {
         parse:function(pjson,deep){

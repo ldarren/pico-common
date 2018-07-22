@@ -1,11 +1,5 @@
 define('pico/str', function(){
 	var Ceil=Math.ceil, Random=Math.random
-	function callerFormat(_, stack){
-		var r = stack[0]
-		return '['+
-		(r.getFunctionName() || r.getTypeName()+'.'+r.getMethodName())+
-		'@'+(r.isEval()?r.getEvalOrigin():r.getFileName()) + ':' + r.getLineNumber() + ':' + r.getColumnNumber()+']'
-	}
 	function compileRestUnit(unit){
 		var idx=unit.search('[#:%]')
 		switch(idx){
@@ -125,36 +119,6 @@ define('pico/str', function(){
 				}
 			}
 			return null
-		},
-		log: function callee(){
-			var
-			orgPrepare = Error.prepareStackTrace,
-			orgCount = Error.stackTraceLimit
-
-			Error.prepareStackTrace = callerFormat
-			Error.stackTraceLimit = 1
-
-			var err = new Error
-			Error.captureStackTrace(err, arguments[0]||callee)
-			var params = [(new Date).toISOString(), err.stack]
-			console.log.apply(console, params.concat(Array.prototype.slice.call(arguments,1)))
-
-			Error.prepareStackTrace = orgPrepare
-			Error.stackTraceLimit = orgCount
-		},
-		error: function callee(){
-			var orgCount = Error.stackTraceLimit
-
-			Error.stackTraceLimit = 4
-
-			var err = new Error
-			Error.captureStackTrace(err, arguments[0]||callee)
-			var params = [(new Date).toISOString()]
-			params = params.concat(Array.prototype.slice.call(arguments,1))
-			params.push('\n')
-			console.error.apply(console, params.concat(err.stack))
-
-			Error.stackTraceLimit = orgCount
 		}
 	}
 })

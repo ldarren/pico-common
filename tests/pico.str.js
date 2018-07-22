@@ -6,14 +6,6 @@ parallel('pico/str', function(){
 	this.test('ensure left pad 8 for a number', function(cb){
 		cb(null, '00000019'===pstr.pad(19,8))
 	})
-	this.test('ensure str.log works', function(cb){
-		pstr.log(null,'str.log','test')
-		cb(null, true)
-	})
-	this.test('ensure str.error works', function(cb){
-		pstr.error(arguments.callee,'str.error','test')
-		cb(null, true)
-	})
 	this.test('ensure str.template works', function(cb){
 		const
 		tmpl=pstr.template('<%d.text%>'),
