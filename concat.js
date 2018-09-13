@@ -4,30 +4,30 @@ const origDirs= (process.argv[2] || '').split(',')
 
 if (!origDirs[0]) return console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS [OUTPUT_NAME]')
 
-const
-BIN='bin',
-SRC='src',
-JS='.js',
-MIN_JS='.min.js',
-MIN_MAP=MIN_JS+'.map',
-PREFIX="(function(module,exports,require){",
-POSTFIX="}).apply(null, 'undefined' === typeof window ? [module, 'exports', require] : [window, 'pico'])",
-uglify=require('uglify-js'),
-fs = require('fs'),
-path = require('path'),
-stream=require('stream'),
-symPath= process.argv[1],
-getPath = function(dir, file){
+const BIN='bin'
+const SRC='src'
+const JS='.js'
+const MIN_JS='.min.js'
+const MIN_MAP=MIN_JS+'.map'
+const PREFIX="(function(module,exports,require){"
+const POSTFIX="}).apply(null, 'object' === typeof module ? [module, 'exports', require] : [window, 'pico'])"
+const uglify=require('uglify-js')
+const fs = require('fs')
+const path = require('path')
+const stream=require('stream')
+const symPath= process.argv[1]
+
+function getPath(dir, file){
     if (path.isAbsolute(file)) return file
     return path.resolve(dir,file)
-},
-pipeStr=function(str,w,opt){
+}
+function pipeStr(str,w,opt){
     const r = new stream.Readable
     r.pipe(w,opt||{end:false})
     r.push(str)    // the string you want
     r.push(null)      // indicates end-of-file basically - the end of the stream
-},
-readdirs=function(wd,dirs,output,cb){
+}
+function readdirs(wd,dirs,output,cb){
 	if (!dirs.length) return cb(null, output)
 	const srcDir = path.join(wd,dirs.shift())
 	console.log('read dir', srcDir)
