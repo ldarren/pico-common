@@ -22,47 +22,48 @@ define('pico/time',function(){
 		return weeknum(date, us, -1)
 	},
     parseQuark=function(quark, min, max){
-        var
-        q=quark.split('/'),
-        q1=q[0]
+		var
+		q=quark.split('/'),
+		q0=q[0]
 
-        if ('*'===q1){
-            q[0]=min
-        }else{
-            q1=q[0]=parseInt(q1)
-            if (q1<min || q1>max) return // error
-        }
+		if ('*'===q0){
+			q[0]=min
+		}else{
+			q0 = parseInt(q0)
+			q0 = Max(min, q0)
+			q0 = Min(max, q0)
+			q[0] = q0
+		}
 
-        if (1===q.length) q.push(0) // interval=1
-        else q[1]=parseInt(q[1])
+		if (1===q.length) q.push(0) // interval=1
+		else q[1]=parseInt(q[1])
 
-        return q
+		return q
     },
     parseAtom=function(atom, min, max){
         if ('*'===atom) return 0
         var 
         ret=[]
         list=atom.split(',')
-        for(var i=0,l,range,j,r,r1,r2,rm,ri; l=list[i]; i++){
+        for(var i=0,l,range,j,r,r0,r1,rm,ri; l=list[i]; i++){
             r=l.split('-')
-            if (!r.length) return null// error
-            r1=parseQuark(r[0],min,max)
+            r0=parseQuark(r[0],min,max)
             if (1===r.length){
-                ri=r1[1]
-                if (ri) for(j=r1[0]; j<=max; j+=ri) ret.push(j);
-                else ret.push(r1[0])
+                ri=r0[1]
+                if (ri) for(j=r0[0]; j<=max; j+=ri) ret.push(j);
+                else ret.push(r0[0])
                 continue
             }
-            r2=parseQuark(r[1],min,max)
-            j=r1[0]
-            rm=r2[0]
-            ri=r2[1]||1
+            r1=parseQuark(r[1],min,max)
+            j=r0[0]
+            rm=r1[0]
+            ri=r1[1]||1
+
             if (j>rm){
                 // wrap around
-                for(rm=max; j<=rm; j+=ri) ret.push(j);
-                for(j=min,rm=r2[0]; j<=rm; j+=ri) ret.push(j);
+                for(; j>=rm; j-=ri) {ret.push(j)};
             }else{
-                for(; j<=rm; j+=ri) ret.push(j);
+                for(; j<=rm; j+=ri) {ret.push(j)};
             }
         }
         ret.sort(function(a,b){return a-b})
@@ -77,7 +78,7 @@ define('pico/time',function(){
         console.error('not suppose to be here',now, list, max)
     },
     closest=function(now, count, mins, hrs, doms, mons, dows, yrs, cb){
-        if (count++ > 1) return cb(0)
+        if (count++ > 3) return cb(0)
 
         var
         min=nearest(now.getMinutes(), mins, 60),
@@ -132,19 +133,7 @@ define('pico/time',function(){
             return [mins, hrs, doms, mons, dows, yrs]
         },
         nearest:function(mins, hrs, doms, mons, dows, yrs){
-            var
-            now=new Date,
-            yr=nearest(now.getFullYear(), yrs, 0),
-            mon=nearest(now.getMonth()+1, mons, 12)-1
-
-            if (now.getFullYear()!==yr || now.getMonth()!==mon){
-                now=new Date(yr, mon)
-            }else{
-                var time=now.getTime()
-                now=new Date(time+MIN)// round up sec n msec
-            }
-
-            return closest(now, 0, mins, hrs, doms, mons, dows, yrs, function(then){ return then })
+            return closest(new Date(Date.now() + MIN), 0, mins, hrs, doms, mons, dows, yrs, function(then){ return then })
         },
 		daynum:daynum,
 		weeknum:weeknum,
