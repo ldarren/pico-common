@@ -9,46 +9,64 @@ A single file solution to use commonjs/nodejs module definition in your browser 
 
 ## Features
 * Asyncronous Module Definition
-* Build single file from multiple files
+* bundle multiple scripts into one file
 * Plugin system to extend it capabilities
 
 ## Installation
-Download just the [pico.js](https://raw.githubusercontent.com/ldarren/pico-common/master/pico.js) or clone github
-```
-git clone https://github.com/ldarren/pico-common.git pico-common
-```
-### Browser
-```html
-<script src=PATH/TO/pico.js></script>
-```
+
 ### Nodejs
+install it as a node module
+```
+npm i pico-common
+```
+and require it in your script
 ```javascript
-var pico=require('PATH/TO/pico.js')
+var pico=require('pico-common')
+```
+
+### Browser
+link the minified version in your browser
+```html
+<script src=//unpkg.com/pico-common@0.10.11/bin/pico.min.js></script>
+```
+and you can start using in your javascript
+```javascript
+window.pico
 ```
 
 ## Configuration
 It has similar requirejs config but not compatible. To bootstrap the amd
 ```javascript
 pico.run({
-    ajax:ajaxFunc,
-    env:envObj,
-    path:{
+	name: 'NAME',			// module name for the entry point function
+    ajax: ajaxFunc,			// override ajax function used in pico
+    onLoad: loadFunc,		// override onload function
+	importRule: ()=>{},		// blacklist module here
+	preprocessor: ()=>{},	// define special file type preprocessor
+    env:envObj,				// add env variable to pico.getEnv()
+    paths:{					// require search path
         '*':./,
         'node':function(name,cb){
             cb(null, pico.require(name))
         }
     }
-},function(){
-    var main=require('main')
+},function(){		// entry point function
+    var main = require('main')	// require module
+
+	return function(){
+		// at this point "main" is fully loaded
+		// your app "main loop" start from here
+	}
 })
 ```
-To compress project into one file
+to bundle the files into one single file, use this configuration
 ```javascript
 pico.build({
     entry:'./main.js',
     output:'./output.js'
 })
 ```
+
 ## Examples
 ### Circular Dependency
 Script A
@@ -132,6 +150,7 @@ return {
 }
 ```
 Important to take note, parent must be a function/constructor when inherit with extend, child can be object or function/constructor
+
 ### Hot reload
 ScriptA
 ```javascript
@@ -182,6 +201,24 @@ Object.getPrototypeOf(proxy).length // 1
 ```
 
 ## Modules
+pico-common has included many useful javascript modules that can be used on both browser and nodejs.
+
+to use the module
+1) In your pico loaded module
+```javascript
+const { setup, ensure } = require('pico/test')
+```
+
+2) In your none pico loaded module
+in browser
+```javascript
+const { steup, ensure } = window.pico.export('pico/test');
+```
+in nodejs
+```javascript
+const { steup, ensure } = require('pico-common').export('pico/test');
+```
+
 ### pico/test
 ```javascript
 const { setup, ensure } = pico.export('pico/test')
