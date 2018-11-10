@@ -1,5 +1,7 @@
 # A Lean Modular System For Browsers and NodeJS
-A single file solution to use commonjs/nodejs module definition in your browser or server (node.js), it can also compile javascripts into single file. It has tiny footprint, 188 lines of codes (before uglify and minification)
+A single file solution to use asynchronous module definition (amd) in your browser or server (node.js), it can also compile javascripts into single file. It has tiny footprint, 188 lines of codes (before uglify and minification)
+
+`pico-common` also comes with a series of common lib to be use with or without the amd
 
 ## Why?
 * Work on browsers and NodeJS (Universal Javascript)
@@ -21,7 +23,10 @@ npm i pico-common
 ```
 and require it in your script
 ```javascript
-var pico=require('pico-common')
+const pico=require('pico-common')
+
+// use plugin without pico's amd 
+const pStr = pico.export('pico/str')
 ```
 
 ### Browser
@@ -32,40 +37,54 @@ link the minified version in your browser
 and you can start using in your javascript
 ```javascript
 window.pico
+
+// use plugin witout pico's amd
+const pStr = pico.export('pico/str')
 ```
 
-## Configuration
+## amd
 It has similar requirejs config but not compatible. To bootstrap the amd
 ```javascript
 pico.run({
-	name: 'NAME',			// module name for the entry point function
-    ajax: ajaxFunc,			// override ajax function used in pico
-    onLoad: loadFunc,		// override onload function
+	name: 'NAME',			// module name for the bootsrap module
+	ajax: ajaxFunc,			// override ajax function used in pico
+	onLoad: loadFunc,		// override onload function
 	importRule: ()=>{},		// blacklist module here
-	preprocessor: ()=>{},	// define special file type preprocessor
-    env:envObj,				// add env variable to pico.getEnv()
-    paths:{					// require search path
-        '*':./,
-        'node':function(name,cb){
-            cb(null, pico.require(name))
-        }
-    }
-},function(){		// entry point function
-    var main = require('main')	// require module
+	preprocessor: ()=>{},		// define special file type preprocessor
+	env:envObj,			// add env variable to pico.getEnv()
+	paths:{				// require search path, path can be string or function
+		'*':./,
+		node(name,cb){
+			cb(null, pico.require(name))
+		}
+	}
+},function(){		// this function is a bootstrap module
+	// Asynchronously load othermodule.js with require keyword defined in pico-common
+	const othermodule = require('other')
+	// Synchronously load pico-common plugin without using .export
+	const pStr = require('pico/str')
+	
+	// *** do not use othermodule here, not loaded yet ***
+	// *** plugin is safe to use here, as it is synchronously loaded ***
 
+	// othermodule is safe to use in this function
 	return function(){
-		// at this point "main" is fully loaded
+		// at this point "othermodule" is fully loaded
 		// your app "main loop" start from here
 	}
 })
 ```
-to bundle the files into one single file, use this configuration
+
+## bundle multiple script into one script
+bundle only work in nodejs env, create a new script with this configuration
 ```javascript
+// newscript.js
 pico.build({
-    entry:'./main.js',
-    output:'./output.js'
+	entry:'./main.js',
+	output:'./output.js'
 })
 ```
+by executing this newscript.js, pico-coomon will create a dependency tree start with `main.js` and put all the dependencies including pico-common into a single file `output.js`
 
 ## Examples
 ### Circular Dependency
@@ -74,11 +93,11 @@ Script A
 var scriptB=require('scriptB')
 
 return function(){
-    return 'Script A'
+	return 'Script A'
 }
 
 this.load=function(){
-    console.log(scriptB())
+	console.log(scriptB())
 }
 ```
 Script B
@@ -86,14 +105,15 @@ Script B
 var scriptA=require('scriptA')
 
 return function(){
-    return 'Script B'
+	return 'Script B'
 }
 
 this.load=function(){
-    console.log(scriptA())
+	console.log(scriptA())
 }
 ```
 to avoid circular dependency, results returned by require() function can't be use in the document scope, they can only be used in function such as this.load
+
 ### Inheritance
 child object can inherit properties of one parent object but declare it in child script
 ```javascript
@@ -155,7 +175,7 @@ Important to take note, parent must be a function/constructor when inherit with 
 ScriptA
 ```javascript
 return {
-    a:function(){return 'Hello World'}
+	a:function(){return 'Hello World'}
 }
 ```
 in runtime
@@ -172,8 +192,8 @@ The object returns by require() are not the actual object itself but a proxy obj
 ```javascript
 // obj.js
 module.exports={
-    a:1,
-    b:2
+	a:1,
+	b:2
 }
 // somewhere.js
 var proxy=require('obj')
@@ -200,7 +220,7 @@ proxy.length // 0
 Object.getPrototypeOf(proxy).length // 1
 ```
 
-## Modules
+## plugins
 pico-common has included many useful javascript modules that can be used on both browser and nodejs.
 
 to use the module
