@@ -239,7 +239,42 @@ in nodejs
 const { steup, ensure } = require('pico-common').export('pico/test');
 ```
 
+### pico/str
+pico string library
+#### rest url handling
+example rest url: `/rest/url/s:str/v%num|#wildcard`
+1) `:`, string variable
+2) `%`, number variable
+3) `|`, optional variable
+4) `#`, wildcard variable
+
+example
+url = `/rest/url/shello/v123/some/more/url`
+rest = `/rest/url/s:str/v%num/#wildcard`
+str=hello, num=123, wildcard=/some/more/url
+
+url = `/rest/url/shello/v123`
+rest = `/rest/url/s:str/v%num/#wildcard`
+error: wildcard undefined
+
+url = `/rest/url/shello/v123`
+rest = `/rest/url/s:str/v%num|#wildcard`
+str=hello, num=123, wildcard=undefined (no error, wildcard is optional)
+
+```javascript
+const pStr = require('pico/str')
+
+const build = pStr.compileRest('/rest1/s:str/v%num/#wildcard')
+pStr.compileRest('/rest2/:str/%num/#wildcard', build) // append more build
+const params = {}
+const api = pStr.execRest('/rest2/hello/123/foo/bar', build, params)
+// api === '/rest2/:str/%num/#wildcard'
+// params === {str: 'hello', num: 123, wildcard: 'foo/bar'}
+```
+
 ### pico/test
+pico test library, which able to test code in parallel or series
+
 ```javascript
 const { setup, ensure } = pico.export('pico/test')
 
