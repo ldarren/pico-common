@@ -81,6 +81,20 @@ parallel('pico/str', function(){
 		api=pstr.execRest('/msair',build,params)
 		cb(null, api===route && 'msair'===params.appName)
 	})
+	var route='http://dev.jasaws.com/v%ver/users/:email|#profile'
+	var build=pstr.compileRest(route)
+	this.test('ensure restful builder works',function(cb){
+		var url=pstr.buildRest(route, build, {ver:1.9, email:'test@email.com', profile: 'firstname/lastname'})
+		cb(null, 'http://dev.jasaws.com/v1.9/users/test@email.com/firstname/lastname' ===  url)
+	})
+	this.test('ensure restful builder fails if missing mandatory params',function(cb){
+		var url=pstr.buildRest(route, build, {ver:1.9, profile: 'firstname/lastname'})
+		cb(null, false ===  url)
+	})
+	this.test('ensure restful builder success if missing non-mandatory params',function(cb){
+		var url=pstr.buildRest(route, build, {ver:1.9, email: 'test@email.com'})
+		cb(null, 'http://dev.jasaws.com/v1.9/users/test@email.com' ===  url)
+	})
 	this.test('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
 		var
 		data = JSON.stringify({data:123}),
