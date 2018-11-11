@@ -1,5 +1,10 @@
 define('pico/str', function(){
 	var Ceil=Math.ceil, Random=Math.random
+	function partial(func){
+		return function(d){
+			return func(pico, d)
+		}
+	}
 	function compileRestUnit(unit){
 		var idx=unit.search('[#:%]')
 		switch(idx){
@@ -49,10 +54,22 @@ define('pico/str', function(){
 		units.splice(0,l)
 		return true
 	}
-	function partial(func){
-		return function(d){
-			return func(pico, d)
+	function buildRest(url, tokens, index, params, prefix, mandatory){
+		if (tokens.length >= index) return url
+		var token = tokens[index++]
+		if (!token.charAt) return buildRest(buildRest(url, token, 0, params, '', mandatory), tokens, index, params, prefix, mandatory)
+
+		url += prefix
+
+		switch(token.charAt(0)){
+		case '%':
+		case ':':
+		case '#':
+			url += params[token.slice(1)]
+		default:
+			url += params[token]
 		}
+		return buildRest(url, tokens, index, params, prefix, mandatory)
 	}
 
 	return {
@@ -119,6 +136,20 @@ define('pico/str', function(){
 				}
 			}
 			return null
+		},
+		buildRest:function(api,build,params){
+			var codes
+			for (var i=0, b; b = build[i]; i++){
+				if (api === b[0]){
+					codes = b[1]
+					break
+				}
+			}
+			var url = buildRest('', codes[0], 0, params, '/', true)
+			for (var i=1, c; c = codes[i]; i++){
+				url = buildRest(url, c, 0, params, '/')
+			}
+			return url//url.search('[#:%]') ? api : url
 		}
 	}
 })
