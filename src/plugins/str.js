@@ -55,7 +55,8 @@ define('pico/str', function(){
 		return true
 	}
 	function buildRest(url, tokens, index, params, prefix, mandatory){
-		if (tokens.length >= index) return url
+console.log('>>> buildRest', tokens.length, index, url)
+		if (tokens.length <= index) return url
 		var token = tokens[index++]
 		if (!token.charAt) return buildRest(buildRest(url, token, 0, params, '', mandatory), tokens, index, params, prefix, mandatory)
 
@@ -65,9 +66,11 @@ define('pico/str', function(){
 		case '%':
 		case ':':
 		case '#':
-			url += params[token.slice(1)]
+			url += params[token.slice(1)] || token
+			break
 		default:
-			url += params[token]
+			url += token
+			break
 		}
 		return buildRest(url, tokens, index, params, prefix, mandatory)
 	}
@@ -141,15 +144,16 @@ define('pico/str', function(){
 			var codes
 			for (var i=0, b; b = build[i]; i++){
 				if (api === b[0]){
-					codes = b[1]
+					codes = b
 					break
 				}
 			}
-			var url = buildRest('', codes[0], 0, params, '/', true)
-			for (var i=1, c; c = codes[i]; i++){
+			if (!codes) return api
+			var url = buildRest('', codes[1], 0, params, '/', true)
+			for (var i=2, c; c = codes[i]; i++){
 				url = buildRest(url, c, 0, params, '/')
 			}
-			return url//url.search('[#:%]') ? api : url
+			return ~url.search('[#:%]') ? false : url
 		}
 	}
 })
