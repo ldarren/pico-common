@@ -248,7 +248,16 @@ example rest url: `/rest/url/s:str/v%num|#wildcard`
 3) `|`, optional variable
 4) `#`, wildcard variable
 
-example
+##### pStr.compileRest
+> pStr.compileRest(rest, [build])
+
+##### pStr.execRest
+> pStr.execRest(rest, build, params)
+
+##### pStr.buildRest
+> pStr.buildRest(rest, build, params, [relativePath])
+
+##### example
 url = `/rest/url/shello/v123/some/more/url`
 rest = `/rest/url/s:str/v%num/#wildcard`
 str=hello, num=123, wildcard=/some/more/url
@@ -272,7 +281,20 @@ const api = pStr.execRest('/rest2/hello/123/foo/bar', build, params)
 // params === {str: 'hello', num: 123, wildcard: 'foo/bar'}
 ```
 
+pico is able to build url from rest path and parameter
+```javascript
+const pStr = require('pico/str')
+
+const build = pStr.compileRest('/rest1/s:str/v%num/#wildcard')
+const params = {str: 'foo', num: 123, wildcard: 'bar/456'}
+var url = pStr.buildRest('/rest1/s:str/v%num/#wildcard', build, params)
+// url === '/rest1/sfoo/v123/bar/456'
+var url = pStr.buildRest('/rest1/s:str/v%num/#wildcard', build, params, true)
+// url === 'rest1/sfoo/v123/bar/456'
+```
+
 ### pico/test
+
 pico test library, which able to test code in parallel or series
 
 ```javascript
