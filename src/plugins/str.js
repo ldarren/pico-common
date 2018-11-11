@@ -55,23 +55,21 @@ define('pico/str', function(){
 		return true
 	}
 	function buildRest(url, tokens, index, params, prefix, mandatory){
-console.log('>>> buildRest', tokens.length, index, url)
 		if (tokens.length <= index) return url
 		var token = tokens[index++]
-		if (!token.charAt) return buildRest(buildRest(url, token, 0, params, '', mandatory), tokens, index, params, prefix, mandatory)
+		if (!token.charAt) return buildRest(buildRest(url + prefix, token, 0, params, '', mandatory), tokens, index, params, prefix, mandatory)
 
-		url += prefix
-
-		switch(token.charAt(0)){
-		case '%':
-		case ':':
-		case '#':
-			url += params[token.slice(1)] || token
-			break
-		default:
-			url += token
-			break
+		if (token.length > 1){
+			switch(token.charAt(0)){
+			case '%':
+			case ':':
+			case '#':
+				token = params[token.slice(1)]
+				if (!token) return mandatory ? '' : url
+				break
+			}
 		}
+		url += prefix + token
 		return buildRest(url, tokens, index, params, prefix, mandatory)
 	}
 
@@ -140,7 +138,7 @@ console.log('>>> buildRest', tokens.length, index, url)
 			}
 			return null
 		},
-		buildRest:function(api,build,params){
+		buildRest:function(api,build,params,relativePath){
 			var codes
 			for (var i=0, b; b = build[i]; i++){
 				if (api === b[0]){
@@ -150,10 +148,13 @@ console.log('>>> buildRest', tokens.length, index, url)
 			}
 			if (!codes) return api
 			var url = buildRest('', codes[1], 0, params, '/', true)
+			if (!url) return false
 			for (var i=2, c; c = codes[i]; i++){
 				url = buildRest(url, c, 0, params, '/')
 			}
-			return ~url.search('[#:%]') ? false : url
+			// remove the first slash
+			if (relativePath || 1 === url.indexOf('http')) url = url.slice(1)
+			return ~url.search('[#%]') ? false : url
 		}
 	}
 })
