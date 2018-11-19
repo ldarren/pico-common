@@ -75,6 +75,44 @@ pico.run({
 })
 ```
 
+### Module initialize
+> this.load(mod)
+
+`this.load` function should override if an one time initialization is needed after all dependencies are loaded.
+```javascript
+// amodule.js
+const depA = require('depA')
+const depB = require('depB')
+
+this.load = function(me){
+	// me.hello === 'world'
+	do something about depA and depB
+}
+
+return {
+	hello: 'world'
+}
+```
+`this.load` will be excueted one time only regardless how many time it being required
+
+### Module timer
+> this.update(mod, elapsed)
+
+each module has a timer function (`this.update`) that will be called every 0.1s. this is a low overhead timer funtion compare to `setTimeout`
+```javascript
+// agamemodule.js
+const dep = require('dep')
+
+this.update = function(me, elapsed){
+	// me.hello === 'world'
+	// elapsed ~ 100ms
+}
+
+return {
+	hello: 'world'
+}
+```
+
 ## bundle multiple script into one script
 bundle only work in nodejs env, create a new script with this configuration
 ```javascript
