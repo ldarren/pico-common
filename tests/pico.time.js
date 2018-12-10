@@ -33,8 +33,16 @@ parallel('pico/time', function(){
 	this.test('ensure weeknum of 1/Mar/2016 is 9', function(cb){
 		cb(null, 9===ptime.weeknum(new Date(2016,2,1,0,0,0)))
 	})
-	this.test('ensure "* * * * * *" return less than a min', function(cb){
+	this.test('ensure "* * * * * *" return less than two min', function(cb){
 		const diff = ptime.nearest(...ptime.parse('* * * * * *')) - Date.now()
-		cb(null, diff < 60 * 1000, diff)
+		cb(null, diff < 2 * 60 * 1000, diff)
+	})
+	this.test('ensure "*/1 * * * * *" always round to nearest min, never return same min', function(cb){
+		const parsed = ptime.parse('*/1 * * * * *')
+		let ret = ptime.nearest(...parsed, Date.UTC(2018, 11, 11, 1, 22, 30)) === Date.UTC(2018, 11, 11, 1, 24)
+		ret = ret && ptime.nearest(...parsed, Date.UTC(2018, 11, 11, 1, 22, 29)) === Date.UTC(2018, 11, 11, 1, 23)
+		ret = ret && ptime.nearest(...parsed, Date.UTC(2018, 11, 11, 1, 23, 29)) === Date.UTC(2018, 11, 11, 1, 24)
+		ret = ret && ptime.nearest(...parsed, Date.UTC(2018, 11, 11, 1, 23, 30)) === Date.UTC(2018, 11, 11, 1, 25)
+		cb(null, ret)
 	})
 })

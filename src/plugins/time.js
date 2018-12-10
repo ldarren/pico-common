@@ -6,6 +6,7 @@ define('pico/time',function(){
     Ceil=Math.ceil,
     SEC = 1000,
     MIN = 60*SEC,
+    SAFE_MIN = 90*SEC,
     HR = 60*MIN,
     DAY= 24*HR,
 	daynum=function(end,start){
@@ -69,7 +70,7 @@ define('pico/time',function(){
         ret.sort(function(a,b){return a-b})
         return ret
     },
-    nearest=function(now, list, max){
+    closest=function(now, list, max){
         if (!list) return now
         if (Max.apply(Math, list.concat(now))===now) return now+(max-now)+Min.apply(Math, list)
         for(var i=0,l=list.length; i<l; i++){
@@ -77,12 +78,12 @@ define('pico/time',function(){
         }
         console.error('not suppose to be here',now, list, max)
     },
-    closest=function(now, count, mins, hrs, doms, mons, dows, yrs, cb){
+    nearest=function(now, count, mins, hrs, doms, mons, dows, yrs, cb){
         if (count++ > 3) return cb(0)
 
         var
-        min=nearest(now.getMinutes(), mins, 60),
-        hr=nearest(now.getHours()+Floor(min/60), hrs, 24),
+        min=closest(now.getMinutes(), mins, 60),
+        hr=closest(now.getHours()+Floor(min/60), hrs, 24),
         dom=now.getDate(),
         mon=now.getMonth(),
         yr=now.getFullYear(),
@@ -92,17 +93,17 @@ define('pico/time',function(){
             // if dow set ignore dom fields
             var
             day=now.getDay()+Floor(hr/24),
-            dow=nearest(day, dows, 7)
+            dow=closest(day, dows, 7)
             dom+=(dow-day)
         }else{
-            dom=nearest(dom+Floor(hr/24), doms, days)
+            dom=closest(dom+Floor(hr/24), doms, days)
         }
-        mon=nearest(mon+1+Floor(dom/days), mons, 12)
+        mon=closest(mon+1+Floor(dom/days), mons, 12)
 
-        if (now.getMonth()+1 !== mon) return closest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
+        if (now.getMonth()+1 !== mon) return nearest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
 
-        yr=nearest(yr+Floor((mon-1)/12), yrs, 0)
-        if (now.getFullYear() !== yr) return closest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
+        yr=closest(yr+Floor((mon-1)/12), yrs, 0)
+        if (now.getFullYear() !== yr) return nearest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
 
         var then=(new Date(yr, (mon-1)%12)).getTime()
         then+=(dom%days-1)*DAY // beginning of day
@@ -132,8 +133,9 @@ define('pico/time',function(){
 
             return [mins, hrs, doms, mons, dows, yrs]
         },
-        nearest:function(mins, hrs, doms, mons, dows, yrs){
-            return closest(new Date(Date.now() + MIN), 0, mins, hrs, doms, mons, dows, yrs, function(then){ return then })
+        nearest:function(mins, hrs, doms, mons, dows, yrs, now){
+			now = now || Date.now()
+            return nearest(new Date(now + SAFE_MIN), 0, mins, hrs, doms, mons, dows, yrs, function(then){ return then })
         },
 		daynum:daynum,
 		weeknum:weeknum,
