@@ -1,0 +1,5 @@
+*.min.*
+tests/amd/lean.js
+tests/amd/pico.js
+node_modules/
+bin/

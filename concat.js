@@ -2,15 +2,18 @@
 
 const origDirs= (process.argv[2] || '').split(',')
 
-if (!origDirs[0]) return console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS [OUTPUT_NAME]')
+if (!origDirs[0]) {
+	console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS [OUTPUT_NAME]')
+	process.exit(1)
+}
 
 const BIN='bin'
 const SRC='src'
 const JS='.js'
 const MIN_JS='.min.js'
 const MIN_MAP=MIN_JS+'.map'
-const PREFIX="(function(module,exports,require){"
-const POSTFIX="}).apply(null, 'object' === typeof module ? [module, 'exports', require] : [window, 'pico'])"
+const PREFIX='(function(module,exports,require){'
+const POSTFIX='}).apply(null, \'object\' === typeof module ? [module, \'exports\', require] : [window, \'pico\'])'
 const uglify=require('uglify-js')
 const fs = require('fs')
 const path = require('path')
@@ -18,14 +21,14 @@ const stream=require('stream')
 const symPath= process.argv[1]
 
 function getPath(dir, file){
-    if (path.isAbsolute(file)) return file
-    return path.resolve(dir,file)
+	if (path.isAbsolute(file)) return file
+	return path.resolve(dir,file)
 }
 function pipeStr(str,w,opt){
-    const r = new stream.Readable
-    r.pipe(w,opt||{end:false})
-    r.push(str)    // the string you want
-    r.push(null)      // indicates end-of-file basically - the end of the stream
+	const r = new stream.Readable
+	r.pipe(w,opt||{end:false})
+	r.push(str)    // the string you want
+	r.push(null)      // indicates end-of-file basically - the end of the stream
 }
 function readdirs(wd,dirs,output,cb){
 	if (!dirs.length) return cb(null, output)
@@ -33,7 +36,7 @@ function readdirs(wd,dirs,output,cb){
 	console.log('read dir', srcDir)
 	fs.readdir(srcDir, (err, files)=>{
 		if (err) return cb(err)
-		for(let i=0,f; f=files[i]; i++){
+		for(let i=0,f; (f=files[i]); i++){
 			if ('.'===f.charAt(0)) continue
 			output.push(path.join(srcDir,f))
 		}
@@ -49,25 +52,27 @@ fs.readlink(symPath, (err, realPath)=>{
 	const destAbs = getPath(wd, dest)
 	console.log('deleting', destAbs)
 	fs.unlink(destAbs+JS, (err)=>{
-        console.log('open file', destAbs)
-        const ws = fs.createWriteStream(destAbs+JS, {flags:'a'})
-        pipeStr(PREFIX,ws)
-        readdirs(wd, origDirs, [], (err, files)=>{
-            if (err) return console.error(err)
-            files.unshift(path.join(wd,SRC,'amd.js'))
-            !function(cb){
-                if (!files.length) return cb()
-                const 
-                fname = files.shift(),
-                callee = arguments.callee
+		console.log('open file', destAbs)
+		const ws = fs.createWriteStream(destAbs+JS, {flags:'a'})
+		pipeStr(PREFIX,ws)
+		readdirs(wd, origDirs, [], (err, files)=>{
+			if (err) return console.error(err)
+			files.unshift(path.join(wd,SRC,'amd.js'))
+			!function(cb){
+				if (!files.length) return cb()
+				const
+					fname = files.shift(),
+					callee = arguments.callee
 
-                console.log('appending', fname, '...')
-                const rs = fs.createReadStream(fname)
+				console.log('appending', fname, '...')
+				const rs = fs.createReadStream(fname)
 
-                rs.on('close', ()=>{ callee(cb) })
-                rs.pipe(ws, {end:false})
-            }(()=>{
-                ws.on('finish',()=>{
+				rs.on('close', ()=>{
+					callee(cb)
+				})
+				rs.pipe(ws, {end:false})
+			}(()=>{
+				ws.on('finish',()=>{
 					fs.readFile(destAbs+JS,'utf8',(err,code)=>{
 						if (err) return console.error(err)
 						const minify=uglify.minify(code,{sourceMap:{filename:dest+MIN_JS,url:dest+MIN_MAP}})
@@ -80,9 +85,9 @@ fs.readlink(symPath, (err, realPath)=>{
 							})
 						})
 					})
-                })
-                pipeStr(POSTFIX,ws,{end:true});
-            })  
-        })
+				})
+				pipeStr(POSTFIX,ws,{end:true})
+			})
+		})
 	})
-})              
+})

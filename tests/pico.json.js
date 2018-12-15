@@ -1,6 +1,6 @@
 const pico = require('../bin/pico-cli')
 const pjson = pico.export('pico/json')
-const { setup, test, series, parallel } = pico.export('pico/test')
+const { parallel } = pico.export('pico/test')
 
 parallel('pico/json', function(){
 	this.test('ensure json.path work', function(cb){
@@ -21,7 +21,9 @@ parallel('pico/json', function(){
 			}
 		}
 		var total = 0
-		pjson.path(json)('..','price')((price)=>{total+=price; return price})()
+		pjson.path(json)('..','price')((price)=>{
+			total+=price; return price
+		})()
 		cb(null, 360 === total)
 	})
 })

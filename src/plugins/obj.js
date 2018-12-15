@@ -1,8 +1,8 @@
 define('pico/obj',function(){
-    var allows = ['object','function']
-    var specialFunc = ['constructor']
-    return  {
-        extend: function extend(to, from, options){
+	var allows = ['object','function']
+	var specialFunc = ['constructor']
+	return  {
+		extend: function extend(to, from, options){
 			var tf=allows.indexOf(typeof to)
 			var ft=allows.indexOf(typeof from)
 			if (1 === tf) tf = allows.indexOf(typeof to.__proto__)
@@ -28,7 +28,7 @@ define('pico/obj',function(){
 						unique[value] = value
 					}
 					to = []
-					for (key in unique) to.push(unique[key]);
+					for (key in unique) to.push(unique[key])
 				}else{
 					to = from
 				}
@@ -41,43 +41,43 @@ define('pico/obj',function(){
 				}
 			}
 			return to
-        },
-        extends: function(to, list, options){
-            var e = this.extend
-            for(var i=0,f; f=list[i]; i++){
-                to= e(to, f, options)
-            }
-            return to
-        },
-        parseInts: function(arr, radix){
-            for(var i=0,l=arr.length; i<l; i++){
-                arr[i] = parseInt(arr[i], radix)
-            }
-            return arr
-        },
-        // pluck([{k:1},{k:2}], 'k') = [1,2]
-        pluck: function(objs, key){
-            var arr = []
-            if (objs.length){
-                var map = {}, obj, id, i, l, k
-                for(i=0,l=objs.length; i<l; i++){
-                    obj = objs[i]
-                    if (!obj) continue
-                    id = obj[key]
-                    if (void 0 === id) continue
-                    map[id] = id
-                }
-                for(k in map){
-                    arr.push(map[k])
-                }
-            }
-            return arr
-        },
+		},
+		extends: function(to, list, options){
+			var e = this.extend
+			for(var i=0,f; (f=list[i]); i++){
+				to= e(to, f, options)
+			}
+			return to
+		},
+		parseInts: function(arr, radix){
+			for(var i=0,l=arr.length; i<l; i++){
+				arr[i] = parseInt(arr[i], radix)
+			}
+			return arr
+		},
+		// pluck([{k:1},{k:2}], 'k') = [1,2]
+		pluck: function(objs, key){
+			var arr = []
+			if (objs.length){
+				var map = {}, obj, id, i, l, k
+				for(i=0,l=objs.length; i<l; i++){
+					obj = objs[i]
+					if (!obj) continue
+					id = obj[key]
+					if (void 0 === id) continue
+					map[id] = id
+				}
+				for(k in map){
+					arr.push(map[k])
+				}
+			}
+			return arr
+		},
 		dotchain: function callee(obj, p, value){
 			if (!p || !p.length) return obj
 			var o = obj[p.shift()]
 			if (o) return callee(o, p)
 			return value
 		}
-    }
+	}
 })

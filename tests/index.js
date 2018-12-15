@@ -1,6 +1,6 @@
 const globalKeys = Object.keys(global)
 const pico = require('../bin/pico-cli')
-const { setup, test, series, parallel } = pico.export('pico/test')
+const { setup, test, series_, parallel_ } = pico.export('pico/test')
 
 setup({
 	stdout: true,

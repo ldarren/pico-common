@@ -1,5 +1,5 @@
 define('pico/test', function(){
-    var pStr = pico.export('pico/str')
+	var pStr = pico.export('pico/str')
 	var isNode = 'undefined' !== typeof require
 	var format = isNode ? require('util').inspect : JSON.stringify
 	var stdout = true
@@ -35,12 +35,14 @@ define('pico/test', function(){
 			Runner.call(this, function(output){
 				runner.merge(msg, output, writable)
 			})
-			group.call(this)	
+			group.call(this)
 		}
 
 		R.prototype  = Runner.prototype
 
-		runner.branch(function(){ new R })
+		runner.branch(function(){
+			new R
+		})
 	}
 
 	function recur(ctx, funcs, idx, args, cb){
@@ -129,7 +131,7 @@ define('pico/test', function(){
 					})
 				}, 0, function(err, result){
 					rs.push(cb(err, result, Array.prototype.slice.call(arguments, 2)))
-					if (err) s.error++ 
+					if (err) s.error++
 					else result ? s.suceeded++ : s.failed++
 
 					onAfter(o, args, function(){
@@ -179,7 +181,7 @@ define('pico/test', function(){
 			var q = o.queue
 			var s = o.summary
 			var rs = o.results
-		
+
 			onBegin(o, s.total, function(err, args){
 				if (err) return cb(err)
 				s.total += retry ? 0 : 1
@@ -197,7 +199,7 @@ define('pico/test', function(){
 					if (err) s.error++
 					else result ? s.suceeded++ : s.failed++
 					onAfter(o, args, function(){
-						if (s.total === s.suceeded + s.failed + s.error) 
+						if (s.total === s.suceeded + s.failed + s.error)
 							return onEnd(o, function(){
 								o.done({summary: s, results: rs})
 							})

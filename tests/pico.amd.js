@@ -1,5 +1,5 @@
 const pico = require('../bin/pico-cli')
-const { setup, test, series, parallel } = pico.export('pico/test')
+const { parallel } = pico.export('pico/test')
 
 parallel('pico', function(){
 /*
@@ -20,14 +20,14 @@ parallel('pico', function(){
 	})
 */
 	this.test('ensure pico.parse function text to module', function(cb){
-		pico.parse('testMod123', "return {value:123}", function(err, mod){
+		pico.parse('testMod123', 'return {value:123}', function(err, mod){
 			if (err) return cb(err)
 			cb(null, 123===mod.value)
 		})
 	})
 
 	this.test('ensure pico.parse define text to module', function(cb){
-		pico.parse(null, "define('testMod345',function(){return {value:345}})", function(err){
+		pico.parse(null, 'define(\'testMod345\',function(){return {value:345}})', function(err){
 			if (err) return cb(err)
 			var testMod345=pico.export('testMod345')
 			cb(null, 345===testMod345.value)

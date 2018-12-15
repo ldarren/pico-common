@@ -1,0 +1,86 @@
+{
+	"env": {
+		"es6": true,
+		"browser": true,
+		"commonjs": true,
+		"node": true
+	},
+	"extends": "eslint:recommended",
+	"parserOptions": {
+		"ecmaVersion": 2018,
+		"sourceType": "module"
+	},
+	"globals": {
+		"__": false,
+		"pico": false,
+		"CryptoJS": false,
+		"dummyCB": false,
+		"loader": false,
+		"compile": false,
+		"js": false,
+		"getExt": false,
+		"EXT_JS": false,
+		"EXT_JSON": false,
+		"funcBody": false,
+		"ran": true,
+		"define": true,
+		"tick": true,
+		"modules": true
+	},
+	"rules": {
+		"brace-style": "error",
+        "eqeqeq": [
+			"error",
+			"smart"
+		],
+		"indent": [
+			"error",
+			"tab"
+		],
+		"linebreak-style": [
+			"error",
+			"unix"
+		],
+		"quotes": [
+			"error",
+			"single"
+		],
+		"semi": [
+			"error",
+			"never",
+			{
+				"beforeStatementContinuationChars": "always"
+			}
+		],
+		"no-console": [
+			"warn",
+			{
+				"allow": ["error", "log"]
+			}
+		],
+		"no-unused-vars": [
+			"error",
+			{
+				"vars": "all",
+				"args": "after-used",
+				"ignoreRestSiblings": true
+			}
+		],
+		"no-trailing-spaces": [
+			"error",
+			{
+				"ignoreComments": true
+			}
+		],
+		"no-unreachable": "warn",
+		"no-fallthrough": "warn",
+		"no-unused-vars": [
+			"error", {
+			"args": "none",
+			"varsIgnorePattern": "_"
+		}],
+		"no-cond-assign": ["error", "except-parens"],
+		"no-empty": ["error", { "allowEmptyCatch": true }],
+		"no-constant-condition": ["error", { "checkLoops": false }]
+	}
+}

@@ -3,7 +3,7 @@ define('pico/func',function(exports,require,module,define,inherit,pico){
 		var r = stack[0]
 		var trace = []
 
-		for (var i = 0, s; s = stack[i]; i++){
+		for (var i = 0, s; (s = stack[i]); i++){
 			trace.push(s.toString())
 		}
 
@@ -23,8 +23,8 @@ define('pico/func',function(exports,require,module,define,inherit,pico){
 		}
 	}
 
-    return {
-        reflect: function callee(func, limit){
+	return {
+		reflect: function callee(func, limit){
 			var orgPrepare = Error.prepareStackTrace
 			var orgCount = Error.stackTraceLimit
 
@@ -40,5 +40,5 @@ define('pico/func',function(exports,require,module,define,inherit,pico){
 
 			return s
 		}
-    }
+	}
 })

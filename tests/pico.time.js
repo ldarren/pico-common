@@ -1,6 +1,6 @@
 const pico = require('../bin/pico-cli')
 const ptime = pico.export('pico/time')
-const { setup, test, series, parallel } = pico.export('pico/test')
+const { parallel } = pico.export('pico/test')
 
 const cron='5-20/6 */9 5/5 6/3 6-0 *'
 parallel('pico/time', function(){

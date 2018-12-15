@@ -1,8 +1,11 @@
 define('pico/build',function(){
 	var
-	CR=/['\n\r]/g,
-	htmlescape= { "'":'&#039;', '\n':'\\n','\r':'\\n' },
-	esc=function(m){return htmlescape[m]}
+		DEF='pico.define(\'URL\',\'FUNC\')\n',
+		CR=/['\n\r]/g,
+		htmlescape= { '\'':'&#039;', '\n':'\\n','\r':'\\n' },
+		esc=function(m){
+			return htmlescape[m]
+		}
 
 	return function(options){
 		var fs=require('fs')
@@ -11,8 +14,8 @@ define('pico/build',function(){
 		var dstDir = options.shift()
 		var orgDefine = define
 
-        // overide tick function
-        tick=dummyCB
+		// overide tick function
+		tick=dummyCB
 
 		function addDeps(dst, deps){
 			if (!deps || !deps.length) return
@@ -35,7 +38,7 @@ define('pico/build',function(){
 				if (!url) return
 				if (-1 !== exclude.indexOf(url)) return
 				switch(getExt(url) || EXT_JS){
-				case EXT_JS: return fs.appendFileSync(dst, DEF.replace('URL',url).replace("'FUNC'",func.toString()))
+				case EXT_JS: return fs.appendFileSync(dst, DEF.replace('URL',url).replace('\'FUNC\'',func.toString()))
 				case EXT_JSON: return fs.appendFileSync(dst, DEF.replace('URL',url).replace('FUNC',JSON.stringify(JSON.parse(func)).replace(CR, esc)))
 				default: return fs.appendFileSync(dst, DEF.replace('URL',url).replace('FUNC',func.replace(CR, esc)))
 				}

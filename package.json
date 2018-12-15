@@ -1,12 +1,14 @@
 {
     "name": "pico-common",
-    "version": "0.10.13",
+    "version": "0.10.14",
     "description": "pico common tools",
     "main": "bin/pico.js",
     "scripts": {
         "prepare": "./concat.js src/plugins; ./concat.js src/plugins,src/cli bin/pico-cli",
         "pretest": "./concat.js src/plugins,src/cli bin/pico-cli",
-        "test": "node tests/index.js"
+        "test": "node tests/index.js",
+		"lint": "eslint .",
+		"lint:fix": "eslint . --fix"
     },
     "repository": {
         "type": "git",
