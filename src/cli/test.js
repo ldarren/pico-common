@@ -58,9 +58,15 @@ define('pico/test', function(){
 			recur(ctx, funcs, idx, args, cb)
 		}]))
 	}
-	function onBegin(ctx, total, next){
-		if (total) return next(null, ctx.args.slice())
-		recur(ctx, ctx.begins, 0, ctx.args, next)
+	function onBegin(ctx, next){
+		if (ctx.beginPending) ctx.beginCallbacks.push(next)
+		else return next(null, ctx.args.slice())
+		if (1 !== ctx.beginCallbacks.length) return
+		recur(ctx, ctx.begins, 0, ctx.args, (err, args) => {
+			ctx.beginPending = false
+			ctx.beginCallbacks.forEach(cb => cb(err, args.slice()))
+			ctx.beginCallbacks.length = 0
+		})
 	}
 	function onEnd(ctx, next){
 		recur(ctx, ctx.ends, 0, ctx.args, next)
@@ -77,6 +83,8 @@ define('pico/test', function(){
 	}
 
 	function Section(){
+		this.beginPending = true
+		this.beginCallbacks = []
 		this.begins = []
 		this.ends = []
 		this.befores = []
@@ -121,10 +129,9 @@ define('pico/test', function(){
 			var s = o.summary
 			var rs = o.results
 
-			onBegin(o, s.total, function(err, args){
+			onBegin(o, function(err, args){
 				if (err) return cb(err)
 				s.total++
-
 				setTimeout(function(next){
 					onBefore(o, args, function(){
 						func.apply(ctx, args.concat([next]))
@@ -182,7 +189,7 @@ define('pico/test', function(){
 			var s = o.summary
 			var rs = o.results
 
-			onBegin(o, s.total, function(err, args){
+			onBegin(o, function(err, args){
 				if (err) return cb(err)
 				s.total += retry ? 0 : 1
 				if ((!retry && q.length) || o.running) return q.push([ctx, func, cb, 1])

@@ -336,7 +336,8 @@ var url = pStr.buildRest('/rest1/s:str/v%num/#wildcard', build, params, true)
 pico test library, which able to test code in parallel or series
 
 ```javascript
-const { setup, ensure } = pico.export('pico/test')
+const pico = require('pico-common/bin/pico-cli')
+const { setup, test, parallel, series} = pico.export('pico/test')
 
 setup({
 	stdout: false, // default: true, toggle standard out
@@ -344,12 +345,39 @@ setup({
 	end: result => {} // default: undefined, callback at the end of test
 })
 
-ensure('ensure 1 is true', cb => {
+test('ensure 1 is true', cb => {
 	cb(null, 1)
 })
 
 // optional remarks
-ensure('ensure "" is false', cb => {
+test('ensure "" is false', cb => {
 	cb(null, "", 'optional', 'remark')
+})
+
+// parallel tests
+parallel('the tests in here are executed in parallel', function(){
+	// execute 1 time
+	this.begin(next => {
+		next(null, (1, 2))
+	})
+	// execute 1 time
+	this.end((arg1, arg2, next) => {
+		next()
+	})
+	// execute everytime before this.test
+	this.before((arg1, arg2, next )=> {
+		next(null, (1, 2))
+	})
+	// execute everytime after this.test
+	this.after((arg1, arg2, next )=> {
+		next(null, (1, 2))
+	})
+	this.test('first parallel', (arg1, arg2, next) => {
+		next(null, true)
+	})
+})
+
+series('the tests in here are executed in series', function(){
+	// same methods as parallel
 })
 ```
