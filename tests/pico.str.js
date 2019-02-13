@@ -82,10 +82,10 @@ parallel('pico/str', function(){
 		cb(null, api===route && 'msair'===params.appName)
 	})
 	this.test('ensure restful builder for relative url works',function(cb){
-		var route='DOMAIN/s3/read/:Key'
+		var route=':DOMAIN/s3/read/:Key'
 		var build=pstr.compileRest(route)
-		var url=pstr.buildRest(route, build, {Key: '123'}, true)
-		cb(null, 'DOMAIN/s3/read/123' === url)
+		var url=pstr.buildRest(route, build, {DOMAIN: 'domain', Key: '123'}, true)
+		cb(null, 'domain/s3/read/123' === url)
 	})
 	var route='http://dev.jasaws.com/v%ver/users/:email|#profile'
 	var build=pstr.compileRest(route)
