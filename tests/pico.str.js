@@ -81,9 +81,15 @@ parallel('pico/str', function(){
 			api=pstr.execRest('/msair',build,params)
 		cb(null, api===route && 'msair'===params.appName)
 	})
+	this.test('ensure restful builder for relative url works',function(cb){
+		var route='DOMAIN/s3/read/:Key'
+		var build=pstr.compileRest(route)
+		var url=pstr.buildRest(route, build, {Key: '123'}, true)
+		cb(null, 'DOMAIN/s3/read/123' === url)
+	})
 	var route='http://dev.jasaws.com/v%ver/users/:email|#profile'
 	var build=pstr.compileRest(route)
-	this.test('ensure restful builder works',function(cb){
+	this.test('ensure restful builder for abs url works',function(cb){
 		var url=pstr.buildRest(route, build, {ver:1.9, email:'test@email.com', profile: 'firstname/lastname'})
 		cb(null, 'http://dev.jasaws.com/v1.9/users/test@email.com/firstname/lastname' ===  url)
 	})
