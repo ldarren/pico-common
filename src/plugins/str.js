@@ -6,7 +6,7 @@ define('pico/str', function(){
 		}
 	}
 	function compileRestUnit(unit){
-		var idx=unit.search('[#:%]')
+		var idx=unit.search(/[#:%][a-zA-Z]/)
 		switch(idx){
 		case -1:
 		case 0: return unit
@@ -119,7 +119,7 @@ define('pico/str', function(){
 		// precedence | / # : %
 		compileRest:function(rest, output){
 			output=output||[]
-			if (-1 === rest.search('[|#:%]')) return output
+			if (-1 === rest.search(/[|#:%][a-zA-Z]/)) return output
 			compileRestOptional(rest.split('|'),[rest],function(err,codes){
 				if (err) throw err
 				output.push(codes)
@@ -155,7 +155,7 @@ define('pico/str', function(){
 			}
 			// remove the first slash
 			if (relativePath || 1 === url.indexOf('http')) url = url.slice(1)
-			return ~url.search('[#%]') ? false : url
+			return ~url.search(/[#%][a-zA-Z]/) ? false : url
 		}
 	}
 })

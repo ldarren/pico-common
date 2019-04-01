@@ -1,0 +1,14 @@
+<script src=../bin/pico-cli.js></script>
+<script>
+const pstr = pico.export('pico/str')
+const { parallel } = pico.export('pico/test')
+
+parallel('pico/str', function(){
+	this.test('ensure restful builder work for abs url without variables',function(cb){
+		var route='http://localhost:3000/1.0/user'
+		var build=pstr.compileRest(route)
+		var url=pstr.buildRest(route, build, {ver:2})
+		cb(null, route ===  url)
+	})
+})
+</script>

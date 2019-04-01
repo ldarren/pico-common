@@ -87,11 +87,11 @@ parallel('pico/str', function(){
 		var url=pstr.buildRest(route, build, {DOMAIN: 'domain', Key: '123'}, true)
 		cb(null, 'domain/s3/read/123' === url)
 	})
-	var route='http://dev.jasaws.com/v%ver/users/:email|#profile'
+	var route='http://localhost:3000/v%ver/users/:email|#profile'
 	var build=pstr.compileRest(route)
 	this.test('ensure restful builder for abs url works',function(cb){
 		var url=pstr.buildRest(route, build, {ver:1.9, email:'test@email.com', profile: 'firstname/lastname'})
-		cb(null, 'http://dev.jasaws.com/v1.9/users/test@email.com/firstname/lastname' ===  url)
+		cb(null, 'http://localhost:3000/v1.9/users/test@email.com/firstname/lastname' ===  url)
 	})
 	this.test('ensure restful builder fails if missing mandatory params',function(cb){
 		var url=pstr.buildRest(route, build, {ver:1.9, profile: 'firstname/lastname'})
@@ -99,7 +99,12 @@ parallel('pico/str', function(){
 	})
 	this.test('ensure restful builder success if missing non-mandatory params',function(cb){
 		var url=pstr.buildRest(route, build, {ver:1.9, email: 'test@email.com'})
-		cb(null, 'http://dev.jasaws.com/v1.9/users/test@email.com' ===  url)
+		cb(null, 'http://localhost:3000/v1.9/users/test@email.com' ===  url)
+	})
+	this.test('ensure restful builder return exact same route',function(cb){
+		var route = 'http://localhost:3000/api/2.0/user'
+		var url=pstr.buildRest(route, build, {ver:1.9})
+		cb(null, route ===  url)
 	})
 	this.test('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
 		var

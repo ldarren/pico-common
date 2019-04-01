@@ -1,14 +1,14 @@
 {
     "name": "pico-common",
-    "version": "0.10.16",
+    "version": "0.10.17",
     "description": "pico common tools",
     "main": "bin/pico.js",
     "scripts": {
         "prepare": "./concat.js src/plugins; ./concat.js src/plugins,src/cli bin/pico-cli",
         "pretest": "./concat.js src/plugins,src/cli bin/pico-cli",
         "test": "node tests/index.js",
-		"lint": "eslint .",
-		"lint:fix": "eslint . --fix"
+        "lint": "eslint .",
+        "lint:fix": "eslint . --fix"
     },
     "repository": {
         "type": "git",
@@ -27,6 +27,6 @@
     },
     "homepage": "https://github.com/ldarren/pico-common",
     "devDependencies": {
-        "uglify-js": "^3.4.5"
+        "uglify-js": "^3.5.3"
     }
 }
