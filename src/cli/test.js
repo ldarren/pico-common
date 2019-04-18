@@ -64,7 +64,9 @@ define('pico/test', function(){
 		if (1 !== ctx.beginCallbacks.length) return
 		recur(ctx, ctx.begins, 0, ctx.args, function(err, args) {
 			ctx.beginPending = false
-			ctx.beginCallbacks.forEach(function(cb){ cb(err, args.slice()) })
+			ctx.beginCallbacks.forEach(function(cb){
+				cb(err, args.slice())
+			})
 			ctx.beginCallbacks.length = 0
 		})
 	}

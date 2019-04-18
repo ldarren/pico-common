@@ -1,6 +1,47 @@
 define('pico/obj',function(){
 	var allows = ['object','function']
 	var specialFunc = ['constructor']
+	var BOOLS = [true, false, 1, 0]
+	function validate(spec, obj){
+		var keys = Object.keys(spec)
+		var s, val, ret
+		for (var i = 0, k; (k = keys[i]); i++){
+			s = spec[k]
+			val = obj[k]
+
+			if (!val && s.required) return k
+
+			switch(s.type || s){
+			case 'string':
+				if (!val.charAt) return k
+				break
+			case 'number':
+				if (isNaN(parseFloat(val)) || !isFinite(val)) return k
+				break
+			case 'boolean':
+				if (!BOOLS.includes(val)) return k
+				break
+			case 'object':
+				if (!(val instanceof Object) || Array.isArray(val)) return k
+				if (s.spec) {
+					ret = validate(s.spec, val)
+					if (ret) return [k, ret].join('.')
+				}
+				break
+			case 'array':
+				if (!(val instanceof Object) || !Array.isArray(val)) return k
+				if (s.spec) {
+					for (var j = 0, v; (v = val[j]); j++){
+						ret = validate(s.spec, v)
+						if (ret) return [k, j, ret].join('.')
+					}
+				}
+				break
+			default: return k
+			}
+		}
+	}
+
 	return  {
 		extend: function extend(to, from, options){
 			var tf=allows.indexOf(typeof to)
@@ -73,11 +114,21 @@ define('pico/obj',function(){
 			}
 			return arr
 		},
-		dotchain: function callee(obj, p, value){
+		dot: function callee(obj, p, value){
 			if (!p || !p.length) return obj
-			var o = obj[p.shift()]
-			if (o) return callee(o, p)
+			var k = p.shift()
+			var v
+			if (Array.isArray(k)){
+				for (var i = 0, ki; (ki = k[i]); i++){
+					v = obj[ki]
+					if (v) break
+				}
+			}else{
+				v = obj[k]
+			}
+			if (v) return callee(v, p, value)
 			return value
-		}
+		},
+		validate: validate
 	}
 })

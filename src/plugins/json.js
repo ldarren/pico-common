@@ -4,6 +4,7 @@ define('pico/json',function(exports,require,module,define,inherit,pico){
 			return JSON.parse(pjson[0], function(k, v){
 				switch(k[0]){
 				case '$': if(deep)return JSON.parse(pjson[v])
+				// fall through
 				case '_': return pjson[v]
 				default: return v
 				}
@@ -14,6 +15,7 @@ define('pico/json',function(exports,require,module,define,inherit,pico){
 			pjson.unshift(JSON.stringify(json, function(k, v){
 				switch(k[0]){
 				case '$': if(deep)return pjson.push(JSON.stringify(v))
+				// fall through
 				case '_': return pjson.push(v)
 				default: return v
 				}

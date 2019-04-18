@@ -204,4 +204,54 @@ parallel('pico/obj', function(){
 		var out = pobj.parseInts(['1','2'])
 		cb(null, JSON.stringify([1,2])===JSON.stringify(out))
 	})
+
+	this.test('ensure dot optional params work', function(cb){
+		var obj = {a: {b: {c: 'ok'}}}
+		cb(null, 'ok' === pobj.dot(obj, [['1', 'a'], ['q', '2', 'b'], ['!', 'c', '3']]))
+	})
+
+	this.test('ensure dot default value work', function(cb){
+		var obj = {a: {b: {c: 'ok'}}}
+		cb(null, 'ko' === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']], 'ko'))
+	})
+
+	this.test('ensure validate work', function(cb){
+		var obj = {a: {b: [{c: 'ok', d: 1, e: false}]}}
+		var okSpec = {
+			a: {
+				type: 'object',
+				required: 1,
+				spec: {
+					b: {
+						type: 'array',
+						required: 1,
+						spec: {
+							c: 'string',
+							d: {type: 'number', required: 1},
+							e: 'boolean'
+						}
+					}
+				}
+			}
+		}
+		var koSpec = {
+			a: {
+				type: 'object',
+				required: 1,
+				spec: {
+					b: {
+						type: 'object',
+						spec: {
+							c: 'string',
+							d: 'number',
+							e: 'boolean'
+						}
+					}
+				}
+			}
+		}
+		var ret1 = null == pobj.validate(okSpec, obj)
+		var ret2 = 'a.b' === pobj.validate(koSpec, obj)
+		cb(null, ret1 && ret2)
+	})
 })
