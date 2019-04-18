@@ -138,10 +138,10 @@ parallel('pico/str', function(){
 		}
 		cb(null, l===hist.length, 'count', hist.length, 'ms', Date.now() - n)
 	})
-	this.test('ensure hash dont collide in uuid x99999', function(cb){
+	this.test('ensure hash dont collide in uuid x9999', function(cb){
 		var
 			hist=[],
-			l=99999,
+			l=9999,
 			n=Date.now()
 		for(var i=0,h; i<l; i++){
 			h=pstr.hash(pstr.rand())
