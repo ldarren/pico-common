@@ -1,8 +1,8 @@
 define('pico/obj',function(){
 	var allows = ['object','function']
 	var specialFunc = ['constructor']
-	var BOOLS = [true, false, 1, 0]
-	function validate(spec, obj){
+	var BOOLS = [true, false, 1, 0, null]
+	function validate(spec, obj, out){
 		var keys = Object.keys(spec)
 		var s, val, ret
 		for (var i = 0, k; (k = keys[i]); i++){
@@ -14,28 +14,43 @@ define('pico/obj',function(){
 			switch(s.type || s){
 			case 'string':
 				if (!val.charAt) return k
+				out && (out[k] = val)
 				break
 			case 'number':
-				if (isNaN(parseFloat(val)) || !isFinite(val)) return k
+				val = parseFloat(val)
+				if (!isFinite(val)) return k
+				out && (out[k] = val)
 				break
 			case 'boolean':
 				if (!BOOLS.includes(val)) return k
+				out && (out[k] = !!val)
 				break
 			case 'object':
 				if (!(val instanceof Object) || Array.isArray(val)) return k
+				out && (out[k] = {})
 				if (s.spec) {
-					ret = validate(s.spec, val)
+					ret = validate(s.spec, val, out && out[k])
 					if (ret) return [k, ret].join('.')
+				}else if (out){
+					Object.assign(out[k], val)
 				}
 				break
 			case 'array':
 				if (!(val instanceof Object) || !Array.isArray(val)) return k
 				if (s.spec) {
+					out && (out[k] = [])
 					for (var j = 0, v; (v = val[j]); j++){
-						ret = validate(s.spec, v)
+						out && out[k].push({})
+						ret = validate(s.spec, v, out && out[k][j])
 						if (ret) return [k, j, ret].join('.')
 					}
+				}else if (out){
+					out[k] = val.slice()
 				}
+				break
+			case 'null':
+				if (null !== val) return k
+				out && (out[k] = null)
 				break
 			default: return k
 			}
