@@ -216,7 +216,7 @@ parallel('pico/obj', function(){
 	})
 
 	this.test('ensure validate work', function(cb){
-		var obj = {a: {b: [{c: 'ok', d: '1', e: null}]}}
+		var obj = [{a: {b: [{c: 'ok', d: '1', e: null}]}}]
 		var okSpec = {
 			a: {
 				type: 'object',
@@ -250,9 +250,10 @@ parallel('pico/obj', function(){
 				}
 			}
 		}
-		var out1 = {}
+		var out1 = []
 		var ret1 = null == pobj.validate(okSpec, obj, out1)
-		var ret2 = 'a.b' === pobj.validate(koSpec, obj)
-		cb(null, out1.a.b[0].c === 'ok' && out1.a.b[0].d === 1 && out1.a.b[0].e === false && ret1 && ret2)
+		var ret2 = '0.a.b' === pobj.validate(koSpec, obj)
+		var o = out1[0].a.b[0]
+		cb(null, o.c === 'ok' && o.d === 1 && o.e === false && ret1 && ret2)
 	})
 })
