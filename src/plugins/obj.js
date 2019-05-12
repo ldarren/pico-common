@@ -136,19 +136,19 @@ define('pico/obj',function(){
 			return arr
 		},
 		dot: function callee(obj, p, value){
-			if (!p || !p.length) return obj
+			if (!p || !p.length) return (void 0 === obj ? value : obj)
+			if (!obj) return value
 			var k = p.shift()
 			var v
 			if (Array.isArray(k)){
 				for (var i = 0, ki; (ki = k[i]); i++){
 					v = obj[ki]
-					if (v) break
+					if (void 0 !== v) break
 				}
 			}else{
 				v = obj[k]
 			}
-			if (v) return callee(v, p, value)
-			return value
+			return callee(v, p, value)
 		},
 		validate: validate
 	}
