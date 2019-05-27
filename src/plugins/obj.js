@@ -51,7 +51,7 @@ define('pico/obj',function(){
 			case 'array':
 				if (!(val instanceof Object) || !Array.isArray(val)) return k
 				out && (out[k] = [])
-				ret = validates(s.spec, val, out[k])
+				ret = validates(s.spec, val, out && out[k])
 				if (ret) return [k, ret].join('.')
 				break
 			case 'null':

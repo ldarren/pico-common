@@ -215,6 +215,22 @@ parallel('pico/obj', function(){
 		cb(null, 'ko' === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']], 'ko'))
 	})
 
+	this.test('ensure validate without nested spec work', function(cb){
+		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
+		var okSpec = {
+			a: {
+				type: 'object',
+				required: 1
+			},
+			b: {
+				type: 'array',
+				required: 1
+			}
+		}
+		var ret1 = null == pobj.validate(okSpec, obj)
+		cb(null, ret1)
+	})
+
 	this.test('ensure validate work', function(cb){
 		var obj = [{a: {b: [{c: 'ok', d: '1', e: null}]}}]
 		var okSpec = {
