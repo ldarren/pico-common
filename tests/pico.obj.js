@@ -231,6 +231,33 @@ parallel('pico/obj', function(){
 		cb(null, ret1)
 	})
 
+	this.test('ensure validate for optional and wrong type can handle gracefully', function(cb){
+		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
+		var koSpec = {
+			a: {
+				type: 'object',
+				required: 1,
+				spec: {
+					b: {
+						type: 'string'
+					},
+					c: {
+						type: 'string'
+					},
+					d: {
+						type: 'null'
+					}
+				}
+			},
+			b: {
+				type: 'array',
+				required: 1
+			}
+		}
+		var ret1 = 'a.c' === pobj.validate(koSpec, obj)
+		cb(null, ret1)
+	})
+
 	this.test('ensure validate work', function(cb){
 		var obj = [{a: {b: [{c: 'ok', d: '1', e: null}]}}]
 		var okSpec = {

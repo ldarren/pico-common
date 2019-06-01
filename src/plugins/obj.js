@@ -17,16 +17,18 @@ define('pico/obj',function(){
 	function validate(spec, obj, out){
 		if (Array.isArray(obj)) return validates(spec, obj, out)
 		var keys = Object.keys(spec)
-		var s, val, ret
+		var s, t, val, ret
 		for (var i = 0, k; (k = keys[i]); i++){
 			s = spec[k]
 			val = obj[k]
 
 			if (null == val && s.required) return k
+			if (void 0 === val) continue
 
-			switch(s.type || s){
+			t = s.type || s
+			switch(t){
 			case 'string':
-				if (!val.charAt) return k
+				if (t !== typeof val) return k
 				out && (out[k] = val)
 				break
 			case 'number':
