@@ -215,6 +215,11 @@ parallel('pico/obj', function(){
 		cb(null, 'ko' === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']], 'ko'))
 	})
 
+	this.test('ensure dot return undefined if nothing match', function(cb){
+		var obj = {a: {b: {c: 'ok'}}}
+		cb(null, void 0 === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']]))
+	})
+
 	this.test('ensure validate without nested spec work', function(cb){
 		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
 		var okSpec = {
@@ -272,12 +277,15 @@ parallel('pico/obj', function(){
 						}
 					}
 				}
+			},
+			c: {
+				value: 12
 			}
 		}
 		var out = []
 		var ret = null == pobj.validate(okSpec, obj, out)
 		var o = out[0].a.b[0]
-		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && ret)
+		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && out[0].c === 12 && ret)
 	})
 
 	this.test('ensure validate work', function(cb){

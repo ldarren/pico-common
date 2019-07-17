@@ -22,10 +22,10 @@ define('pico/obj',function(){
 			s = spec[k]
 			val = obj[k]
 
-			if (null == val && s.required) return k
 			if (void 0 === val) {
-				if (void 0 === s.value) continue
-				val = s.value
+				if (s.required) return k
+				if (out && void 0 !== s.value) out[k] = s.value
+				continue
 			}
 
 			t = s.type || s
