@@ -93,7 +93,7 @@ define('pico/time',function(){
 				dom=now.getDate(),
 				mon=now.getMonth(),
 				yr=now.getFullYear(),
-				days=(new Date(yr, mon, 0)).getDate()
+				days=(new Date(yr, mon+1, 0)).getDate()
 
 			if (dows){
 				// if dow set ignore dom fields
