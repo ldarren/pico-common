@@ -104,7 +104,7 @@ define('pico/time',function(){
 			}else{
 				dom=closest(dom+Floor(hr/24), doms, days)
 			}
-			mon=closest(mon+1+Floor(dom/days), mons, 12)
+			mon=closest(mon+1+Floor(dom/(days+1)), mons, 12)
 
 			if (now.getMonth()+1 !== mon) return nearest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
 
@@ -112,7 +112,7 @@ define('pico/time',function(){
 			if (now.getFullYear() !== yr) return nearest(new Date(yr, mon-1), count, mins, hrs, doms, mons, dows, yrs, cb)
 
 			var then=(new Date(yr, (mon-1)%12)).getTime()
-			then+=(dom%days-1)*DAY // beginning of day
+			then+=(dom%(days+1)-1)*DAY // beginning of day
 			then+=(hr%24)*HR
 			then+=(min%60)*MIN
 

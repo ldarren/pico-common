@@ -35,7 +35,12 @@ parallel('pico/time', function(){
 	})
 	this.test('ensure "* * * * * *" return less than two min', function(cb){
 		const diff = ptime.nearest(...ptime.parse('* * * * * *')) - Date.now()
-		cb(null, diff < 2 * 60 * 1000, diff)
+		cb(null, diff < 2 * 60 * 1000 && diff > 0, diff)
+	})
+	this.test('ensure "* * * * * *" on last month day behave correctly', function(cb){
+		const now = new Date(2019, 7, 31, 7, 8, 0)
+		const diff = ptime.nearest(...ptime.parse('* * * * * *'), now.getTime()) - now
+		cb(null, diff < 2 * 60 * 1000 && diff > 0, diff)
 	})
 	this.test('ensure "*/1 * * * * *" always round to nearest min, never return same min', function(cb){
 		const parsed = ptime.parse('*/1 * * * * *')

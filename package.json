@@ -1,6 +1,6 @@
 {
     "name": "pico-common",
-    "version": "0.10.27",
+    "version": "0.10.28",
     "description": "pico common tools",
     "main": "bin/pico.js",
     "scripts": {
