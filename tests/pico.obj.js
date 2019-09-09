@@ -205,6 +205,12 @@ parallel('pico/obj', function(){
 		cb(null, JSON.stringify([1,2])===JSON.stringify(out))
 	})
 
+	this.test('ensure dot doesnt mutate params', function(cb){
+		var obj = {a: {b: {c: 'ok'}}}
+		var params = ['a', 'b', 'c']
+		cb(null, 'ok' === pobj.dot(obj, params) && 3 === params.length && 'c' === params[2])
+	})
+
 	this.test('ensure dot optional params work', function(cb){
 		var obj = {a: {b: {c: 'ok'}}}
 		cb(null, 'ok' === pobj.dot(obj, [['1', 'a'], ['q', '2', 'b'], ['!', 'c', '3']]))

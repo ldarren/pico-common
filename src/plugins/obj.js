@@ -140,10 +140,11 @@ define('pico/obj',function(){
 			}
 			return arr
 		},
-		dot: function callee(obj, p, value){
-			if (!p || !p.length) return (void 0 === obj ? value : obj)
-			if (!obj) return value
-			var k = p.shift()
+		dot: function callee(obj, p, value, startIdx){
+			if (void 0 === obj) return value
+			if (!p || startIdx === p.length) return obj
+			startIdx |= 0
+			var k = p[startIdx]
 			var v
 			if (Array.isArray(k)){
 				for (var i = 0, ki; (ki = k[i]); i++){
@@ -153,7 +154,7 @@ define('pico/obj',function(){
 			}else{
 				v = obj[k]
 			}
-			return callee(v, p, value)
+			return callee(v, p, value, startIdx + 1)
 		},
 		validate: validate
 	}
