@@ -122,7 +122,7 @@ parallel('pico/str', function(){
 		cb(null, key===pstr.codec(key, pstr.codec(hash, token)))
 	})
 	this.test('ensure hash password to 32bit int', function(cb){
-		cb(null, pstr.hash('免费服务会立即翻译英文和英文之间的单词'))
+		cb(null, pstr.hash('免费服务会立即翻译英文和英文之间的单词') < 0xFFFFFFFF)
 	})
 	this.test('ensure hash dont collide in repeating char x9999', function(cb){
 		var

@@ -151,7 +151,7 @@ parallel('pico/obj', function(){
 		}
 		t2=Date.now()-t
 
-		cb(null, [t1,t2])
+		cb(null, t1 + 10 > t2, [t1,t2])
 	})
 
 	this.test('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
@@ -212,8 +212,8 @@ parallel('pico/obj', function(){
 	})
 
 	this.test('ensure dot optional params work', function(cb){
-		var obj = {a: {b: {c: 'ok'}}}
-		cb(null, 'ok' === pobj.dot(obj, [['1', 'a'], ['q', '2', 'b'], ['!', 'c', '3']]))
+		var obj = {a: {b: {c: null}}}
+		cb(null, null === pobj.dot(obj, [['1', 'a'], ['q', '2', 'b'], ['!', 'c', '3']]))
 	})
 
 	this.test('ensure dot default value work', function(cb){
@@ -222,7 +222,7 @@ parallel('pico/obj', function(){
 	})
 
 	this.test('ensure dot return undefined if nothing match', function(cb){
-		var obj = {a: {b: {c: 'ok'}}}
+		var obj = {a: {b: null}}
 		cb(null, void 0 === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']]))
 	})
 
