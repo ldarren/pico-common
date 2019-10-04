@@ -335,4 +335,36 @@ parallel('pico/obj', function(){
 		var o = out1[0].a.b[0]
 		cb(null, o.c === 'ok' && o.d === 1 && o.e === false && ret1 && ret2)
 	})
+
+	this.test('ensure min max validate work as expected', function(cb){
+		var spec = {
+			type:'array',
+			gt: 0,
+			lt: 5,
+			spec: {
+				a: {
+					type: 'array',
+					lt: 5,
+					gt: 0
+				},
+				b: {
+					type: 'object',
+					lt: 3,
+					gt: 2
+				},
+				c: {
+					type: 'string',
+					lt: 4,
+					gt: 0
+				},
+				c: {
+					type: 'number',
+					lt: 100,
+					gt: 0
+				}
+			}
+		}
+		var obj = [{a: {b: [{c: 'ok', d: '1', e: null}]}}]
+		cb(null, o.c === 'ok' && o.d === 1 && o.e === false && ret1 && ret2)
+	})
 })

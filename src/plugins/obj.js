@@ -2,6 +2,13 @@ define('pico/obj',function(){
 	var allows = ['object','function']
 	var specialFunc = ['constructor']
 	var BOOLS = [true, false, 1, 0, null]
+	function notin(v, s){
+		var lt = s.lt
+		var gt = s.gt
+		if ((null != lt && v >= lt) ||
+			(null != gt && v <= gt)) return 1
+		return 0
+	}
 	function validates(spec, arr, out){
 		if (!Array.isArray(arr)) return validate(spec, arr, out)
 		if (spec) {
@@ -31,12 +38,12 @@ define('pico/obj',function(){
 			t = s.type || s
 			switch(t){
 			case 'string':
-				if (t !== typeof val) return k
+				if (t !== typeof val || notin(val.length, s) || !RegExp(s.regex).test(val)) return k
 				out && (out[k] = val)
 				break
 			case 'number':
 				val = parseFloat(val)
-				if (!isFinite(val)) return k
+				if (!isFinite(val) || notin(val, s)) return k
 				out && (out[k] = val)
 				break
 			case 'boolean':
@@ -45,6 +52,7 @@ define('pico/obj',function(){
 				break
 			case 'object':
 				if (!(val instanceof Object) || Array.isArray(val)) return k
+				if ((s.lt || s.gt) && notin(Object.keys(val), s.lt, s.gt)) return k
 				out && (out[k] = {})
 				if (s.spec) {
 					ret = validate(s.spec, val, out && out[k])
@@ -55,6 +63,7 @@ define('pico/obj',function(){
 				break
 			case 'array':
 				if (!(val instanceof Object) || !Array.isArray(val)) return k
+				if (notin(val.length, s.lt, s.gt)) return k
 				out && (out[k] = [])
 				ret = validates(s.spec, val, out && out[k])
 				if (ret) return [k, ret].join('.')
