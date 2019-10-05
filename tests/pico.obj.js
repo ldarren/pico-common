@@ -226,104 +226,51 @@ parallel('pico/obj', function(){
 		cb(null, void 0 === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']]))
 	})
 
-	this.test('ensure validate without nested spec work', function(cb){
-		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
-		var okSpec = {
-			a: {
-				type: 'object',
-				required: 1
-			},
-			b: 'array',
-		}
-		var ret1 = null == pobj.validate(okSpec, obj)
-		cb(null, ret1)
-	})
-
-	this.test('ensure validate for optional and wrong type can handle gracefully', function(cb){
-		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
-		var koSpec = {
-			a: {
-				type: 'object',
-				required: 1,
-				spec: {
-					b: {
-						type: 'string'
-					},
-					c: {
-						type: 'string'
-					},
-					d: {
-						type: 'null'
-					}
-				}
-			},
-			b: {
-				type: 'array',
-				required: 1
-			}
-		}
-		var ret1 = 'a.c' === pobj.validate(koSpec, obj)
-		cb(null, ret1)
-	})
-
-	this.test('ensure validate default value works', function(cb){
-		var obj = [{a: {b: [{d: '1'}]}}]
-		var okSpec = {
-			a: {
-				type: 'object',
-				required: 1,
-				spec: {
-					b: {
-						type: 'array',
-						required: 1,
-						spec: {
-							c: {type: 'string', value: 'hello'},
-							d: {type: 'number', required: 1},
-							e: {type: 'boolean', value: true}
-						}
-					}
-				}
-			},
-			c: {
-				value: 12
-			}
-		}
-		var out = []
-		var ret = null == pobj.validate(okSpec, obj, out)
-		var o = out[0].a.b[0]
-		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && out[0].c === 12 && ret)
-	})
-
 	this.test('ensure validate work', function(cb){
 		var obj = [{a: {b: [{c: 'ok', d: '1', e: null}]}}]
 		var okSpec = {
-			a: {
+			type: 'array',
+			spec: {
 				type: 'object',
-				required: 1,
 				spec: {
-					b: {
-						type: 'array',
+					a: {
+						type: 'object',
 						required: 1,
 						spec: {
-							c: 'string',
-							d: {type: 'number', required: 1},
-							e: 'boolean'
+							b: {
+								type: 'array',
+								required: 1,
+								spec: {
+									type: 'objecy',
+									spec: {
+										c: 'string',
+										d: {type: 'number', required: 1},
+										e: 'boolean'
+									}
+								}
+							}
 						}
 					}
 				}
 			}
 		}
 		var koSpec = {
-			a: {
+			type: 'array',
+			spec: {
 				type: 'object',
-				required: 1,
 				spec: {
-					b: {
+					a: {
 						type: 'object',
+						required: 1,
 						spec: {
-							c: 'string',
-							d: 'number',
-							e: 'boolean'
+							b: {
+								type: 'object',
+								spec: {
+									c: 'string',
+									d: 'number',
+									e: 'boolean'
+								}
+							}
 						}
 					}
 				}
@@ -331,8 +278,162 @@ parallel('pico/obj', function(){
 		}
 		var out1 = []
 		var ret1 = null == pobj.validate(okSpec, obj, out1)
-		var ret2 = '0.a.b' === pobj.validate(koSpec, obj)
+		var ret2 = '$.0.a.b' === pobj.validate(koSpec, obj)
 		var o = out1[0].a.b[0]
 		cb(null, o.c === 'ok' && o.d === 1 && o.e === false && ret1 && ret2)
+	})
+
+	this.test('ensure validate without nested spec work', function(cb){
+		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
+		var okSpec = {
+			type: 'object',
+			spec:{
+				a: {
+					type: 'object',
+					required: 1
+				},
+				b: 'array',
+			}
+		}
+		var ret = pobj.validate(okSpec, obj)
+		cb(null, ret == null)
+	})
+
+	this.test('ensure validate for optional and wrong type can handle gracefully', function(cb){
+		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
+		var koSpec = {
+			type: 'object',
+			spec: {
+				a: {
+					type: 'object',
+					required: 1,
+					spec: {
+						b: 'string',
+						c: 'string',
+						d: 'null'
+					}
+				},
+				b: {
+					type: 'array',
+					required: 1
+				}
+			}
+		}
+		var ret = pobj.validate(koSpec, obj)
+		cb(null, ret === '$.a.c')
+	})
+
+	this.test('ensure validate default value works', function(cb){
+		var obj = [{a: {b: [{d: '1'}]}}]
+		var okSpec = {
+			type: 'array',
+			spec: {
+				type: 'object',
+				spec: {
+					a: {
+						type: 'object',
+						required: 1,
+						spec: {
+							b: {
+								type: 'array',
+								required: 1,
+								spec: {
+									type: 'object',
+									spec: {
+										c: {type: 'string', value: 'hello'},
+										d: {type: 'number', required: 1},
+										e: {type: 'boolean', value: true}
+									}
+								}
+							}
+						}
+					},
+					c: {
+						value: 12
+					}
+				}
+			}
+		}
+		var out = []
+		var ret = pobj.validate(okSpec, obj, out)
+		if (null != ret) return cb(null, false)
+		var o = out[0].a.b[0]
+		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && out[0].c === 12)
+	})
+
+	this.test('ensure min max validation work', function(cb){
+		var spec = {
+			type:'array',
+			gt: 0,
+			lt: 2,
+			spec: {
+				type: 'object',
+				spec: {
+					a: {
+						type: 'array',
+						lt: 5,
+						gt: 0
+					},
+					b: {
+						type: 'string',
+						lt: 4,
+						gt: 0
+					},
+					c: {
+						type: 'number',
+						lt: 100,
+						gt: 0
+					}
+				}
+			}
+		}
+
+		var out = []
+		var res = pobj.validate(spec, [{a:[1,2,3,4], b: '123', c: 98}], out)
+		if (res && out[0].c === 98) cb(null, false)
+
+		out = []
+		res = pobj.validate(spec, [{a:[1,2,3,4,5], b: '123', c: 98}], out)
+		if ('$.0.a' !== res) cb(null, false)
+
+		out = []
+		res = pobj.validate(spec, [{a:[1], b: '1234', c: 98}], out)
+		if ('$.0.b' !== res) cb(null, false)
+
+		out = []
+		res = pobj.validate(spec, [{a:[1], b: '1', c: 198}], out)
+		if ('$.0.c' !== res) cb(null, false)
+
+		cb(null, true)
+	})
+
+	this.test('ensure regex validation work', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				tel: {
+					type: 'string',
+					regex: '^\\+[0-9]{2}\\s[0-9]{4}\\s[0-9]{4}$'
+				},
+				email: {
+					type: 'string',
+					regex: '^(([^<>()[\\]\\\\.,;:\\s@]+(\\.[^<>()[\\]\\\\.,;:\\s@]+)*)|(.+))@((\\[[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\])|(([a-zA-Z\\-0-9]+\\.)+[a-zA-Z]{2,}))$'
+				}
+			}
+		}
+
+		var res = pobj.validate(spec, {tel: '+65 9876 5432', email: 'darren@yopmail.com'})
+		if (res) return cb(null, false)
+
+		res = pobj.validate(spec, {email: 'darren@yopmail.com'})
+		if (res) return cb(null, false)
+
+		res = pobj.validate(spec, {tel: '34456', email: 'darren@yopmail.com'})
+		if ('$.tel' !== res) return cb(null, false)
+
+		res = pobj.validate(spec, {email: 'world'})
+		if ('$.email' !== res) return cb(null, false)
+
+		cb(null, true)
 	})
 })

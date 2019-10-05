@@ -2,6 +2,93 @@ define('pico/obj',function(){
 	var allows = ['object','function']
 	var specialFunc = ['constructor']
 	var BOOLS = [true, false, 1, 0, null]
+	var ROOT = '$'
+	function notin(v, lt, gt){
+		if ((null != lt && v >= lt) || (null != gt && v <= gt)) return 1
+		return 0
+	}
+	function set(obj, key, value){
+		if (obj && void 0 !== value && ROOT !== key) {
+			if (Array.isArray(obj)){
+				obj.push(value)
+			}else{
+				obj[key] = value
+			}
+		}
+	}
+	function get(obj, key){
+		if (ROOT === key) return obj
+		if (obj) return obj[key]
+	}
+	function validateObj(key, spec, val, out){
+		if (!(val instanceof Object) || Array.isArray(val)) return key
+		var s = spec.spec
+		if (s) {
+			set(out, key, {})
+			var o = get(out, key)
+			var keys = Object.keys(s)
+			for (var i = 0, ret, k; (k = keys[i]); i++){
+				ret = validate(k, s[k], val[k], o)
+				if (ret) return [key, ret].join('.')
+			}
+		}else{
+			set(out, key, Object.assign({}, val))
+		}
+	}
+	function validateArr(key, spec, val, out){
+		if (!(val instanceof Object) || !Array.isArray(val)) return key
+		if (notin(val.length, spec.lt, spec.gt)) return key
+		var s = spec.spec
+		if (s) {
+			set(out, key, [])
+			var o = get(out, key)
+			for (var j = 0, ret, v; (v = val[j]); j++){
+				ret = validateObj(j, s, v, o)
+				if (ret) return [key, ret].join('.')
+			}
+		}else{
+			set(out, key, val.slice())
+		}
+	}
+	function validate(k, s, val, out){
+		if (void 0 === val) {
+			if (s.required) return k
+			set(out, k, s.value)
+			return
+		}
+
+		var t = s.type || s
+		var ret
+		switch(t){
+		case 'string':
+			if (t !== typeof val || notin(val.length, s.lt, s.gt) || !RegExp(s.regex).test(val)) return k
+			set(out, k, val)
+			break
+		case 'number':
+			val = parseFloat(val)
+			if (!isFinite(val) || notin(val, s.lt, s.gt)) return k
+			set(out, k, val)
+			break
+		case 'boolean':
+			if (!BOOLS.includes(val)) return k
+			set(out, k, !!val)
+			break
+		case 'object':
+			ret = validateObj(k, s, val, out)
+			if (ret) return ret
+			break
+		case 'array':
+			ret = validateArr(k, s, val, out)
+			if (ret) return ret
+			break
+		case 'null':
+			if (null !== val) return k
+			set(out, k, null)
+			break
+		default: return k
+		}
+	}
+	/*
 	function validates(spec, arr, out){
 		if (!Array.isArray(arr)) return validate(spec, arr, out)
 		if (spec) {
@@ -15,7 +102,6 @@ define('pico/obj',function(){
 		}
 	}
 	function validate(spec, obj, out){
-		if (Array.isArray(obj)) return validates(spec, obj, out)
 		var keys = Object.keys(spec)
 		var s, t, val, ret
 		for (var i = 0, k; (k = keys[i]); i++){
@@ -31,12 +117,12 @@ define('pico/obj',function(){
 			t = s.type || s
 			switch(t){
 			case 'string':
-				if (t !== typeof val) return k
+				if (t !== typeof val || notin(val.length, s.lt, s.gt) || !RegExp(s.regex).test(val)) return k
 				out && (out[k] = val)
 				break
 			case 'number':
 				val = parseFloat(val)
-				if (!isFinite(val)) return k
+				if (!isFinite(val) || notin(val, s.lt, s.gt)) return k
 				out && (out[k] = val)
 				break
 			case 'boolean':
@@ -45,6 +131,7 @@ define('pico/obj',function(){
 				break
 			case 'object':
 				if (!(val instanceof Object) || Array.isArray(val)) return k
+				if ((s.lt || s.gt) && notin(Object.keys(val), s.lt, s.gt)) return k
 				out && (out[k] = {})
 				if (s.spec) {
 					ret = validate(s.spec, val, out && out[k])
@@ -55,6 +142,7 @@ define('pico/obj',function(){
 				break
 			case 'array':
 				if (!(val instanceof Object) || !Array.isArray(val)) return k
+				if (notin(val.length, s.lt, s.gt)) return k
 				out && (out[k] = [])
 				ret = validates(s.spec, val, out && out[k])
 				if (ret) return [k, ret].join('.')
@@ -67,6 +155,7 @@ define('pico/obj',function(){
 			}
 		}
 	}
+	*/
 
 	return  {
 		extend: function extend(to, from, options){
@@ -156,6 +245,8 @@ define('pico/obj',function(){
 			}
 			return callee(v, p, value, idx + 1)
 		},
-		validate: validate
+		validate: function(spec, obj, out){
+			return validate(ROOT, spec, obj, out)
+		},
 	}
 })
