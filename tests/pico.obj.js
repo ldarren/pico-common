@@ -434,6 +434,6 @@ parallel('pico/obj', function(){
 		res = pobj.validate(spec, {email: 'world'})
 		if ('$.email' !== res) return cb(null, false)
 
-		cb(null, true)
+		cb(null, false)
 	})
 })
