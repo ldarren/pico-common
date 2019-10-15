@@ -227,7 +227,7 @@ parallel('pico/obj', function(){
 	})
 
 	this.test('ensure validate work', function(cb){
-		var obj = [{a: {b: [{c: 'ok', d: '1', e: null}]}}]
+		var obj = [{a: {b: [{c: 'ok', d: '1', e: null, f: '2019-10-16 06:33:00'}]}}]
 		var okSpec = {
 			type: 'array',
 			spec: {
@@ -245,7 +245,8 @@ parallel('pico/obj', function(){
 									spec: {
 										c: 'string',
 										d: {type: 'number', required: 1},
-										e: 'boolean'
+										e: 'boolean',
+										f: 'date'
 									}
 								}
 							}
@@ -268,7 +269,8 @@ parallel('pico/obj', function(){
 								spec: {
 									c: 'string',
 									d: 'number',
-									e: 'boolean'
+									e: 'boolean',
+									f: 'date'
 								}
 							}
 						}
@@ -280,7 +282,7 @@ parallel('pico/obj', function(){
 		var ret1 = null == pobj.validate(okSpec, obj, out1)
 		var ret2 = '$.0.a.b' === pobj.validate(koSpec, obj)
 		var o = out1[0].a.b[0]
-		cb(null, o.c === 'ok' && o.d === 1 && o.e === false && ret1 && ret2)
+		cb(null, o.c === 'ok' && o.d === 1 && o.e === false && !!(o.f.getTime()) && ret1 && ret2)
 	})
 
 	this.test('ensure validate without nested spec work', function(cb){
@@ -299,8 +301,32 @@ parallel('pico/obj', function(){
 		cb(null, ret == null)
 	})
 
-	this.test('ensure validate for optional and wrong type can handle gracefully', function(cb){
-		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
+	this.test('ensure validate for optional handle gracefully', function(cb){
+		var obj = {a:{}}
+		var okSpec = {
+			type: 'object',
+			spec: {
+				a: {
+					type: 'object',
+					required: 1,
+					spec: {
+						c: 'date',
+						d: 'string',
+						e: 'string',
+					}
+				},
+				b: {
+					type: 'array',
+				},
+				g: 'object'
+			}
+		}
+		var ret = pobj.validate(okSpec, obj)
+		cb(null, !ret && void 0 === obj.b && void 0 === obj.g && void 0 === obj.a.c && void 0 === obj.a.d && void 0 === obj.a.e)
+	})
+
+	this.test('ensure validate wrong type can handle gracefully', function(cb){
+		var obj = {a:{d:1, e:2}, b:[{f:1, g:2}]}
 		var koSpec = {
 			type: 'object',
 			spec: {
@@ -308,9 +334,8 @@ parallel('pico/obj', function(){
 					type: 'object',
 					required: 1,
 					spec: {
-						b: 'string',
-						c: 'string',
-						d: 'null'
+						d: 'string',
+						e: 'string',
 					}
 				},
 				b: {
@@ -320,7 +345,8 @@ parallel('pico/obj', function(){
 			}
 		}
 		var ret = pobj.validate(koSpec, obj)
-		cb(null, ret === '$.a.c')
+		console.log(obj)
+		cb(null, ret === '$.a.d')
 	})
 
 	this.test('ensure validate default value works', function(cb){
@@ -342,13 +368,15 @@ parallel('pico/obj', function(){
 									spec: {
 										c: {type: 'string', value: 'hello'},
 										d: {type: 'number', required: 1},
-										e: {type: 'boolean', value: true}
+										e: {type: 'boolean', value: true},
+										f: {type: 'date', value: '2019-10-16 06:36:00'}
 									}
 								}
 							}
 						}
 					},
 					c: {
+						type: 'number',
 						value: 12
 					}
 				}
@@ -358,7 +386,7 @@ parallel('pico/obj', function(){
 		var ret = pobj.validate(okSpec, obj, out)
 		if (null != ret) return cb(null, false)
 		var o = out[0].a.b[0]
-		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && out[0].c === 12)
+		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && !!(o.f.getTime()) && out[0].c === 12)
 	})
 
 	this.test('ensure min max validation work', function(cb){
@@ -383,6 +411,10 @@ parallel('pico/obj', function(){
 						type: 'number',
 						lt: 100,
 						gt: 0
+					},
+					d: {
+						type: 'date',
+						lt: 1571179049000,
 					}
 				}
 			}
@@ -403,6 +435,10 @@ parallel('pico/obj', function(){
 		out = []
 		res = pobj.validate(spec, [{a:[1], b: '1', c: 198}], out)
 		if ('$.0.c' !== res) cb(null, false)
+
+		out = []
+		res = pobj.validate(spec, [{a:[1], b: '1', c: 10, d: '2019-10-16 06:40:00'}], out)
+		if ('$.0.d' !== res) cb(null, false)
 
 		cb(null, true)
 	})
