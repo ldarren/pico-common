@@ -51,13 +51,14 @@ define('pico/obj',function(){
 		}
 	}
 	function validate(k, s, val, out){
+		var t = s.type || s
 		if (void 0 === val) {
 			if (s.required) return k
-			set(out, k, s.value)
+			val = s.value
+			set(out, k, (val && 'date' === t) ? new Date(val) : val)
 			return
 		}
 
-		var t = s.type || s
 		var ret
 		switch(t){
 		case 'string':
@@ -72,6 +73,11 @@ define('pico/obj',function(){
 		case 'boolean':
 			if (!BOOLS.includes(val)) return k
 			set(out, k, !!val)
+			break
+		case 'date':
+			val = new Date(val)
+			if (!val.getTime() || notin(val.getTime(), s.lt, s.gt)) return k
+			set(out, k, val)
 			break
 		case 'object':
 			ret = validateObj(k, s, val, out)
@@ -88,74 +94,6 @@ define('pico/obj',function(){
 		default: return k
 		}
 	}
-	/*
-	function validates(spec, arr, out){
-		if (!Array.isArray(arr)) return validate(spec, arr, out)
-		if (spec) {
-			for (var j = 0, ret, v; (v = arr[j]); j++){
-				out && out.push({})
-				ret = validate(spec, v, out && out[j])
-				if (ret) return [j, ret].join('.')
-			}
-		}else if (out){
-			Array.prototype.push.apply(out, arr)
-		}
-	}
-	function validate(spec, obj, out){
-		var keys = Object.keys(spec)
-		var s, t, val, ret
-		for (var i = 0, k; (k = keys[i]); i++){
-			s = spec[k]
-			val = obj[k]
-
-			if (void 0 === val) {
-				if (s.required) return k
-				if (out && void 0 !== s.value) out[k] = s.value
-				continue
-			}
-
-			t = s.type || s
-			switch(t){
-			case 'string':
-				if (t !== typeof val || notin(val.length, s.lt, s.gt) || !RegExp(s.regex).test(val)) return k
-				out && (out[k] = val)
-				break
-			case 'number':
-				val = parseFloat(val)
-				if (!isFinite(val) || notin(val, s.lt, s.gt)) return k
-				out && (out[k] = val)
-				break
-			case 'boolean':
-				if (!BOOLS.includes(val)) return k
-				out && (out[k] = !!val)
-				break
-			case 'object':
-				if (!(val instanceof Object) || Array.isArray(val)) return k
-				if ((s.lt || s.gt) && notin(Object.keys(val), s.lt, s.gt)) return k
-				out && (out[k] = {})
-				if (s.spec) {
-					ret = validate(s.spec, val, out && out[k])
-					if (ret) return [k, ret].join('.')
-				}else if (out){
-					Object.assign(out[k], val)
-				}
-				break
-			case 'array':
-				if (!(val instanceof Object) || !Array.isArray(val)) return k
-				if (notin(val.length, s.lt, s.gt)) return k
-				out && (out[k] = [])
-				ret = validates(s.spec, val, out && out[k])
-				if (ret) return [k, ret].join('.')
-				break
-			case 'null':
-				if (null !== val) return k
-				out && (out[k] = null)
-				break
-			default: return k
-			}
-		}
-	}
-	*/
 
 	return  {
 		extend: function extend(to, from, options){
