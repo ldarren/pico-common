@@ -1,6 +1,6 @@
 {
     "name": "pico-common",
-    "version": "0.11.2",
+    "version": "0.11.3",
     "description": "pico common tools",
     "main": "bin/pico.js",
     "scripts": {
@@ -21,7 +21,7 @@
         "requirejs"
     ],
     "bin": {
-        "pico-common-concat": "./concat.js"
+        "pico-common-build": "./concat.js"
     },
     "author": "Darren Liew",
     "license": "MIT",
@@ -30,6 +30,6 @@
     },
     "homepage": "https://github.com/ldarren/pico-common",
     "devDependencies": {
-        "uglify-js": "^3.6.0"
+        "uglify-js": "^3.6.3"
     }
 }
