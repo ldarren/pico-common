@@ -88,8 +88,7 @@ define('pico/obj',function(){
 			if (ret) return ret
 			break
 		case 'null':
-			if (null !== val) return k
-			set(out, k, null)
+			set(out, k, null == val ? s.value || null : val)
 			break
 		default: return k
 		}
@@ -142,30 +141,6 @@ define('pico/obj',function(){
 				to= e(to, f, options)
 			}
 			return to
-		},
-		parseInts: function(arr, radix){
-			for(var i=0,l=arr.length; i<l; i++){
-				arr[i] = parseInt(arr[i], radix)
-			}
-			return arr
-		},
-		// pluck([{k:1},{k:2}], 'k') = [1,2]
-		pluck: function(objs, key){
-			var arr = []
-			if (objs.length){
-				var map = {}, obj, id, i, l, k
-				for(i=0,l=objs.length; i<l; i++){
-					obj = objs[i]
-					if (!obj) continue
-					id = obj[key]
-					if (void 0 === id) continue
-					map[id] = id
-				}
-				for(k in map){
-					arr.push(map[k])
-				}
-			}
-			return arr
 		},
 		dot: function callee(obj, p, value, idx){
 			idx |= 0

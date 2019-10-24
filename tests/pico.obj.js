@@ -200,11 +200,6 @@ parallel('pico/obj', function(){
 		cb(null, 'a' === outa.a && null === outb.b && 'c' === outc.c && 'd' === outd.d)
 	})
 
-	this.test('ensure obj.parseInts is working, ["1", "2"] should parse to [1, 2]', function(cb){
-		var out = pobj.parseInts(['1','2'])
-		cb(null, JSON.stringify([1,2])===JSON.stringify(out))
-	})
-
 	this.test('ensure dot doesnt mutate params', function(cb){
 		var obj = {a: {b: {c: 'ok'}}}
 		var params = ['a', 'b', 'c']
@@ -345,7 +340,6 @@ parallel('pico/obj', function(){
 			}
 		}
 		var ret = pobj.validate(koSpec, obj)
-		console.log(obj)
 		cb(null, ret === '$.a.d')
 	})
 
@@ -471,5 +465,37 @@ parallel('pico/obj', function(){
 		if ('$.email' !== res) return cb(null, false)
 
 		cb(null, true)
+	})
+
+	this.test('ensure nullable', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				a: 'null',
+				b: 'null',
+				c: 'null',
+				d: 'null',
+				e: 'null',
+				f: {
+					type: 'null',
+					value: 1
+				}
+			}
+		}
+
+		var input = {a: 'hello', b: 321, c: [], d: {}, e: new Date, f: null}
+		var out = {}
+		var res = pobj.validate(spec, input, out)
+		if (res) return cb(null, false, res)
+
+		cb(
+			null,
+			out.a === input.a &&
+			out.b === input.b &&
+			out.c === input.c &&
+			out.d === input.d &&
+			out.e === input.e &&
+			out.f === 1
+		)
 	})
 })
