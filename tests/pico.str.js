@@ -106,6 +106,13 @@ parallel('pico/str', function(){
 		var url=pstr.buildRest(route, build, {ver:1.9})
 		cb(null, route ===  url)
 	})
+	this.test('ensure builder rest can handle empty params gracefully',function(cb){
+		var route = 'http://localhost:3000/api/%ver/cal'
+		pstr.compileRest(route, build)
+		// no exception here
+		var url=pstr.buildRest(route, build)
+		cb(null, !url)
+	})
 	this.test('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
 		var
 			data = JSON.stringify({data:123}),
