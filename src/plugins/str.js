@@ -147,7 +147,7 @@ define('pico/str', function(){
 				}
 			}
 			if (!codes) return api
-			var url = buildRest('', codes[1], 0, params, '/', true)
+			var url = buildRest('', codes[1], 0, params || {}, '/', true)
 			if (!url) return false
 			var c
 			for (i=2; (c = codes[i]); i++){
