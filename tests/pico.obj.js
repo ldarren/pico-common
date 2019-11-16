@@ -467,7 +467,7 @@ parallel('pico/obj', function(){
 		cb(null, true)
 	})
 
-	this.test('ensure nullable', function(cb){
+	this.test('ensure nullable work for all types', function(cb){
 		var spec = {
 			type: 'object',
 			spec: {
@@ -497,5 +497,24 @@ parallel('pico/obj', function(){
 			out.e === input.e &&
 			out.f === 1
 		)
+	})
+
+	this.test('ensure nullable, object and array without spec return all object', function(cb){
+		var input = {a: 1, b: 'hi'}
+		var out = {}
+		var res = pobj.validate({type:'null'}, input, out)
+		if (res) return cb(null, false, res)
+		if (out.a !== input.a || out.b !== input.b) return cb(null, false)
+
+		res = pobj.validate({type:'object'}, input, out)
+		if (res) return cb(null, false, res)
+		if (out.a !== input.a || out.b !== input.b) return cb(null, false)
+
+		input = [1, 'hi']
+		out = []
+		res = pobj.validate({type:'array'}, input, out)
+		if (res) return cb(null, false, res)
+		if (out[0] !== input[0] || out[1] !== input[1]) return cb(null, false)
+		cb(null, true)
 	})
 })

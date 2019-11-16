@@ -8,7 +8,16 @@ define('pico/obj',function(){
 		return 0
 	}
 	function set(obj, key, value){
-		if (obj && void 0 !== value && ROOT !== key) {
+		if (!obj || void 0 === value) return
+		if (ROOT === key) {
+			if (Array.isArray(obj)){
+				obj.push.apply(obj, value)
+			}else if (obj && obj.constructor === Object){
+				Object.assign(obj, value)
+			}else{
+				obj = value
+			}
+		} else {
 			if (Array.isArray(obj)){
 				obj.push(value)
 			}else{
