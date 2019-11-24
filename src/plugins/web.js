@@ -1,34 +1,20 @@
 define('pico/web',function(exports,require,module,define,inherit,pico){
 	var
 		PJSON=require('pico/json'),
-		Abs = Math.abs,Floor=Math.floor,Random=Math.random,
+		Floor=Math.floor,Random=Math.random,
+		OPTS = void 0,
 		API_ACK = 'ack',
 		PT_HEAD = 1,
 		PT_BODY = 2,
 		isOnline = true,
-		stdCB = function(err){
-			if (err) console.error(err)
-		},
 		appendFD = function(fd, name, value){
 			fd.append(name, value)
 		},
 		appendObj = function(obj, name, value){
 			obj[name] = value
 		},
-		timeSync = function(net, cb){
-			cb = cb || stdCB
-			pico.ajax('get', net.url, null, null, function(err, readyState, response){
-				if (4 !== readyState) return
-				if (err) return cb(err)
-				var st = parseInt(response)
-				if (isNaN(st)) return cb('invalid timesync response')
-				net.serverTime = st
-				net.serverTimeAtClient = Date.now()
-				cb()
-			})
-		},
 		onResponse = function(err, readyState, response, net){
-			if (err && 4===readyState) timeSync(net) // sync time, in case it was due to time error
+			if (err && 4===readyState) console.error(err)
 
 			// schedule next update
 			switch(readyState){
@@ -74,25 +60,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 							net.request(API_ACK, {resId:head.resId})
 						}
 						if (!head.reqId) {
-							console.error('incomplete response header: '+JSON.stringify(head))
-							return
-						}
-						if (net.cullAge && net.cullAge < Abs(net.getServerTime()-head.date)) {
-							console.error('invalid server time: '+JSON.stringify(head)+' '+Abs(net.getServerTime()-head.date))
-							return
-						}
-						if (net.secretKey && body.length){
-							var hmac = CryptoJS.algo.HMAC.create(CryptoJS.algo.MD5, net.secretKey+head.date)
-
-							//key: CryptoJS.HmacMD5(JSON.stringify(data), this.secretKey+t).toString(CryptoJS.enc.Base64),
-							for(var i=0,l=body.length; i<l; i++){
-								hmac.update(body[i])
-							}
-
-							if (head.key !== hmac.finalize().toString(CryptoJS.enc.Base64)){
-								console.error('invalid server key: '+JSON.stringify(head))
-								return
-							}
+							return console.error('incomplete response header: '+JSON.stringify(head))
 						}
 						if (head.len) head.data = PJSON.parse(body,true)
 						net.inbox.push(head)
@@ -136,8 +104,6 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 		},
 		netConfig = function(net, cfg){
 			net.url = cfg.url || net.url
-			net.secretKey = cfg.secretKey || net.secretKey
-			net.cullAge = cfg.cullAge || net.cullAge
 			net.delimiter = cfg.delimiter ? JSON.stringify(cfg.delimiter) : net.delimiter
 		},
 		netReset = function(net){
@@ -148,7 +114,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 
 	function Net(cfg){
 		if (!cfg.url) return console.error('url is not set')
-		netConfig(this, Object.assign({cullAge:0, delimiter:['&']}, cfg))
+		netConfig(this, Object.assign({delimiter:['&']}, cfg))
 		this.reqId = 1 + Floor(Random() * 1000)
 		this.inbox = []
 		this.outbox = []
@@ -157,11 +123,9 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 		this.acks = []
 		this.reqs = []
 		this.resEndPos = 0
-		this.head = null,
-		this.body = [],
-		this.currPT = PT_HEAD,
-		this.serverTime = 0
-		this.serverTimeAtClient = 0
+		this.head = null
+		this.body = []
+		this.currPT = PT_HEAD
 	}
 
 	Net.prototype = {
@@ -187,21 +151,18 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 				var uploads=this.uploads,outbox=this.outbox,acks=this.acks
 
 				if (uploads.length){
-					pico.ajax('post', this.url, uploads.shift(), null, onResponse, this)
+					pico.ajax('post', this.url, uploads.shift(), OPTS, onResponse, this)
 				}else{
 					var reqs = this.reqs = acks.concat(outbox)
 					acks.length = outbox.length = 0
 
-					pico.ajax('post', this.url, reqs.join(this.delimiter)+this.delimiter, null, onResponse, this)
+					pico.ajax('post', this.url, reqs.join(this.delimiter)+this.delimiter, OPTS, onResponse, this)
 				}
 			}
 		},
 		reconnect: function(cfg, cb){
 			netConfig(this, cfg)
 			netReset(this)
-			timeSync(this, function(err){
-				cb(err, this)
-			})
 		},
 		submit: function(form, cred, cb){
 			if ('undefined'===typeof window || !form || !(form instanceof HTMLFormElement)) return console.error('No HTMLFormElement submitted')
@@ -267,47 +228,20 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 			var dataList=data?PJSON.stringify(data,true):[]
 
 			dataList.unshift(JSON.stringify(cred))
-
-			if (dataList.length && this.secretKey){
-				var
-					t = this.getServerTime(),
-					hmac = CryptoJS.algo.HMAC.create(CryptoJS.algo.MD5, this.secretKey+t) // result of utf8 is diff from node.crypto
-
-				//key: CryptoJS.HmacMD5(JSON.stringify(data), this.secretKey+t).toString(CryptoJS.enc.Base64),
-				for(var i=0,l=dataList.length; i<l; i++){
-					hmac.update(dataList[i])
-				}
-
-				dataList.unshift(JSON.stringify({
-					api: api,
-					reqId: reqId,
-					len:dataList.length,
-					date: t,
-					key: hmac.finalize().toString(CryptoJS.enc.Base64)
-				}))
-			}else{
-				dataList.unshift(JSON.stringify({
-					api: api,
-					reqId: reqId,
-					len:dataList.length
-				}))
-			}
+			dataList.unshift(JSON.stringify({
+				api: api,
+				reqId: reqId,
+				len:dataList.length
+			}))
 			queue.push(dataList.join(this.delimiter))
-		},
-		getServerTime: function(){
-			return this.serverTime + (Date.now() - this.serverTimeAtClient)
-		},
-		test: function(cb){
-			timeSync(this, cb)
 		}
 	}
 
 	return {
 		create: function(cfg, cb){
 			var net= new Net(cfg)
-			timeSync(net, function(err){
-				cb && cb(err, net)
-			})
+			OPTS = {headers: {'Content-Type': 'text/plain;boundary=' + net.delimiter}},
+			cb && cb(null, net)
 			return net
 		},
 		//window.addEventListener('online', online)
