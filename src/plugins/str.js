@@ -1,7 +1,7 @@
 define('pico/str', function(){
 	var Random=Math.random
 	var re = /<%([\s\S]*?)%>/g
-	var reExp = /(^( )?(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|let|return|super|switch|throw|try|var|while|with|yield|{|}|;))(.*)?/g
+	var reExp = /(^( )?(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|finally|for|function|if|import|let|return|super|switch|throw|try|var|while|with|yield|{|}|;))(.*)?/g
 	function addCode(code, line, js) {
 		line = line.trim()
 		if (!line) return code
