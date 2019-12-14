@@ -14,7 +14,7 @@ parallel('pico/str', function(){
 		cb(null, obj.text===tmpl(obj))
 	})
 	this.test('ensure str.template mix well with js', function(cb){
-		const tmpl=pstr.template('<%for(var i=0; i<5; i++){%>1<%}%>')
+		const tmpl=pstr.template('<%for(let i=0; i<5; i++){%>1<%}%>')
 		cb(null, '11111'===tmpl())
 	})
 	this.test('ensure str.template has pico as argument', function(cb){
@@ -24,11 +24,31 @@ parallel('pico/str', function(){
 		}
 		pico.run({ env }, function(){
 			const pstr = require('pico/str')
-			const tmpl = pstr.template('<%pico.env(\'secret\')%>')
+			const tmpl = pstr.template('<%pico.env("secret")%>')
 			return function(){
 				pico.env('cb')(null, pico.env('secret') === tmpl())
 			}
 		})
+	})
+	this.test('ensure str.template work with multiline', function(cb){
+		const tmpl = pstr.template(`
+			<%
+			function plus(x, y){
+				return x + y
+			}
+			function minus(x, y){
+				return x - y
+			}
+			switch(d.type){
+			case "plus":%>
+			<p><%plus(d.x, d.y)%></p>
+			<%break;
+			case "minus":%>
+			<p><%minus(d.x, d.y)%></p>
+			<%break;
+			}%>
+		`)
+		cb(null, '<p>2</p>' === tmpl({type: 'minus', x: 4, y: 2}))
 	})
 	this.test('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
 		var

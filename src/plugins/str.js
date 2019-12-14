@@ -1,5 +1,13 @@
 define('pico/str', function(){
 	var Random=Math.random
+	var re = /<%([\s\S]*?)%>/g
+	var reExp = /(^( )?(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|export|extends|finally|for|function|if|import|let|return|super|switch|throw|try|var|while|with|yield|{|}|;))(.*)?/g
+	function addCode(code, line, js) {
+		line = line.trim()
+		if (!line) return code
+		js ? (code += line.match(reExp) ? line + '\n' : 'r.push(' + line + ');\n') : (code += line !== '' ? 'r.push("' + line.replace(/"/g, '\\"') + '");\n' : '')
+		return code
+	}
 	function partial(func){
 		return function(d){
 			return func(pico, d)
@@ -98,22 +106,17 @@ define('pico/str', function(){
 			return Array(c>0?c:0).join(str||'0')
 		},
 		// src:https://raw.githubusercontent.com/krasimir/absurd/master/lib/processors/html/helpers/TemplateEngine.js
+		// caveat: semicolon is required
 		template:function(html){
-			var re = /<%(.+?)%>/g,
-				reExp = /(^( )?(var|if|for|else|switch|case|break|{|}|;))(.*)?/g,
-				code = 'var r=[];\n',
-				cursor = 0,
-				match
-			var add = function(line, js) {
-				js ? (code += line.match(reExp) ? line + '\n' : 'r.push(' + line + ');\n') :
-					(code += line !== '' ? 'r.push("' + line.replace(/"/g, '\\"') + '");\n' : '')
-				return add
-			}
+			var code = 'var r=[];\n'
+			var cursor = 0
+			var match
 			while((match = re.exec(html))) {
-				add(html.slice(cursor, match.index))(match[1], true)
+				code = addCode(code, html.slice(cursor, match.index))
+				code = addCode(code, match[1], true)
 				cursor = match.index + match[0].length
 			}
-			add(html.substr(cursor, html.length - cursor))
+			code = addCode(code, html.substr(cursor, html.length - cursor))
 			return partial(new Function('pico', 'd', (code + 'return r.join("");').replace(/[\r\t\n]/g, ' ')))
 		},
 		// precedence | / # : %
