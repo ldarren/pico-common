@@ -3,16 +3,16 @@ A single file solution to use asynchronous module definition (amd) in your brows
 
 `pico-common` also comes with a series of common lib to be use with or without the amd
 
+## Features
+* Asyncronous Module Definition
+* bundle multiple scripts into one file
+* Plugin system to extend it capabilities
+
 ## Why?
 * Work on browsers and NodeJS (Universal Javascript)
 * Same syntax on client and server 
 * Support circular dependency
 * Small footprint
-
-## Features
-* Asyncronous Module Definition
-* bundle multiple scripts into one file
-* Plugin system to extend it capabilities
 
 ## Installation
 

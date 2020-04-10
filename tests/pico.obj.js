@@ -236,7 +236,7 @@ parallel('pico/obj', function(){
 								type: 'array',
 								required: 1,
 								spec: {
-									type: 'objecy',
+									type: 'object',
 									spec: {
 										c: 'string',
 										d: {type: 'number', required: 1},
@@ -278,6 +278,38 @@ parallel('pico/obj', function(){
 		var ret2 = '$.0.a.b' === pobj.validate(koSpec, obj)
 		var o = out1[0].a.b[0]
 		cb(null, o.c === 'ok' && o.d === 1 && o.e === false && !!(o.f.getTime()) && ret1 && ret2)
+	})
+
+	this.test('ensure primitive array type check', function(cb){
+		var obj = {a: ['a', 'b'], b: [1, 2], c: [['d', 'e'], ['3', '4']]}
+		var okSpec = {
+			type: 'object',
+			spec:{
+				a: {
+					type: 'array',
+					spec: {
+						type: 'string'
+					}
+				},
+				b: {
+					type: 'array',
+					spec: {
+						type: 'number'
+					}
+				},
+				c: {
+					type: 'array',
+					spec: {
+						type: 'array',
+						spec: {
+							type: 'string'
+						}
+					}
+				},
+			}
+		}
+		var ret = pobj.validate(okSpec, obj)
+		cb(null, ret == null)
 	})
 
 	this.test('ensure validate without nested spec work', function(cb){

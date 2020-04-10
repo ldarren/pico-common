@@ -45,14 +45,14 @@ define('pico/obj',function(){
 		}
 	}
 	function validateArr(key, spec, val, out){
-		if (!(val instanceof Object) || !Array.isArray(val)) return key
+		if (!Array.isArray(val)) return key
 		if (notin(val.length, spec.lt, spec.gt)) return key
 		var s = spec.spec
 		if (s) {
 			set(out, key, [])
 			var o = get(out, key)
 			for (var j = 0, ret, v; (v = val[j]); j++){
-				ret = validateObj(j, s, v, o)
+				ret = validate(j, s, v, o)
 				if (ret) return [key, ret].join('.')
 			}
 		}else{
