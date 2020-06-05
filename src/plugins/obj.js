@@ -45,6 +45,7 @@ define('pico/obj',function(){
 		}
 	}
 	function validateArr(key, spec, val, out){
+		if (spec.sep && val && val.split) val = val.split(spec.sep)
 		if (!Array.isArray(val)) return key
 		if (notin(val.length, spec.lt, spec.gt)) return key
 		var s = spec.spec

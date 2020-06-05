@@ -2,7 +2,7 @@ const pico = require('../bin/pico-cli')
 const pjson = pico.export('pico/json')
 const { parallel } = pico.export('pico/test')
 
-parallel('pico/json', function(){
+parallel('\npico/json', function(){
 	this.test('ensure json.path work', function(cb){
 		var json = {
 			store: {

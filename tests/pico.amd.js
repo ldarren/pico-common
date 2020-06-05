@@ -1,7 +1,7 @@
 const pico = require('../bin/pico-cli')
 const { parallel } = pico.export('pico/test')
 
-parallel('pico', function(){
+parallel('\npico', function(){
 /*
 	this.test('ensure pico preprocessors and env work', function(cb){
 		pico.run({

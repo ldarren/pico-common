@@ -2,7 +2,7 @@ const pico = require('../bin/pico-cli')
 const pobj = pico.export('pico/obj')
 const { parallel } = pico.export('pico/test')
 
-parallel('pico/obj', function(){
+parallel('\npico/obj', function(){
 	this.test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
 		pico.define('ancestor0',function(exports,require,module,define,inherit,pico){
 			return {say:function(txt){
@@ -534,6 +534,7 @@ parallel('pico/obj', function(){
 	this.test('ensure nullable, object and array without spec return all object', function(cb){
 		var input = {a: 1, b: 'hi'}
 		var out = {}
+
 		var res = pobj.validate({type:'null'}, input, out)
 		if (res) return cb(null, false, res)
 		if (out.a !== input.a || out.b !== input.b) return cb(null, false)
@@ -547,6 +548,21 @@ parallel('pico/obj', function(){
 		res = pobj.validate({type:'array'}, input, out)
 		if (res) return cb(null, false, res)
 		if (out[0] !== input[0] || out[1] !== input[1]) return cb(null, false)
+		cb(null, true)
+	})
+
+	this.test('separator supports in array', function(cb){
+		var input = 'a|b|c'
+		var spec = {
+			type: 'array',
+			sep: '|'
+		}
+		var out = []
+
+		var res = pobj.validate(spec, input, out)
+		if (res) return cb(null, false, res)
+		if ('a' !== out[0] || 'b' !== out[1] || 'c' !== out[2]) return cb(null, false)
+
 		cb(null, true)
 	})
 })

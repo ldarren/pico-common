@@ -2,7 +2,7 @@ const pico = require('../bin/pico-cli')
 const pfunc = pico.export('pico/func')
 const { parallel } = pico.export('pico/test')
 
-parallel('pico/func', function(){
+parallel('\npico/func', function(){
 	this.test('ensure func.reflect works correctly', function callee(cb){
 		const f = pfunc.reflect()
 		cb(null, 'callee' === f.functionName)

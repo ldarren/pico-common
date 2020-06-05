@@ -3,7 +3,7 @@ const ptime = pico.export('pico/time')
 const { parallel } = pico.export('pico/test')
 
 const cron='5-20/6 */9 5/5 6/3 6-0 *'
-parallel('pico/time', function(){
+parallel('\npico/time', function(){
 	this.test(`ensure parse cron(${cron}) correctly`, function(cb){
 		const parsed = ptime.parse(cron)
 		function compare(a, b){

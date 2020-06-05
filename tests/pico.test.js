@@ -1,7 +1,7 @@
 const pico = require('../bin/pico-cli')
 const { series, parallel } = pico.export('pico/test')
 
-parallel('pico/test parallel', function() {
+parallel('\npico/test parallel', function() {
 	this.begin(next => {
 		next(null, ['hel', 'wor'])
 	})

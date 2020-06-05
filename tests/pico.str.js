@@ -2,7 +2,7 @@ const pico = require('../bin/pico-cli')
 const pstr = pico.export('pico/str')
 const { parallel } = pico.export('pico/test')
 
-parallel('pico/str', function(){
+parallel('\npico/str', function(){
 	this.test('ensure left pad 8 for a number', function(cb){
 		cb(null, '00000019'===pstr.pad(19,8))
 	})
