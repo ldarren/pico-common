@@ -110,7 +110,7 @@ define('pico/obj',function(){
 			var ft=allows.indexOf(typeof from)
 			if (1 === tf) tf = allows.indexOf(typeof to.__proto__)
 			if (1 === ft) ft = allows.indexOf(typeof from.__proto__)
-			if (!to || null === from || (-1 === ft && ft === tf)) return void 0 === from ? to : from
+			if (!to || null === from || (-1 === ft && ft === tf)) return (void 0 === from && tidy) ? to : from
 			if (1===ft) {
 				if(ft === tf)from.prototype=to
 				return from
@@ -120,7 +120,7 @@ define('pico/obj',function(){
 			if (Array.isArray(from)){
 				if (options.mergeArr){
 					to = to || []
-					// TODO: change unique to Set when is more commonly support on mobile
+					// TODO: change unique to Set when it is more common on mobile
 					var i, l, unique={}
 					for (i=0,l=to.length; i<l; i++){
 						if (void 0 === (value = to[i]) && tidy) continue

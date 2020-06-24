@@ -192,12 +192,38 @@ parallel('\npico/obj', function(){
 		cb(null, obj1.func()===obj4.func())
 	})
 
-	this.test('ensure obj.extend handled null/undefined correctly', function(cb){
+	this.test('ensure obj.extends handled null/undefined correctly', function(cb){
 		var outa = pobj.extends({}, [{a: null}, {a: 'a'}])
 		var outb = pobj.extends({}, [{b: 'b'}, {b: null}])
 		var outc = pobj.extends({}, [{c: undefined}, {c: 'c'}])
 		var outd = pobj.extends({}, [{d: 'd'}, {d: undefined}])
-		cb(null, 'a' === outa.a && null === outb.b && 'c' === outc.c && 'd' === outd.d)
+		var oute = pobj.extends({}, [{d: 'd'}, {d: undefined}], {tidy: 1})
+		cb(null, 'a' === outa.a && null === outb.b && 'c' === outc.c && void 0 === outd.d && 'd' === oute.d)
+	})
+
+	this.test('ensure obj.extends merge sub-obj', function(cb){
+		var obj1 = {
+			idx: 1,
+			id: 'a1',
+			meta: { h: 3, l: 1, m: 5, w: 2, du: 'in', mu: 'oz' },
+			dst: {
+				size: 'xs',
+				id: '144101',
+			},
+			src: { idx: 1 },
+		}
+		var obj2 = {
+			id: 'a2',
+			ref: 'ref',
+			meta: {},
+			dst: {
+				id: void 0,
+				size: 'm'
+			}
+		}
+
+		var out = pobj.extends({}, [obj1, obj2], {tidy: 0, mergeArr: 1})
+		cb(null, out.idx === 1 && out.id === 'a2' && out.ref === obj2.ref && out.meta.h === 3 && out.dst.size === 'm' && out.dst.id == null && out.src.idx === 1)
 	})
 
 	this.test('ensure dot doesnt mutate params', function(cb){
