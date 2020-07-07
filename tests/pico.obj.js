@@ -525,7 +525,7 @@ parallel('\npico/obj', function(){
 		cb(null, true)
 	})
 
-	this.test('ensure nullable work for all types', function(cb){
+	this.test('ensure null type work for all data', function(cb){
 		var spec = {
 			type: 'object',
 			spec: {
@@ -541,7 +541,7 @@ parallel('\npico/obj', function(){
 			}
 		}
 
-		var input = {a: 'hello', b: 321, c: [], d: {}, e: new Date, f: null}
+		var input = {a: 'hello', b: 321, c: [], d: {}, e: new Date}
 		var out = {}
 		var res = pobj.validate(spec, input, out)
 		if (res) return cb(null, false, res)
@@ -590,5 +590,44 @@ parallel('\npico/obj', function(){
 		if ('a' !== out[0] || 'b' !== out[1] || 'c' !== out[2]) return cb(null, false)
 
 		cb(null, true)
+	})
+
+	this.test('validate support nullable', function(cb){
+		var input = {a: null, b: null, c: null, d: null, e: null}
+		var spec = {
+			type: 'object',
+			spec: {
+				a: 'string',
+				b: 'number',
+				c: 'boolean',
+				d: 'array',
+				e: 'object',
+			}
+		}
+		var out = {}
+
+		var res = pobj.validate(spec, input, out)
+		if (res) return cb(null, false, res)
+		cb(null, (null === out.a || null === out.b || false === out.c || null === out.d || null === out.e))
+	})
+
+	this.test('validate support not nullable', function(cb){
+		var input = {a: null, b: null, c: null, d: null, e: null}
+		var spec = {
+			type: 'object',
+			spec: {
+				a: 'string',
+				b: 'number',
+				c: 'boolean',
+				d: 'array',
+				e: {
+					type: 'object',
+					notnull: 1
+				}
+			}
+		}
+
+		var res = pobj.validate(spec, input, {})
+		return cb(null, '$.e' === res)
 	})
 })

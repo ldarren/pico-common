@@ -1,7 +1,6 @@
 define('pico/obj',function(){
 	var allows = ['object','function']
 	var specialFunc = ['constructor']
-	var BOOLS = [true, false, 1, 0, null]
 	var ROOT = '$'
 	function notin(v, lt, gt){
 		if ((null != lt && v >= lt) || (null != gt && v <= gt)) return 1
@@ -68,6 +67,11 @@ define('pico/obj',function(){
 			set(out, k, (val && 'date' === t) ? new Date(val) : val)
 			return
 		}
+		if (null === val && 'boolean' !== t) {
+			if (s.notnull) return k
+			set(out, k, val)
+			return
+		}
 
 		var ret
 		switch(t){
@@ -81,7 +85,6 @@ define('pico/obj',function(){
 			set(out, k, val)
 			break
 		case 'boolean':
-			if (!BOOLS.includes(val)) return k
 			set(out, k, !!val)
 			break
 		case 'date':
