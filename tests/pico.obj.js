@@ -226,6 +226,18 @@ parallel('\npico/obj', function(){
 		cb(null, out.idx === 1 && out.id === 'a2' && out.ref === obj2.ref && out.meta.h === 3 && out.dst.size === 'm' && out.dst.id == null && out.src.idx === 1)
 	})
 
+	this.test('ensure obj.extend handle Date object correctly', function(cb){
+		var str = 'suppose to be date'
+		var obj1 = {
+			d: str
+		}
+		var obj2 = {
+			d: new Date()
+		}
+		var out = pobj.extend(obj1, obj2)
+		cb(null, out.d !== str)
+	})
+
 	this.test('ensure dot doesnt mutate params', function(cb){
 		var obj = {a: {b: {c: 'ok'}}}
 		var params = ['a', 'b', 'c']

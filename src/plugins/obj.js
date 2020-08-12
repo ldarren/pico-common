@@ -2,6 +2,11 @@ define('pico/obj',function(){
 	var allows = ['object','function']
 	var specialFunc = ['constructor']
 	var ROOT = '$'
+	function isObjFun(o){
+		if (!o) return -1
+		if (o instanceof Date) return -1
+		return allows.indexOf(typeof o)
+	}
 	function notin(v, lt, gt){
 		if ((null != lt && v >= lt) || (null != gt && v <= gt)) return 1
 		return 0
@@ -109,10 +114,10 @@ define('pico/obj',function(){
 
 	return  {
 		extend: function extend(to, from, options){
-			var tf=allows.indexOf(typeof to)
-			var ft=allows.indexOf(typeof from)
-			if (1 === tf) tf = allows.indexOf(typeof to.__proto__)
-			if (1 === ft) ft = allows.indexOf(typeof from.__proto__)
+			var tf=isObjFun(to)
+			var ft=isObjFun(from)
+			if (1 === tf) tf = isObjFun(to.__proto__)
+			if (1 === ft) ft = isObjFun(from.__proto__)
 			if (!to || null === from || (-1 === ft && ft === tf)) return (void 0 === from && tidy) ? to : from
 			if (1===ft) {
 				if(ft === tf)from.prototype=to
