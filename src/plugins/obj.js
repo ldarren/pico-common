@@ -1,11 +1,10 @@
 define('pico/obj',function(){
-	var allows = ['object','function']
+	var objfun = ['object','function']
 	var specialFunc = ['constructor']
 	var ROOT = '$'
 	function isObjFun(o){
-		if (!o) return -1
-		if (o instanceof Date) return -1
-		return allows.indexOf(typeof o)
+		if (!o || o instanceof Date) return -1
+		return objfun.indexOf(typeof o)
 	}
 	function notin(v, lt, gt){
 		if ((null != lt && v >= lt) || (null != gt && v <= gt)) return 1
