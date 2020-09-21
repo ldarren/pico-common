@@ -260,7 +260,7 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('ensure validate work', function(cb){
-		var obj = [{a: {b: [{c: 'ok', d: '1', e: null, f: '2019-10-16 06:33:00'}]}}]
+		var obj = [{a: {b: [{c: 'ok', d: '1', e: null, f: '2019-10-16 06:33:00', g: 'T1'}]}}]
 		var okSpec = {
 			type: 'array',
 			spec: {
@@ -279,7 +279,8 @@ parallel('\npico/obj', function(){
 										c: 'string',
 										d: {type: 'number', required: 1},
 										e: 'boolean',
-										f: 'date'
+										f: 'date',
+										g: ['T1', 'T2']
 									}
 								}
 							}
@@ -303,7 +304,8 @@ parallel('\npico/obj', function(){
 									c: 'string',
 									d: 'number',
 									e: 'boolean',
-									f: 'date'
+									f: 'date',
+									g: ['T1', 'T2']
 								}
 							}
 						}
