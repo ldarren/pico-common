@@ -285,10 +285,10 @@ pObj.validate validate and export a given javascript object with a specfication.
 ##### syntax
 > pObj.validate(spec, input, [output])
 
-spec: specification object of the input
-input: input object or array
-output: optional output, if no output given only validation will perform
-return: null if no error, of a xpath string of the first element with error
+* spec: specification object of the input
+* input: input object or array
+* output: optional output, if no output given only validation will perform
+* return: null if no error, of a xpath string of the first element with error
 
 A simple example
 ```javascript
