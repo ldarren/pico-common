@@ -277,6 +277,46 @@ in nodejs
 const { steup, ensure } = require('pico-common').export('pico/test');
 ```
 
+### pico/obj
+pico javascript object manipulation library
+#### validate
+pObj.validate validate and export a given javascript object with a specfication. any thing not defined in the specification will be omitted from the export output.
+
+##### syntax
+> pObj.validate(spec, input, [output])
+spec: specification object of the input
+input: input object or array
+output: optional output, if no output given only validation will perform
+return: null if no error, of a xpath string of the first element with error
+
+A simple example
+```javascript
+pObj.validate({
+	type: 'object',
+	require: 1,
+	spec: {
+		key1: 'string',
+		key2: 'number'
+	}
+}, {
+	key1: 'hello',
+	key2: 1
+})
+
+// output will be null
+```
+
+##### validation type
+the validatation function support following type
+- string
+- number
+- boolean/bool
+- date
+- nested object
+- nested array
+- null
+- enum
+
 ### pico/str
 pico string library
 #### rest url handling

@@ -65,10 +65,18 @@ define('pico/obj',function(){
 	}
 	function validate(k, s, val, out){
 		var t = s.type || s
+		if (!t) return k
 		if (void 0 === val) {
 			if (s.required) return k
 			val = s.value
-			set(out, k, (val && 'date' === t) ? new Date(val) : val)
+			if (void 0 === val) {
+				set(out, k, val)
+				return
+			}
+		}
+		if (Array.isArray(t)){
+			if (!t.includes(val)) return k
+			set(out, k, val)
 			return
 		}
 		if (null === val && 'boolean' !== t) {
@@ -89,6 +97,7 @@ define('pico/obj',function(){
 			set(out, k, val)
 			break
 		case 'boolean':
+		case 'bool':
 			set(out, k, !!val)
 			break
 		case 'date':
