@@ -284,6 +284,7 @@ pObj.validate validate and export a given javascript object with a specfication.
 
 ##### syntax
 > pObj.validate(spec, input, [output])
+
 spec: specification object of the input
 input: input object or array
 output: optional output, if no output given only validation will perform
@@ -296,14 +297,16 @@ pObj.validate({
 	require: 1,
 	spec: {
 		key1: 'string',
-		key2: 'number'
+		key2: 'number',
+		key3: ['SG', 'MY', 'US'] // enum
 	}
 }, {
 	key1: 'hello',
-	key2: 1
+	key2: 1,
+	key3: 'SG'
 })
 
-// output will be null
+// should return null for no error
 ```
 
 ##### validation type
