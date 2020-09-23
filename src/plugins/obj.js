@@ -79,7 +79,7 @@ define('pico/obj',function(){
 			set(out, k, val)
 			return
 		}
-		if (null === val && 'boolean' !== t) {
+		if (null === val && !t.includes('bool')) {
 			if (s.notnull) return k
 			set(out, k, val)
 			return
