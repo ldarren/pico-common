@@ -49,4 +49,9 @@ parallel('\npico/time', function(){
 		ret = ret && ptime.nearest(...parsed, Date.UTC(2018, 11, 11, 1, 23, 30)) === Date.UTC(2018, 11, 11, 1, 25)
 		cb(null, ret)
 	})
+	this.test('ensure get nearest return date correctly with hr = 24 with dow presented', function(cb){
+		const parsed = ptime.parse(cron)
+		let ret = ptime.nearest(...parsed, new Date(2020, 8, 23, 19, 30, 30)) === (new Date(2020, 8, 24, 0, 5)).getTime()
+		cb(null, ret)
+	})
 })
