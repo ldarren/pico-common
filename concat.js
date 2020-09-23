@@ -3,7 +3,7 @@
 const origDirs= (process.argv[2] || '').split(',')
 
 if (!origDirs[0]) {
-	console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS [OUTPUT_NAME]')
+	console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS [OUTPUT_NAME] [TYPE = {js,es}]')
 	process.exit(1)
 }
 
@@ -14,7 +14,9 @@ const MIN_JS='.min.js'
 const MIN_MAP=MIN_JS+'.map'
 const PREFIX='(function(module,exports,require){'
 const POSTFIX='}).apply(null, \'object\' === typeof module ? [module, \'exports\', require] : [window, \'pico\'])'
-const uglify=require('uglify-js')
+const ES_PREFIX='var obj = {};(function(module,exports,require){'
+const ES_POSTFIX='}).apply(null, [obj, \'esm\']); export default obj.esm'
+const {minify} = require('terser')
 const fs = require('fs')
 const path = require('path')
 const stream=require('stream')
@@ -45,6 +47,7 @@ function readdirs(wd,dirs,output,cb){
 }
 
 let dest= process.argv[3] || path.join(BIN,'pico')
+const [prefix, postfix] = 'es' === process.argv[4] ? [ES_PREFIX, ES_POSTFIX] : [PREFIX, POSTFIX]
 
 fs.readlink(symPath, (err, realPath)=>{
 	if (err) realPath = symPath
@@ -54,7 +57,7 @@ fs.readlink(symPath, (err, realPath)=>{
 	fs.unlink(destAbs+JS, (err)=>{
 		console.log('open file', destAbs)
 		const ws = fs.createWriteStream(destAbs+JS, {flags:'a'})
-		pipeStr(PREFIX,ws)
+		pipeStr(prefix,ws)
 		readdirs(wd, origDirs, [], (err, files)=>{
 			if (err) return console.error(err)
 			files.unshift(path.join(wd,SRC,'amd.js'))
@@ -73,20 +76,20 @@ fs.readlink(symPath, (err, realPath)=>{
 				rs.pipe(ws, {end:false})
 			}(()=>{
 				ws.on('finish',()=>{
-					fs.readFile(destAbs+JS,'utf8',(err,code)=>{
+					fs.readFile(destAbs+JS,'utf8',async (err,code)=>{
 						if (err) return console.error(err)
-						const minify=uglify.minify(code,{sourceMap:{filename:dest+MIN_JS,url:dest+MIN_MAP}})
-						if (minify.error) return console.error(minify.error)
-						fs.writeFile(destAbs+MIN_JS, minify.code, 'utf8', (err)=>{
+						const mini=await minify(code,{sourceMap:{filename:dest+MIN_JS,url:dest+MIN_MAP}})
+						if (mini.error) return console.error(mini.error)
+						fs.writeFile(destAbs+MIN_JS, mini.code, 'utf8', (err)=>{
 							if (err) return console.error(err)
-							fs.writeFile(destAbs+MIN_MAP, minify.map, 'utf8', ()=>{
+							fs.writeFile(destAbs+MIN_MAP, mini.map, 'utf8', ()=>{
 								if (err) return console.error(err)
 								console.log('Done!')
 							})
 						})
 					})
 				})
-				pipeStr(POSTFIX,ws,{end:true})
+				pipeStr(postfix,ws,{end:true})
 			})
 		})
 	})
