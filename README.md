@@ -44,7 +44,7 @@ const pStr = window.pico.export('pico/str')
 ESM import is supported
 ```html
 <script type=module>
-import pico from './bin/pico-es.m'in.js'
+import pico from './bin/pico-es.min.js'
 const pStr = pico.export('pico/str')
 </script>
 ```
