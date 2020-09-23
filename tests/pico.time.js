@@ -21,7 +21,6 @@ parallel('\npico/time', function(){
 		const parsed = ptime.parse(cron)
 		const then = ptime.nearest(...parsed)
 		let ret = then > Date.now()
-
 		const t = new Date(then)
 		ret = ret && parsed[0].includes(t.getMinutes())
 		ret = ret && parsed[1].includes(t.getHours())

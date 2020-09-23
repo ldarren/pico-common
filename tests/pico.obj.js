@@ -607,22 +607,22 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('validate support nullable', function(cb){
-		var input = {a: null, b: null, c: null, d: null, e: null}
+		var input = {a: null, b: null, c: null, d: null, e: null, f: null}
 		var spec = {
 			type: 'object',
 			spec: {
 				a: 'string',
 				b: 'number',
 				c: 'boolean',
-				d: 'array',
-				e: 'object',
+				d: 'bool',
+				e: 'array',
+				f: 'object',
 			}
 		}
 		var out = {}
-
 		var res = pobj.validate(spec, input, out)
 		if (res) return cb(null, false, res)
-		cb(null, (null === out.a || null === out.b || false === out.c || null === out.d || null === out.e))
+		cb(null, (null === out.a && null === out.b && false === out.c && false === out.d && null === out.e && null === out.f))
 	})
 
 	this.test('validate support not nullable', function(cb){

@@ -78,7 +78,7 @@ define('pico/time',function(){
 		},
 		closest=function(now, list, max){
 			if (!list) return now
-			if (Max.apply(Math, list.concat(now))===now) return now+(max-now)+Min.apply(Math, list)
+			if (Max.apply(Math, list.concat(now))===now) return max + Min.apply(Math, list)
 			for(var i=0,l=list.length; i<l; i++){
 				if (list[i]>=now) return list[i]
 			}
@@ -98,9 +98,9 @@ define('pico/time',function(){
 			if (dows){
 				// if dow set ignore dom fields
 				var
-					day=now.getDay()+Floor(hr/24),
+					day = now.getDay(),
 					dow=closest(day, dows, 7)
-				dom+=(dow-day)
+				dom+=(dow-day+Floor(hr/24))
 			}else{
 				dom=closest(dom+Floor(hr/24), doms, days)
 			}
