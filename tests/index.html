@@ -1,13 +1,23 @@
 <script src=../bin/pico-cli.js></script>
-<script>
+<script type=module>
+
+import picoES from '../bin/pico-cli-es.js'
+const pstr2 = picoES.export('pico/str')
 const pstr = pico.export('pico/str')
 const { parallel } = pico.export('pico/test')
 
 parallel('pico/str', function(){
-	this.test('ensure restful builder work for abs url without variables',function(cb){
-		var route='http://localhost:3000/1.0/user'
-		var build=pstr.compileRest(route)
-		var url=pstr.buildRest(route, build, {ver:2})
+	this.test('ensure restful builder work for abs url without variables', cb => {
+		const route='http://localhost:3000/1.0/user'
+		const build=pstr.compileRest(route)
+		const url=pstr.buildRest(route, build, {ver:2})
+		cb(null, route ===  url)
+	})
+
+	this.test('ensure esm is supported', cb => {
+		const route='http://localhost:3000/1.0/user'
+		const build=pstr2.compileRest(route)
+		const url=pstr2.buildRest(route, build, {ver:2})
 		cb(null, route ===  url)
 	})
 })
