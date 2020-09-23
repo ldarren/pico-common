@@ -36,10 +36,17 @@ link the minified version in your browser
 ```
 and you can start using in your javascript
 ```javascript
-window.pico
+// use plugin without pico's amd
+const pStr = window.pico.export('pico/str')
+```
 
-// use plugin witout pico's amd
+### Browser with ES6 Module
+ESM import is supported
+```html
+<script type=module>
+import pico from './bin/pico-es.m'in.js'
 const pStr = pico.export('pico/str')
+</script>
 ```
 
 ## amd

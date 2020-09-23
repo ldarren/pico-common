@@ -3,7 +3,7 @@
 const origDirs= (process.argv[2] || '').split(',')
 
 if (!origDirs[0]) {
-	console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS [OUTPUT_NAME] [TYPE{js,es}]')
+	console.log('Usage: '+process.argv[1]+' COMMA_SEP_PATHS [OUTPUT_NAME] [TYPE = {js,es}]')
 	process.exit(1)
 }
 
