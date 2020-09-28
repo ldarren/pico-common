@@ -1,5 +1,5 @@
 # `pico-common`
-A pico sized (~ 7kb) of commonly overlooked common functions for both nodejs and browser.
+A pico sized (~ 7kb) and zero dependency javascript library for commonly overlooked utility functions for both nodejs and the browser.
 
 this library goes well with commonly used libraries such lodash and jquery with little or no overlapping.
 
