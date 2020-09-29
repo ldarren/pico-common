@@ -2,6 +2,25 @@ define('pico/obj',function(){
 	var objfun = ['object','function']
 	var specialFunc = ['constructor']
 	var ROOT = '$'
+	function find(obj, p){
+		if (!p || !obj) return
+		for (var i = 0, v, pi; (pi = p[i]); i++){
+			v = obj[pi]
+			if (void 0 !== v) return v
+		}
+	}
+	function dot(obj, p, value){
+		if (!p || !Array.isArray(p)) return void 0 === obj ? value : obj
+		if (!obj) return value
+		var v = obj
+		for (var i = 0, pi; (pi = p[i]); i++){
+			console.log('$$$$$$', i, pi, v)
+			if (Array.isArray(pi)) v = find(v, pi)
+			else v = v[pi]
+			if (void 0 === v) return value
+		}
+		return v
+	}
 	function isObjFun(o){
 		if (!o || o instanceof Date) return -1
 		return objfun.indexOf(typeof o)
@@ -168,22 +187,7 @@ define('pico/obj',function(){
 			}
 			return to
 		},
-		dot: function callee(obj, p, value, idx){
-			idx |= 0
-			if (!p || idx === p.length) return void 0 === obj ? value : obj
-			if (!obj) return value
-			var k = p[idx]
-			var v
-			if (Array.isArray(k)){
-				for (var i = 0, ki; (ki = k[i]); i++){
-					v = obj[ki]
-					if (void 0 !== v) break
-				}
-			}else{
-				v = obj[k]
-			}
-			return callee(v, p, value, idx + 1)
-		},
+		dot: dot,
 		validate: function(spec, obj, out){
 			return validate(ROOT, spec, obj, out)
 		},

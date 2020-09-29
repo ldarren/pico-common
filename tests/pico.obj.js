@@ -246,7 +246,9 @@ parallel('\npico/obj', function(){
 
 	this.test('ensure dot optional params work', function(cb){
 		var obj = {a: {b: {c: null}}}
-		cb(null, null === pobj.dot(obj, [['1', 'a'], ['q', '2', 'b'], ['!', 'c', '3']]))
+		var arr = [0, [[0, 1, 2, null]]]
+		var spec = [['1', 'a'], ['q', '0', 'b'], ['!', 'c', '3']]
+		cb(null, null === pobj.dot(obj, spec) && null === pobj.dot(arr, spec))
 	})
 
 	this.test('ensure dot default value work', function(cb){
