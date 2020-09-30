@@ -151,7 +151,7 @@ parallel('\npico/obj', function(){
 		}
 		t2=Date.now()-t
 
-		cb(null, t1 + 10 > t2, [t1,t2])
+		cb(null, t1 + 20 > t2, [t1,t2])
 	})
 
 	this.test('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
@@ -246,7 +246,9 @@ parallel('\npico/obj', function(){
 
 	this.test('ensure dot optional params work', function(cb){
 		var obj = {a: {b: {c: null}}}
-		cb(null, null === pobj.dot(obj, [['1', 'a'], ['q', '2', 'b'], ['!', 'c', '3']]))
+		var arr = [0, [[0, 1, 2, null]]]
+		var spec = [['1', 'a'], ['q', '0', 'b'], ['!', 'c', '3']]
+		cb(null, null === pobj.dot(obj, spec) && null === pobj.dot(arr, spec))
 	})
 
 	this.test('ensure dot default value work', function(cb){
@@ -260,7 +262,7 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('ensure validate work', function(cb){
-		var obj = [{a: {b: [{c: 'ok', d: '1', e: null, f: '2019-10-16 06:33:00', g: 'T1'}]}}]
+		var obj = [{a: {b: [{c: '123', d: '1', e: null, f: '2019-10-16 06:33:00', g: 'T1'}]}}]
 		var okSpec = {
 			type: 'array',
 			spec: {
@@ -317,7 +319,7 @@ parallel('\npico/obj', function(){
 		var ret1 = null == pobj.validate(okSpec, obj, out1)
 		var ret2 = '$.0.a.b' === pobj.validate(koSpec, obj)
 		var o = out1[0].a.b[0]
-		cb(null, o.c === 'ok' && o.d === 1 && o.e === false && !!(o.f.getTime()) && ret1 && ret2)
+		cb(null, o.c === '123' && o.d === 1 && o.e === false && !!(o.f.getTime()) && ret1 && ret2)
 	})
 
 	this.test('ensure primitive array type check', function(cb){
@@ -643,5 +645,69 @@ parallel('\npico/obj', function(){
 
 		var res = pobj.validate(spec, input, {})
 		return cb(null, '$.e' === res)
+	})
+
+	this.test('validate dynamic spec support', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				dropoff: {
+					type: 'bool',
+					required: 1
+				},
+				src: {
+					type: 'object',
+					required: [['dropoff'], 0],
+					spec: {
+						first_name: {
+							type: 'string',
+							required: 1
+						},
+						last_name: 'string',
+					}
+				}
+			}
+		}
+
+		var res = pobj.validate(spec, {dropoff: 0})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {dropoff: 1})
+		if ('$.src' !== res) return cb(null, false, res)
+
+		var out = {}
+		res = pobj.validate(spec, {dropoff: 1, src: {first_name: 'Darren'}}, out)
+		return cb(null, !res && out.dropoff && out.src.first_name === 'Darren')
+	})
+
+	this.test('validate dynamic spec with out-of-spec value', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				src: {
+					type: 'object',
+					required: [['opt', 0, 'dropoff'], 0],
+					spec: {
+						first_name: {
+							type: 'string',
+							required: 1
+						},
+						last_name: 'string',
+					}
+				}
+			}
+		}
+
+		var res = pobj.validate(spec, {})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {opt: [{dropoff:1}]})
+		if ('$.src' !== res) return cb(null, false, res)
+
+		var out = {}
+		res = pobj.validate(spec, {opt: [{dropoff:1}], src: {first_name: 'Darren'}}, out)
+		return cb(null, !res && !out.opt && out.src.first_name === 'Darren')
 	})
 })
