@@ -14,7 +14,6 @@ define('pico/obj',function(){
 		if (!obj) return value
 		var v = obj
 		for (var i = 0, pi; (pi = p[i]); i++){
-			console.log('$$$$$$', i, pi, v)
 			if (Array.isArray(pi)) v = find(v, pi)
 			else v = v[pi]
 			if (void 0 === v) return value
@@ -51,7 +50,11 @@ define('pico/obj',function(){
 		if (ROOT === key) return obj
 		if (obj) return obj[key]
 	}
-	function validateObj(key, spec, val, out){
+	function getV(obj, key){
+		if (Array.isArray(key)) return dot(obj, key[0], key[1])
+		return key
+	}
+	function validateObj(key, spec, val, out, full){
 		if (!(val instanceof Object) || Array.isArray(val)) return key
 		var s = spec.spec
 		if (s) {
@@ -59,35 +62,35 @@ define('pico/obj',function(){
 			var o = get(out, key)
 			var keys = Object.keys(s)
 			for (var i = 0, ret, k; (k = keys[i]); i++){
-				ret = validate(k, s[k], val[k], o)
+				ret = validate(k, s[k], val[k], o, full)
 				if (ret) return [key, ret].join('.')
 			}
 		}else{
 			set(out, key, Object.assign({}, val))
 		}
 	}
-	function validateArr(key, spec, val, out){
-		if (spec.sep && val && val.split) val = val.split(spec.sep)
+	function validateArr(key, spec, val, out, full){
+		if (spec.sep && val && val.split) val = val.split(getV(full, spec.sep))
 		if (!Array.isArray(val)) return key
-		if (notin(val.length, spec.lt, spec.gt)) return key
+		if (notin(val.length, getV(full, spec.lt), getV(full, spec.gt))) return key
 		var s = spec.spec
 		if (s) {
 			set(out, key, [])
 			var o = get(out, key)
 			for (var j = 0, ret, v; (v = val[j]); j++){
-				ret = validate(j, s, v, o)
+				ret = validate(j, s, v, o, full)
 				if (ret) return [key, ret].join('.')
 			}
 		}else{
 			set(out, key, val.slice())
 		}
 	}
-	function validate(k, s, val, out){
-		var t = s.type || s
+	function validate(k, s, val, out, full){
+		var t = getV(full, s.type) || s
 		if (!t) return k
 		if (void 0 === val) {
-			if (s.required) return k
-			val = s.value
+			if (getV(full, s.required)) return k
+			val = getV(full, s.value)
 			if (void 0 === val) {
 				set(out, k, val)
 				return
@@ -99,7 +102,7 @@ define('pico/obj',function(){
 			return
 		}
 		if (null === val && !t.includes('bool')) {
-			if (s.notnull) return k
+			if (getV(full, s.notnull)) return k
 			set(out, k, val)
 			return
 		}
@@ -107,12 +110,12 @@ define('pico/obj',function(){
 		var ret
 		switch(t){
 		case 'string':
-			if (t !== typeof val || notin(val.length, s.lt, s.gt) || !RegExp(s.regex).test(val)) return k
+			if (t !== typeof val || notin(val.length, getV(full, s.lt), getV(full, s.gt)) || !RegExp(getV(full, s.regex)).test(val)) return k
 			set(out, k, val)
 			break
 		case 'number':
 			val = parseFloat(val)
-			if (!isFinite(val) || notin(val, s.lt, s.gt)) return k
+			if (!isFinite(val) || notin(val, getV(full, s.lt), getV(full, s.gt))) return k
 			set(out, k, val)
 			break
 		case 'boolean':
@@ -121,19 +124,19 @@ define('pico/obj',function(){
 			break
 		case 'date':
 			val = new Date(val)
-			if (!val.getTime() || notin(val.getTime(), s.lt, s.gt)) return k
+			if (!val.getTime() || notin(val.getTime(), getV(full, s.lt), getV(full, s.gt))) return k
 			set(out, k, val)
 			break
 		case 'object':
-			ret = validateObj(k, s, val, out)
+			ret = validateObj(k, s, val, out, full)
 			if (ret) return ret
 			break
 		case 'array':
-			ret = validateArr(k, s, val, out)
+			ret = validateArr(k, s, val, out, full)
 			if (ret) return ret
 			break
 		case 'null':
-			set(out, k, null == val ? s.value || null : val)
+			set(out, k, null == val ? getV(full, s.value) || null : val)
 			break
 		default: return k
 		}
@@ -189,7 +192,7 @@ define('pico/obj',function(){
 		},
 		dot: dot,
 		validate: function(spec, obj, out){
-			return validate(ROOT, spec, obj, out)
+			return validate(ROOT, spec, obj, out, obj)
 		},
 	}
 })

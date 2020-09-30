@@ -151,7 +151,7 @@ parallel('\npico/obj', function(){
 		}
 		t2=Date.now()-t
 
-		cb(null, t1 + 10 > t2, [t1,t2])
+		cb(null, t1 + 20 > t2, [t1,t2])
 	})
 
 	this.test('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
@@ -645,5 +645,39 @@ parallel('\npico/obj', function(){
 
 		var res = pobj.validate(spec, input, {})
 		return cb(null, '$.e' === res)
+	})
+
+	this.test('validate dynamic spec support', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				dropoff: {
+					type: 'bool',
+					required: 1
+				},
+				src: {
+					type: 'object',
+					required: [['dropoff'], 0],
+					spec: {
+						first_name: {
+							type: 'string',
+							required: 1
+						},
+						last_name: 'string',
+					}
+				}
+			}
+		}
+
+		var res = pobj.validate(spec, {dropoff: 0})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {dropoff: 1})
+		if ('$.src' !== res) return cb(null, false, res)
+
+		var out = {}
+		res = pobj.validate(spec, {dropoff: 1, src: {first_name: 'Darren'}}, out)
+		return cb(null, !res && out.dropoff && out.src.first_name === 'Darren')
 	})
 })
