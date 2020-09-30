@@ -90,7 +90,7 @@ define('pico/obj',function(){
 		if (!t) return k
 		if (void 0 === val) {
 			if (getV(full, s.required)) return k
-			val = getV(full, s.value)
+			val = s.value
 			if (void 0 === val) {
 				set(out, k, val)
 				return
@@ -136,7 +136,7 @@ define('pico/obj',function(){
 			if (ret) return ret
 			break
 		case 'null':
-			set(out, k, null == val ? getV(full, s.value) || null : val)
+			set(out, k, null == val ? s.value || null : val)
 			break
 		default: return k
 		}
