@@ -1,13 +1,14 @@
 # `pico-common`
-A pico sized (~ 7kb) and zero dependency javascript library for commonly overlooked utility functions for both nodejs and the browser.
+A pico sized (~ 7kb) with zero dependency javascript library for commonly overlooked utility functions for both nodejs and the browser.
 
 this library goes well with commonly used libraries such lodash and jquery with little or no overlapping.
 
-## main features
-All these features are workable on nodejs and browsers
+## features
+Below are the main features
 
 ### object validation
-[link](man/obj_validate.md)
+A simple and lightweight object and json schema validator
+[read more](man/obj_validate.md)
 
 ### Object.assgin at deeper level
 [link](man/obj_extend.md)
@@ -39,5 +40,5 @@ All these features are workable on nodejs and browsers
 ### template engine
 [link](man/str_template.md)
 
-## installation
+## installing
 [link](man/install.md)
