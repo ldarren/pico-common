@@ -63,7 +63,7 @@ define('pico/obj',function(){
 			var keys = Object.keys(s)
 			for (var i = 0, ret, k; (k = keys[i]); i++){
 				ret = validate(k, s[k], val[k], o, full)
-				if (ret) return [key, ret].join('.')
+				if (void 0 !== ret) return [key, ret].join('.')
 			}
 		}else{
 			set(out, key, Object.assign({}, val))
@@ -79,7 +79,7 @@ define('pico/obj',function(){
 			var o = get(out, key)
 			for (var j = 0, ret, v; (v = val[j]); j++){
 				ret = validate(j, s, v, o, full)
-				if (ret) return [key, ret].join('.')
+				if (void 0 !== ret) return [key, ret].join('.')
 			}
 		}else{
 			set(out, key, val.slice())
@@ -129,11 +129,11 @@ define('pico/obj',function(){
 			break
 		case 'object':
 			ret = validateObj(k, s, val, out, full)
-			if (ret) return ret
+			if (void 0 !== ret) return ret
 			break
 		case 'array':
 			ret = validateArr(k, s, val, out, full)
-			if (ret) return ret
+			if (void 0 !== ret) return ret
 			break
 		case 'null':
 			set(out, k, null == val ? s.value || null : val)

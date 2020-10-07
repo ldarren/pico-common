@@ -710,4 +710,16 @@ parallel('\npico/obj', function(){
 		res = pobj.validate(spec, {opt: [{dropoff:1}], src: {first_name: 'Darren'}}, out)
 		return cb(null, !res && !out.opt && out.src.first_name === 'Darren')
 	})
+
+	this.test('validate array error position', function(cb){
+		var spec = {
+			type: 'array',
+			spec: {
+				type: 'number'
+			}
+		}
+
+		var res = pobj.validate(spec, ['a', 'b'])
+		return cb(null, res === '$.0')
+	})
 })
