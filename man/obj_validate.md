@@ -63,6 +63,35 @@ __spec__: nested object schema, _valid for array and string_
 
 __type__: data type, _valid for all_
 
+### attribute referencing
+> syntax attribute: [['path', 'to', 'value'], 'default_value']
+
+attribute can be taken from the input value, this make attribute dynamic to the input value
+
+for example, requirement of `email` field is depend on the `meta type`, instead of prepare two spec, the `require` of email can be referencing to meta type instead
+```js
+const spec = {
+  type: 'object',
+  spec: {
+    email: {
+      type: 'string',
+      required: [['meta', 'type'], 0]
+    },
+    mobile: {
+      type: 'string',
+      required: 1
+    }
+  }
+}
+
+pObj.validate(spec, {
+  meta: {
+    type: 0
+  },
+  mobile: '12345678'
+})
+```
+
 ### validate nested object
 unlimited nested object is supported with `spec` attributes
 
