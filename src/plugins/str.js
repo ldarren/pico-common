@@ -1,5 +1,6 @@
 define('pico/str', function(){
 	var Random=Math.random
+	var Ceil=Math.ceil
 	var re = /<%([\s\S]*?)%>/g
 	var reExp = /(^( )?(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|finally|for|function|if|import|let|return|super|switch|throw|try|var|while|with|yield|{|}|;))(.*)?/g
 	var PARAM = ':'
@@ -234,8 +235,13 @@ define('pico/str', function(){
 			}
 			return h
 		},
-		rand: function(){
-			return Random().toString(36).substr(2)
+		rand: function(len){
+			var times = len ? Ceil(len / 11) : 1
+			var r = ''
+			for (var i = 0; i < times; i++) {
+				r += Random().toString(36).substr(2)
+			}
+			return len ? r.substring(0, len) : r
 		},
 		pad:function(val,n,str){
 			return this.tab(val,n,str)+val

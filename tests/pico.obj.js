@@ -996,6 +996,8 @@ parallel('\npico/obj', function(){
 	this.test('validate pObj.create', function(cb){
 		var spec = {
 			type: 'array',
+			required: 1,
+			notnull: 1,
 			spec: {
 				type: 'object',
 				spec: {

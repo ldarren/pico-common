@@ -188,4 +188,8 @@ parallel('\npico/str', function(){
 		}
 		cb(null, l===hist.length, 'count', hist.length, 'ms', Date.now() - n)
 	})
+	this.test('ensure rand generate exact len', function(cb){
+		var r = pstr.rand(64)
+		cb(null, r.length === 64)
+	})
 })

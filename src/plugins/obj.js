@@ -1,5 +1,7 @@
 define('pico/obj',function(exports,require){
 	var pTime = require('pico/time')
+	var pStr = require('pico/str')
+	var Rand = Math.random
 	var Round = Math.round
 	var Ceil = Math.ceil
 	var Floor = Math.floor
@@ -200,42 +202,54 @@ define('pico/obj',function(exports,require){
 		}
 	}
 
-	function createObj(s){
+	function rand(min, max){
+		return min + Round(Rand() * (max - min))
+	}
+
+	function createObj(s, opt){
 		var out = {}
 		if (!s) return out
 		var keys = Object.keys(s)
-		for (var i = 0, k; k = keys[i]; i++){
-			out[k] = create(s[k])
+		for (var i = 0, k; (k = keys[i]); i++){
+			out[k] = create(s[k], opt)
 		}
 		return out
 	}
 
-	function createArr(s){
+	function createArr(s, opt){
 		var out = []
 		if (!s) return out
-		out.push(create(s.spec))
+		var times = rand(s.gt || 0, s.lt || 10)
+		for (var i = 0; i < times; i++){
+			out.push(create(s.spec, opt))
+		}
 		return out
 	}
 
-	function create(s){
+	function create(s, randex){
 		var t = s.type || s
+
+		if (!s.required && 0 === rand(0, 100)) return s.value
+		if (!s.notnull&& 0 === rand(0, 100)) return null
 
 		switch(t){
 		case 'number':
-			return 1
+			return rand(s.gt || -10, s.lt || 10)
 		case 'string':
-			return 'a'
+			return s.regex ? randex(s.regex, s.gt || 32) : pStr.rand(rand(s.gt || 0, s.lt || 11))
 		case 'boolean':
 		case 'bool':
-			return true
+			return 1 === rand(0, 1)
 		case 'date':
-			return new Date()
+			return new Date(rand(s.gt || Date.now() - 0x9A7EC800, s.lt || Date.now() + 0x9A7EC800))
 		case 'object':
-			return createObj(s.spec)
+			return createObj(s.spec, randex)
 		case 'array':
-			return createArr(s.spec)
+			return createArr(s, randex)
 		case 'null':
 			return null
+		default:
+			return s[rand(0, s.length - 1)]
 		}
 	}
 
