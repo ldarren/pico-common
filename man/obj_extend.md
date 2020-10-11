@@ -66,11 +66,11 @@ const source1 = {
 }
 const source2 = {
   foo: {
-    b: 2,
+    b: 3,
     e: 3
   }
 }
 
 const output = pObj.extend(target, [source1, soruce2])
-// output = { foo: {a: 1, b: 2, c: 1}}
+// output = { foo: {a: 1, b: 3, c: 1, e: 3}}
 ```
