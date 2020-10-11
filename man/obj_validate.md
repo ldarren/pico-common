@@ -12,17 +12,17 @@ __output [optional]__: an optional js object to store transformed data of the ta
 it returns a string when encountered an error. the string is a [jsonpath](https://www.baeldung.com/guide-to-jayway-jsonpath) to indicator the location of
 the first encountered error. return `undefined` if no error encountered.
 
-## schema format
-simplest schema format
+## spec format
+simplest spec can be just the [type](#supported-types)
 ```js
-const spec = {type: 'number'}
+const spec = 'number'
 pObj.validate(spec, 1) // returns undefined
-pObj.validate(spec, {}) // returns '$'
+pObj.validate(spec, 'a') // returns '$'
 ```
 
-more attributes can be added to schema object to imporve the constraint. see [attribute section](#validation-attributes) for more
+spec can also be an object to imporve the constraint. see [attribute section](#validation-attributes) for more
 ```js
-const spec = {type: 'number', gt: 1, lt: 10}
+const spec = {type: 'number', gt: 1, lt: 10} // a number greater than 1 and lesser than 10
 pObj.validate(spec, 5) // returns undefined
 pObj.validate(spec, 10) // returns '$'
 ```
@@ -93,7 +93,7 @@ pObj.validate(spec, {
 ```
 
 ### validate nested object
-unlimited nested object is supported with `spec` attributes
+unlimited nested object can be validated with the help of `spec` attributes
 
 A sample nested objects
 ```js
@@ -147,7 +147,7 @@ const spec = {
 }
 ```
 ### object transformation
-object transformation only supported for array or object target type
+if the target is container (object or array), a third parameter provides the transformation output
 
 number transformation
 ```js
