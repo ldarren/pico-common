@@ -992,4 +992,27 @@ parallel('\npico/obj', function(){
 		var res = pobj.validate(spec, {round: 3.6, down: 3.6, floor: 3.6, up: 3.6, ceil: 3.6}, out)
 		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4)
 	})
+
+	this.test('validate pObj.create', function(cb){
+		var spec = {
+			type: 'array',
+			spec: {
+				type: 'object',
+				spec: {
+					num: 'number',
+					str: 'string',
+					bl: 'bool',
+					date: 'date',
+					empty: 'null',
+					county: ['CN', 'MY', 'US', 'SG']
+				}
+			}
+		}
+
+		var obj = pobj.create(spec)
+		if (!obj) return cb(null, false, 'failed to create')
+
+		var res = pobj.validate(spec, obj)
+		return cb(null, void 0 === res)
+	})
 })

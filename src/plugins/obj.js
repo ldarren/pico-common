@@ -200,6 +200,45 @@ define('pico/obj',function(exports,require){
 		}
 	}
 
+	function createObj(s){
+		var out = {}
+		if (!s) return out
+		var keys = Object.keys(s)
+		for (var i = 0, k; k = keys[i]; i++){
+			out[k] = create(s[k])
+		}
+		return out
+	}
+
+	function createArr(s){
+		var out = []
+		if (!s) return out
+		out.push(create(s.spec))
+		return out
+	}
+
+	function create(s){
+		var t = s.type || s
+
+		switch(t){
+		case 'number':
+			return 1
+		case 'string':
+			return 'a'
+		case 'boolean':
+		case 'bool':
+			return true
+		case 'date':
+			return new Date()
+		case 'object':
+			return createObj(s.spec)
+		case 'array':
+			return createArr(s.spec)
+		case 'null':
+			return null
+		}
+	}
+
 	return  {
 		extend: function extend(to, from, options){
 			var tf=isObjFun(to)
@@ -252,5 +291,6 @@ define('pico/obj',function(exports,require){
 		validate: function(spec, obj, out, ext){
 			return validate(ROOT, spec, obj, out, obj, null, ext)
 		},
+		create: create
 	}
 })
