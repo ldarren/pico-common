@@ -45,9 +45,9 @@ pObj.validate(spec, 'US') // returns '$'
 ```
 
 ### validation attributes
-__gt__: greater than, _valid for `string`, `number` and `array`_
+__gt__: greater than, _valid for `string`, `number`, `date` and `array`_
 
-__lt__: lesser than, _valid for `string`, `number` and `array`_
+__lt__: lesser than, _valid for `string`, `number`, `date` and `array`_
 
 __required__: mandatory, error if `undefined` is given, but no error if `null` is given, _valid for all_. 
 
