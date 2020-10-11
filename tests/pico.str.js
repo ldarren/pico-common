@@ -192,4 +192,8 @@ parallel('\npico/str', function(){
 		var r = pstr.rand(64)
 		cb(null, r.length === 64)
 	})
+	this.test('ensure rand generate sep', function(cb){
+		var r = pstr.rand(96, ' ')
+		cb(null, r.length === 96 && -1 !== r.indexOf(' '))
+	})
 })
