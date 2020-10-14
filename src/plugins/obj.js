@@ -2,9 +2,9 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 	var objfun = ['object','function']
 	var specialFunc = ['nstructor']
 	var ROOT = '$'
-	var dotfun = {
-		bool: function(v){ return v ? 1 : 0 },
-		invert: function(v){ return v ? 0 : 1 },
+	var attrfun = {
+		ref: function(p, def){ return dot(this, p, def) ? 1 : 0 },
+		invert: function(p, def){ return dot(this, p, def) ? 0 : 1 },
 	}
 	function find(obj, p){
 		if (!p || !obj) return
@@ -13,23 +13,16 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 			if (void 0 !== v) return v
 		}
 	}
-	function transform(v, opts){
-		if (!opts || !opts.length) return v
-		for (var i = 0, opt; (opt = opts[i]); i++){
-			v = dotfun[opt[0]](v, opt.slice(1))
-		}
-		return v
-	}
-	function dot(obj, p, value, opts){
-		if (!p || !Array.isArray(p)) return void 0 === obj ? value : obj
-		if (void 0 === obj) return transform(value, opts)
+	function dot(obj, p, def){
+		if (!p || !Array.isArray(p)) return void 0 === obj ? def : obj
+		if (void 0 === obj) return def
 		var v = obj
 		for (var i = 0, pi; (pi = p[i]); i++){
 			if (Array.isArray(pi)) v = find(v, pi)
 			else v = v[pi]
-			if (void 0 === v) return transform(value, opts)
+			if (void 0 === v) return def
 		}
-		return transform(v, opts)
+		return v
 	}
 	function isObjFun(o){
 		if (!o || o instanceof Date) return -1
@@ -61,9 +54,9 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		if (ROOT === key) return obj
 		if (obj) return obj[key]
 	}
-	function getV(obj, key){
-		if (Array.isArray(key)) return dot(obj, key[0], key[1], key[2])
-		return key
+	function getV(obj, attr){
+		if (Array.isArray(attr) && attrfun[attr[0]]) return attrfun[attr[0]].apply(obj, attr.slice(1))
+		return attr
 	}
 	function validateObj(key, spec, val, out, full){
 		if (!(val instanceof Object) || Array.isArray(val)) return key

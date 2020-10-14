@@ -261,21 +261,6 @@ parallel('\npico/obj', function(){
 		cb(null, void 0 === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']]))
 	})
 
-	this.test('ensure dot operator works', function(cb){
-		cb(null,
-			1 === pobj.dot(true, [], null, [['bool']]) &&
-			1 === pobj.dot(42, [], null, [['bool']]) &&
-			1 === pobj.dot('d', [], null, [['bool']]) &&
-			1 === pobj.dot({}, [], null, [['bool']]) &&
-			1 === pobj.dot([], [], null, [['bool']]) &&
-			1 === pobj.dot(false, [], null, [['invert']]) &&
-			1 === pobj.dot(0, [], null, [['invert']]) &&
-			1 === pobj.dot('', [], null, [['invert']]) &&
-			1 === pobj.dot(null, [], null, [['invert']]) &&
-			1 === pobj.dot(undefined, [], null, [['invert']])
-		)
-	})
-
 	this.test('ensure validate work', function(cb){
 		var obj = [{a: {b: [{c: '123', d: '1', e: null, f: '2019-10-16 06:33:00', g: 'T1'}]}}]
 		var okSpec = {
@@ -674,28 +659,28 @@ parallel('\npico/obj', function(){
 			type: 'object',
 			required: 1,
 			spec: {
-				id: {
+				idx: {
 					type: 'number',
-					required: [['ref'], 0, [['invert']]]
+					required: ['invert', ['ref'], 0]
 				},
 				ref: {
 					type: 'string',
-					required: [['id'], 0, [['invert']]]
+					required: ['invert', ['idx'], 0]
 				},
 			}
 		}
 
-		var res = pobj.validate(spec, {id: 1})
+		var res = pobj.validate(spec, {idx: 42})
 		if (res) return cb(null, false, res)
 
-		res = pobj.validate(spec, {ref: 'a'})
+		res = pobj.validate(spec, {ref: 'd'})
 		if (res) return cb(null, false, res)
 
-		res = pobj.validate(spec, {id: 1, ref: 'a'})
+		res = pobj.validate(spec, {idx: 42, ref: 'd'})
 		if (res) return cb(null, false, res)
 
 		res = pobj.validate(spec, {})
-		cb(null, '$.id' === res, res)
+		cb(null, '$.idx' === res, res)
 	})
 
 	this.test('validate dynamic spec with out-of-spec value', function(cb){
@@ -705,7 +690,7 @@ parallel('\npico/obj', function(){
 			spec: {
 				src: {
 					type: 'object',
-					required: [['opt', 0, 'dropoff'], 0],
+					required: ['ref', ['opt', 0, 'dropoff'], 0],
 					spec: {
 						first_name: {
 							type: 'string',
