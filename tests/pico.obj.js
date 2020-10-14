@@ -624,7 +624,14 @@ parallel('\npico/obj', function(){
 		var out = {}
 		var res = pobj.validate(spec, input, out)
 		if (res) return cb(null, false, res)
-		cb(null, (null === out.a && null === out.b && false === out.c && false === out.d && null === out.e && null === out.f))
+		cb(null, (
+			null === out.a &&
+			null === out.b &&
+			false === out.c &&
+			false === out.d &&
+			null === out.e &&
+			null === out.f
+		))
 	})
 
 	this.test('validate support not nullable', function(cb){
@@ -647,38 +654,33 @@ parallel('\npico/obj', function(){
 		return cb(null, '$.e' === res)
 	})
 
-	this.test('validate dynamic spec support', function(cb){
+	this.test('validate dynamic spec support for either case scenario', function(cb){
 		var spec = {
 			type: 'object',
 			required: 1,
 			spec: {
-				dropoff: {
-					type: 'bool',
-					required: 1
+				idx: {
+					type: 'number',
+					required: ['invert', ['ref'], 0]
 				},
-				src: {
-					type: 'object',
-					required: [['dropoff'], 0],
-					spec: {
-						first_name: {
-							type: 'string',
-							required: 1
-						},
-						last_name: 'string',
-					}
-				}
+				ref: {
+					type: 'string',
+					required: ['invert', ['idx'], 0]
+				},
 			}
 		}
 
-		var res = pobj.validate(spec, {dropoff: 0})
+		var res = pobj.validate(spec, {idx: 42})
 		if (res) return cb(null, false, res)
 
-		res = pobj.validate(spec, {dropoff: 1})
-		if ('$.src' !== res) return cb(null, false, res)
+		res = pobj.validate(spec, {ref: 'd'})
+		if (res) return cb(null, false, res)
 
-		var out = {}
-		res = pobj.validate(spec, {dropoff: 1, src: {first_name: 'Darren'}}, out)
-		return cb(null, !res && out.dropoff && out.src.first_name === 'Darren')
+		res = pobj.validate(spec, {idx: 42, ref: 'd'})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {})
+		cb(null, '$.idx' === res, res)
 	})
 
 	this.test('validate dynamic spec with out-of-spec value', function(cb){
@@ -688,7 +690,7 @@ parallel('\npico/obj', function(){
 			spec: {
 				src: {
 					type: 'object',
-					required: [['opt', 0, 'dropoff'], 0],
+					required: ['ref', ['opt', 0, 'dropoff'], 0],
 					spec: {
 						first_name: {
 							type: 'string',
