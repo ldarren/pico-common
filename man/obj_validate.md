@@ -63,6 +63,8 @@ __spec__: nested object schema, _valid for array and string_
 
 __type__: data type, _valid for all_
 
+__***__: object key, _valid for object's spec_
+
 ### attribute referencing
 > syntax attribute: [['path', 'to', 'value'], 'default_value']
 
