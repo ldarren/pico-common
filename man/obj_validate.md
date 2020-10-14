@@ -63,34 +63,35 @@ __spec__: nested object schema, _valid for array and string_
 
 __type__: data type, _valid for all_
 
-__***__: object key, _valid for object's spec_
+__*__: object key, _valid for object's spec_
 
-### attribute referencing
-> syntax attribute: [['path', 'to', 'value'], 'default_value']
+### dynamic attribute
+> dynamc attribute syntax: ['operation_name', 'path_to_value', 'default_value']
 
-attribute can be taken from the input value, this make attribute dynamic to the input value
+__operation_name__: _string_, currently supported `ref` and `invert`
 
-for example, requirement of `email` field is depend on the `meta type`, instead of prepare two spec, the `require` of email can be referencing to meta type instead
+__path_to_value__: _array_, an array of string for the path to referencing value, e.g. [{id: 1}, {id: 2}, {id: 3}], the _path_to_value_ of `id:3` is [2, 'id']
+
+__default_value__: if value not found in the given _path_to_value_, the default value will be used instead
+
+an dynamic attribute example to have either `idx` or `ref` be mandatory
 ```js
 const spec = {
   type: 'object',
   spec: {
-    email: {
-      type: 'string',
-      required: [['meta', 'type'], 0]
+    idx: {
+      type: 'number',
+      required: ['invert', ['ref'], 0] // required = 1 if ref is undefined
     },
-    mobile: {
+    ref: {
       type: 'string',
-      required: 1
+      required: ['invert', ['idx'], 0] // required = 1 if idx is undefined
     }
   }
 }
 
 pObj.validate(spec, {
-  meta: {
-    type: 0
-  },
-  mobile: '12345678'
+  idx: 42
 })
 ```
 
