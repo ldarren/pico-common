@@ -261,6 +261,21 @@ parallel('\npico/obj', function(){
 		cb(null, void 0 === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']]))
 	})
 
+	this.test('ensure dot operator works', function(cb){
+		cb(null,
+			1 === pobj.dot(true, [], null, [['bool']]) &&
+			1 === pobj.dot(42, [], null, [['bool']]) &&
+			1 === pobj.dot('d', [], null, [['bool']]) &&
+			1 === pobj.dot({}, [], null, [['bool']]) &&
+			1 === pobj.dot([], [], null, [['bool']]) &&
+			1 === pobj.dot(false, [], null, [['invert']]) &&
+			1 === pobj.dot(0, [], null, [['invert']]) &&
+			1 === pobj.dot('', [], null, [['invert']]) &&
+			1 === pobj.dot(null, [], null, [['invert']]) &&
+			1 === pobj.dot(undefined, [], null, [['invert']])
+		)
+	})
+
 	this.test('ensure validate work', function(cb){
 		var obj = [{a: {b: [{c: '123', d: '1', e: null, f: '2019-10-16 06:33:00', g: 'T1'}]}}]
 		var okSpec = {
@@ -624,7 +639,14 @@ parallel('\npico/obj', function(){
 		var out = {}
 		var res = pobj.validate(spec, input, out)
 		if (res) return cb(null, false, res)
-		cb(null, (null === out.a && null === out.b && false === out.c && false === out.d && null === out.e && null === out.f))
+		cb(null, (
+			null === out.a &&
+			null === out.b &&
+			false === out.c &&
+			false === out.d &&
+			null === out.e &&
+			null === out.f
+		))
 	})
 
 	this.test('validate support not nullable', function(cb){
@@ -647,38 +669,33 @@ parallel('\npico/obj', function(){
 		return cb(null, '$.e' === res)
 	})
 
-	this.test('validate dynamic spec support', function(cb){
+	this.test('validate dynamic spec support for either case scenario', function(cb){
 		var spec = {
 			type: 'object',
 			required: 1,
 			spec: {
-				dropoff: {
-					type: 'bool',
-					required: 1
+				id: {
+					type: 'number',
+					required: [['ref'], 0, [['invert']]]
 				},
-				src: {
-					type: 'object',
-					required: [['dropoff'], 0],
-					spec: {
-						first_name: {
-							type: 'string',
-							required: 1
-						},
-						last_name: 'string',
-					}
-				}
+				ref: {
+					type: 'string',
+					required: [['id'], 0, [['invert']]]
+				},
 			}
 		}
 
-		var res = pobj.validate(spec, {dropoff: 0})
+		var res = pobj.validate(spec, {id: 1})
 		if (res) return cb(null, false, res)
 
-		res = pobj.validate(spec, {dropoff: 1})
-		if ('$.src' !== res) return cb(null, false, res)
+		res = pobj.validate(spec, {ref: 'a'})
+		if (res) return cb(null, false, res)
 
-		var out = {}
-		res = pobj.validate(spec, {dropoff: 1, src: {first_name: 'Darren'}}, out)
-		return cb(null, !res && out.dropoff && out.src.first_name === 'Darren')
+		res = pobj.validate(spec, {id: 1, ref: 'a'})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {})
+		cb(null, '$.id' === res, res)
 	})
 
 	this.test('validate dynamic spec with out-of-spec value', function(cb){

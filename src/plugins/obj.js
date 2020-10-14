@@ -1,7 +1,11 @@
-define('pico/obj',function(){
+define('pico/obj',function(exports,require,module,define,inherit,pico){
 	var objfun = ['object','function']
-	var specialFunc = ['constructor']
+	var specialFunc = ['nstructor']
 	var ROOT = '$'
+	var dotfun = {
+		bool: function(v){ return v ? 1 : 0 },
+		invert: function(v){ return v ? 0 : 1 },
+	}
 	function find(obj, p){
 		if (!p || !obj) return
 		for (var i = 0, v, pi; (pi = p[i]); i++){
@@ -9,16 +13,23 @@ define('pico/obj',function(){
 			if (void 0 !== v) return v
 		}
 	}
-	function dot(obj, p, value){
+	function transform(v, opts){
+		if (!opts || !opts.length) return v
+		for (var i = 0, opt; (opt = opts[i]); i++){
+			v = dotfun[opt[0]](v, opt.slice(1))
+		}
+		return v
+	}
+	function dot(obj, p, value, opts){
 		if (!p || !Array.isArray(p)) return void 0 === obj ? value : obj
-		if (!obj) return value
+		if (void 0 === obj) return transform(value, opts)
 		var v = obj
 		for (var i = 0, pi; (pi = p[i]); i++){
 			if (Array.isArray(pi)) v = find(v, pi)
 			else v = v[pi]
-			if (void 0 === v) return value
+			if (void 0 === v) return transform(value, opts)
 		}
-		return v
+		return transform(v, opts)
 	}
 	function isObjFun(o){
 		if (!o || o instanceof Date) return -1
@@ -51,7 +62,7 @@ define('pico/obj',function(){
 		if (obj) return obj[key]
 	}
 	function getV(obj, key){
-		if (Array.isArray(key)) return dot(obj, key[0], key[1])
+		if (Array.isArray(key)) return dot(obj, key[0], key[1], key[2])
 		return key
 	}
 	function validateObj(key, spec, val, out, full){
