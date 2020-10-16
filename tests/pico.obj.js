@@ -713,6 +713,31 @@ parallel('\npico/obj', function(){
 		return cb(null, !res && !out.opt && out.src.first_name === 'Darren')
 	})
 
+	this.test('validate dynamic spec with ref op', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				id: {
+					type: 'string',
+					required: 1
+				},
+				ref: {
+					type: 'string',
+					value: ['ref', ['id']]
+				}
+			}
+		}
+
+		var obj = {}
+		var res = pobj.validate(spec, {id: 'a' }, obj)
+		if (res) return cb(null, false, res)
+		if (obj.id !== obj.ref) return cb(null, false, obj)
+
+		res = pobj.validate(spec, {id: 'a', ref: 'b' }, obj)
+		cb(null, !res && 'b' === obj.ref)
+	})
+
 	this.test('validate array error position', function(cb){
 		var spec = {
 			type: 'array',

@@ -3,7 +3,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 	var specialFunc = ['nstructor']
 	var ROOT = '$'
 	var attrfun = {
-		ref: function(p, def){ return dot(this, p, def) ? 1 : 0 },
+		ref: function(p, def){ return dot(this, p, def) },
 		invert: function(p, def){ return dot(this, p, def) ? 0 : 1 },
 	}
 	function find(obj, p){
@@ -94,7 +94,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		if (!t) return k
 		if (void 0 === val) {
 			if (getV(full, s.required)) return k
-			val = s.value
+			val = getV(full, s.value)
 			if (void 0 === val) {
 				set(out, k, val)
 				return
