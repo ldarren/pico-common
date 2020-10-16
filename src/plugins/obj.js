@@ -17,7 +17,8 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		if (!p || !Array.isArray(p)) return void 0 === obj ? def : obj
 		if (void 0 === obj) return def
 		var v = obj
-		for (var i = 0, pi; (pi = p[i]); i++){
+		for (var i = 0, l = p.length, pi; i < l; i++){
+			var pi = p[i]
 			if (Array.isArray(pi)) v = find(v, pi)
 			else v = v[pi]
 			if (void 0 === v) return def

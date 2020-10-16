@@ -239,9 +239,9 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('ensure dot doesnt mutate params', function(cb){
-		var obj = {a: {b: {c: 'ok'}}}
-		var params = ['a', 'b', 'c']
-		cb(null, 'ok' === pobj.dot(obj, params) && 3 === params.length && 'c' === params[2])
+		var obj = {a: [{b: {c: ['o', 'k']}}]}
+		var params = ['a', 0, 'b', 'c', 'length']
+		cb(null, 2 === pobj.dot(obj, params) && 5 === params.length && 'c' === params[3])
 	})
 
 	this.test('ensure dot optional params work', function(cb){
