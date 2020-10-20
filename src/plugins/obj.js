@@ -3,8 +3,12 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 	var specialFunc = ['nstructor']
 	var ROOT = '$'
 	var attrfun = {
-		ref: function(p, def){ return dot(this, p, def) },
-		invert: function(p, def){ return dot(this, p, def) ? 0 : 1 },
+		ref: function(p, def){
+			return dot(this, p, def)
+		},
+		invert: function(p, def){
+			return dot(this, p, def) ? 0 : 1
+		},
 	}
 	function find(obj, p){
 		if (!p || !obj) return
@@ -18,7 +22,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		if (void 0 === obj) return def
 		var v = obj
 		for (var i = 0, l = p.length, pi; i < l; i++){
-			var pi = p[i]
+			pi = p[i]
 			if (Array.isArray(pi)) v = find(v, pi)
 			else v = v[pi]
 			if (void 0 === v) return def
@@ -96,17 +100,23 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		if (void 0 === val) {
 			if (getV(full, s.required)) return k
 			val = getV(full, s.value)
-			if (void 0 === val) {
-				set(out, k, val)
-				return
-			}
+		}
+		var vt = typeof val
+		if (t.includes('bool')) {
+			if ('string' === vt) set(out, k, val && 'false' !== val.toLowerCase())
+			else set(out, k, !!val)
+			return
+		}
+		if (void 0 === val) {
+			set(out, k, val)
+			return
 		}
 		if (Array.isArray(t)){
 			if (!t.includes(val)) return k
 			set(out, k, val)
 			return
 		}
-		if (null === val && !t.includes('bool')) {
+		if (null === val) {
 			if (getV(full, s.notnull)) return k
 			set(out, k, val)
 			return
@@ -115,17 +125,13 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		var ret
 		switch(t){
 		case 'string':
-			if (t !== typeof val || notin(val.length, getV(full, s.lt), getV(full, s.gt)) || !RegExp(getV(full, s.regex)).test(val)) return k
+			if (t !== vt || notin(val.length, getV(full, s.lt), getV(full, s.gt)) || !RegExp(getV(full, s.regex)).test(val)) return k
 			set(out, k, val)
 			break
 		case 'number':
 			val = parseFloat(val)
 			if (!isFinite(val) || notin(val, getV(full, s.lt), getV(full, s.gt))) return k
 			set(out, k, val)
-			break
-		case 'boolean':
-		case 'bool':
-			set(out, k, !!val)
 			break
 		case 'date':
 			val = new Date(val)

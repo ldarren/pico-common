@@ -416,7 +416,6 @@ parallel('\npico/obj', function(){
 		var ret = pobj.validate(koSpec, obj)
 		cb(null, ret === '$.a.d')
 	})
-
 	this.test('ensure validate default value works', function(cb){
 		var obj = [{a: {b: [{d: '1'}]}}]
 		var okSpec = {
@@ -748,5 +747,25 @@ parallel('\npico/obj', function(){
 
 		var res = pobj.validate(spec, ['a', 'b'])
 		return cb(null, res === '$.0')
+	})
+
+	this.test('validate boolean', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				bool1: 'bool',
+				bool2: 'bool',
+				bool3: {
+					type: 'bool',
+					required: 1
+				},
+				bool4: 'bool',
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null}, out)
+		if (res) return cb(null, false)
+		return cb(null, false === out.bool1 && true === out.bool2 && false === out.bool3 && false === out.bool4)
 	})
 })
