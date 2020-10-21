@@ -2,22 +2,29 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 	var objfun = ['object','function']
 	var specialFunc = ['nstructor']
 	var ROOT = '$'
+	var EXT = '_'
 	var attrfun = {
-		ref: function(p, def){
-			return dot(this, p, def)
+		ref: function(p, def, ext){
+			return attrdot(this, p, def, ext)
 		},
-		invert: function(p, def){
-			return dot(this, p, def) ? 0 : 1
+		invert: function(p, def, ext){
+			return attrdot(this, p, def, ext) ? 0 : 1
 		},
 		map: function(fromP, fromDef, mapP, toP, toDef, ext){
-			if (!ext) return
-			var map = ext[mapP]
+			var map = attrdot(this, mapP, void 0, ext)
 			if (!map) return
-			var to = dot(this, fromP, fromDef)
+			var to = attrdot(this, fromP, fromDef, ext)
 			var val = map[to]
-			if (toP) return dot(val, toP, toDef)
+			if (toP) return attrdot(val, toP, toDef)
 			return val
 		},
+	}
+	function attrdot(obj, p, def, ext){
+		switch(p[0]){
+		case ROOT: return dot(obj, p.slice(1), def)
+		case EXT: return dot(ext, p.slice(1), def)
+		default: return dot(obj, p, def)
+		}
 	}
 	function find(obj, p){
 		if (!p || !obj) return

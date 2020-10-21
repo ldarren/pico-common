@@ -782,11 +782,9 @@ parallel('\npico/obj', function(){
 				first_name: {
 					type: 'string',
 					value: ['map',
-						['id'],
-						0,
-						'user',
-						['first_name'],
-						'error'
+						['$', 'id'], 0,
+						['_', 'user'],
+						['$', 'first_name'], 'error'
 					]
 				}
 			}
