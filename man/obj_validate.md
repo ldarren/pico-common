@@ -1,12 +1,14 @@
 ## syntax
-> pObj.validate(spec, target, [output])
+> pObj.validate(spec, input, [output], [external])
 
 ### parameters
 __spec__: a js object that defined the target object schema
 
-__target__: a value to be validated, it can be any js value such as object, array, string or number
+__input__: a value to be validated, it can be any js value such as object, array, string or number
 
 __output [optional]__: an optional js object to store transformed data of the target object. if not provided, only object validation will be performed.
+
+__external [optional]__: an optional js object, any data needed to transform the input to output should be placed here. external data is accessable by [dynamic attributes](#dynamic attribute)
 
 ### returns
 it returns a string when encountered an error. the string is a [jsonpath](https://www.baeldung.com/guide-to-jayway-jsonpath) to indicator the location of
@@ -30,7 +32,7 @@ pObj.validate(spec, 10) // returns '$'
 ### supported types
 - number
 - string
-- bool
+- bool, _false for undefined, null, "", "false", false, 0_
 - array
 - object
 - null, _null is a wildcard, it accepts any type_
@@ -45,30 +47,30 @@ pObj.validate(spec, 'US') // returns '$'
 ```
 
 ### validation attributes
+__type__: data type, _valid for all_
+
+__required__: mandatory, error if `undefined` is given, but no error if `null` is given, _valid for all_. 
+
+__value__: default value, `value` will be used if `undefined` is given and `required` is false, _valid for all_. 
+
+__notnull__: not null, error if `null` or `undefined` is given and `value` is undefined, _valid for all_. 
+
+__spec__: nested object schema, _valid for array and string_
+
 __gt__: greater than, _valid for `string`, `number`, `date` and `array`_
 
 __lt__: lesser than, _valid for `string`, `number`, `date` and `array`_
 
-__required__: mandatory, error if `undefined` is given, but no error if `null` is given, _valid for all_. 
-
-__notnull__: not null, error if `null` is given, but no error if `undefined` is given, _valid for all_. 
-
-__value__: default value, `value` will be used if `undefined` is given, _valid for all_. 
-
 __sep__: separator, separator to split string value to array, _valid for array_. 
 
 __regex__: regular expression, _valid for string_
-
-__spec__: nested object schema, _valid for array and string_
-
-__type__: data type, _valid for all_
 
 __*__: object key, _valid for object's spec_
 
 ### dynamic attribute
 > dynamc attribute syntax: ['operation_name', 'path_to_value', 'default_value']
 
-__operation_name__: _string_, currently supported `ref` and `invert`
+__operation_name__: _string_, currently supported `ref`, `invert` or `map`
 
 __path_to_value__: _array_, an array of string for the path to referencing value, e.g. [{id: 1}, {id: 2}, {id: 3}], the _path_to_value_ of `id:3` is [2, 'id']
 
