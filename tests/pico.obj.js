@@ -2,6 +2,8 @@ const pico = require('../bin/pico-cli')
 const pobj = pico.export('pico/obj')
 const { parallel } = pico.export('pico/test')
 
+const first_name = 'Darren'
+
 parallel('\npico/obj', function(){
 	this.test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
 		pico.define('ancestor0',function(exports,require,module,define,inherit,pico){
@@ -653,90 +655,6 @@ parallel('\npico/obj', function(){
 		return cb(null, '$.e' === res)
 	})
 
-	this.test('validate dynamic spec support for either case scenario', function(cb){
-		var spec = {
-			type: 'object',
-			required: 1,
-			spec: {
-				idx: {
-					type: 'number',
-					required: ['invert', ['ref'], 0]
-				},
-				ref: {
-					type: 'string',
-					required: ['invert', ['idx'], 0]
-				},
-			}
-		}
-
-		var res = pobj.validate(spec, {idx: 42})
-		if (res) return cb(null, false, res)
-
-		res = pobj.validate(spec, {ref: 'd'})
-		if (res) return cb(null, false, res)
-
-		res = pobj.validate(spec, {idx: 42, ref: 'd'})
-		if (res) return cb(null, false, res)
-
-		res = pobj.validate(spec, {})
-		cb(null, '$.idx' === res, res)
-	})
-
-	this.test('validate dynamic spec with out-of-spec value', function(cb){
-		var spec = {
-			type: 'object',
-			required: 1,
-			spec: {
-				src: {
-					type: 'object',
-					required: ['ref', ['opt', 0, 'dropoff'], 0],
-					spec: {
-						first_name: {
-							type: 'string',
-							required: 1
-						},
-						last_name: 'string',
-					}
-				}
-			}
-		}
-
-		var res = pobj.validate(spec, {})
-		if (res) return cb(null, false, res)
-
-		res = pobj.validate(spec, {opt: [{dropoff:1}]})
-		if ('$.src' !== res) return cb(null, false, res)
-
-		var out = {}
-		res = pobj.validate(spec, {opt: [{dropoff:1}], src: {first_name: 'Darren'}}, out)
-		return cb(null, !res && !out.opt && out.src.first_name === 'Darren')
-	})
-
-	this.test('validate dynamic spec with ref op', function(cb){
-		var spec = {
-			type: 'object',
-			required: 1,
-			spec: {
-				id: {
-					type: 'string',
-					required: 1
-				},
-				ref: {
-					type: 'string',
-					value: ['ref', ['id']]
-				}
-			}
-		}
-
-		var obj = {}
-		var res = pobj.validate(spec, {id: 'a' }, obj)
-		if (res) return cb(null, false, res)
-		if (obj.id !== obj.ref) return cb(null, false, obj)
-
-		res = pobj.validate(spec, {id: 'a', ref: 'b' }, obj)
-		cb(null, !res && 'b' === obj.ref)
-	})
-
 	this.test('validate array error position', function(cb){
 		var spec = {
 			type: 'array',
@@ -767,5 +685,120 @@ parallel('\npico/obj', function(){
 		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null}, out)
 		if (res) return cb(null, false)
 		return cb(null, false === out.bool1 && true === out.bool2 && false === out.bool3 && false === out.bool4)
+	})
+
+	this.test('validate dynamic spec with out-of-spec value', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				src: {
+					type: 'object',
+					required: ['ref', ['opt', 0, 'dropoff'], 0],
+					spec: {
+						first_name: {
+							type: 'string',
+							required: 1
+						},
+						last_name: 'string',
+					}
+				}
+			}
+		}
+
+		var res = pobj.validate(spec, {})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {opt: [{dropoff:1}]})
+		if ('$.src' !== res) return cb(null, false, res)
+
+		var out = {}
+		res = pobj.validate(spec, {opt: [{dropoff:1}], src: {first_name}}, out)
+		return cb(null, !res && !out.opt && out.src.first_name === first_name)
+	})
+
+	this.test('validate dynamic spec with ref op', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				id: {
+					type: 'string',
+					required: 1
+				},
+				ref: {
+					type: 'string',
+					value: ['ref', ['id']]
+				}
+			}
+		}
+
+		var obj = {}
+		var res = pobj.validate(spec, {id: 'a' }, obj)
+		if (res) return cb(null, false, res)
+		if (obj.id !== obj.ref) return cb(null, false, obj)
+
+		res = pobj.validate(spec, {id: 'a', ref: 'b' }, obj)
+		cb(null, !res && 'b' === obj.ref)
+	})
+
+	this.test('validate dynamic spec with invert op', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				idx: {
+					type: 'number',
+					required: ['invert', ['ref'], 0]
+				},
+				ref: {
+					type: 'string',
+					required: ['invert', ['idx'], 0]
+				},
+			}
+		}
+
+		var res = pobj.validate(spec, {idx: 42})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {ref: 'd'})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {idx: 42, ref: 'd'})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {})
+		cb(null, '$.idx' === res, res)
+	})
+
+	this.test('validate dynamic spec with map op', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				id: {
+					type: 'number',
+				},
+				first_name: {
+					type: 'string',
+					value: ['map', ['id'], 0, {0: {first_name: 'NA'}, 1: {first_name}}, ['first_name'], 'error']
+				}
+			}
+		}
+
+		var obj = {}
+		var res = pobj.validate(spec, {}, obj)
+		if (res) return cb(null, false, res)
+		if (obj.first_name !== 'NA') return cb(null, false, obj)
+
+		obj = {}
+		res = pobj.validate(spec, {id: 1}, obj)
+		if (res) return cb(null, false, res)
+		if (obj.first_name !== first_name) return cb(null, false, obj)
+
+		obj = {}
+		res = pobj.validate(spec, {id: 2}, obj)
+		if (res) return cb(null, false, res)
+		return cb(null, obj.first_name === 'error', obj)
 	})
 })

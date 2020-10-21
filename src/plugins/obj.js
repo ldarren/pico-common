@@ -9,6 +9,12 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		invert: function(p, def){
 			return dot(this, p, def) ? 0 : 1
 		},
+		map: function(fromP, fromDef, map, toP, toDef){
+			var to = dot(this, fromP, fromDef)
+			var val = map[to]
+			if (toP) return dot(val, toP, toDef)
+			return val
+		},
 	}
 	function find(obj, p){
 		if (!p || !obj) return
