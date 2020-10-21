@@ -781,23 +781,30 @@ parallel('\npico/obj', function(){
 				},
 				first_name: {
 					type: 'string',
-					value: ['map', ['id'], 0, {0: {first_name: 'NA'}, 1: {first_name}}, ['first_name'], 'error']
+					value: ['map',
+						['id'],
+						0,
+						'user',
+						['first_name'],
+						'error'
+					]
 				}
 			}
 		}
+		var ext = {user: {0: {first_name: 'NA'}, 1: {first_name}}}
 
 		var obj = {}
-		var res = pobj.validate(spec, {}, obj)
+		var res = pobj.validate(spec, {}, obj, ext)
 		if (res) return cb(null, false, res)
 		if (obj.first_name !== 'NA') return cb(null, false, obj)
 
 		obj = {}
-		res = pobj.validate(spec, {id: 1}, obj)
+		res = pobj.validate(spec, {id: 1}, obj, ext)
 		if (res) return cb(null, false, res)
 		if (obj.first_name !== first_name) return cb(null, false, obj)
 
 		obj = {}
-		res = pobj.validate(spec, {id: 2}, obj)
+		res = pobj.validate(spec, {id: 2}, obj, ext)
 		if (res) return cb(null, false, res)
 		return cb(null, obj.first_name === 'error', obj)
 	})
