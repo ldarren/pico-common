@@ -1,5 +1,5 @@
 # cron expression parser
-A pure js cron expression parser for the browsers and nodejs. This parser convert cron expression to an object that can be easily digest by other pico/time functions such as [nearest function](#get next trigger time)
+A pure js cron expression parser for the browsers and nodejs. This parser convert cron expression to an object that can be easily digest by other pico/time functions such as [nearest function](#get_next_trigger_time)
 
 ## syntax
 > pTime.parse(cron_expr)
@@ -11,7 +11,8 @@ __cron_expr__: _string_, [crontab job expression](https://en.wikipedia.org/wiki/
 tokenised cron expression for `pTime.nearest` method
 
 # get next trigger time
-this function analyse the output of [parser function] and determine the next trigger time in milliseconds
+this function analyse the output of [parser function](#cron_expression_parser) and determine the next trigger time in milliseconds
+
 ## syntax
 > pTime.nearest(mins, hrs, doms, mons, dows, yrs, [now])
 
