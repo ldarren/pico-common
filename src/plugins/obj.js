@@ -4,22 +4,23 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 	var ROOT = '$'
 	var EXT = '_'
 	var attrfun = {
-		ref: function(p, def, ext){
-			return attrdot(this, p, def, ext)
+		ref: function(ext, p, def){
+			return attrdot(this, ext, p, def)
 		},
-		invert: function(p, def, ext){
-			return attrdot(this, p, def, ext) ? 0 : 1
+		invert: function(ext, p, def){
+			return attrdot(this, ext, p, def) ? 0 : 1
 		},
-		map: function(fromP, fromDef, mapP, toP, toDef, ext){
-			var map = attrdot(this, mapP, void 0, ext)
+		map: function(ext, fromP, fromDef, mapP, toP, toDef){
+			var map = attrdot(this, ext, mapP)
 			if (!map) return
-			var to = attrdot(this, fromP, fromDef, ext)
+			var to = attrdot(this, ext, fromP, fromDef)
 			var val = map[to]
-			if (toP) return attrdot(val, toP, toDef)
+			if (toP) return attrdot(val, null, toP, toDef)
 			return val
 		},
 	}
-	function attrdot(obj, p, def, ext){
+	function attrdot(obj, ext, p, def){
+		if (!p) return dot(obj, p, def)
 		switch(p[0]){
 		case ROOT: return dot(obj, p.slice(1), def)
 		case EXT: return dot(ext, p.slice(1), def)
@@ -76,7 +77,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		if (obj) return obj[key]
 	}
 	function getV(obj, attr, ext){
-		if (Array.isArray(attr) && attrfun[attr[0]]) return attrfun[attr[0]].call(obj, ...attr.slice(1), ext)
+		if (Array.isArray(attr) && attrfun[attr[0]]) return attrfun[attr[0]].call(obj, ext, ...attr.slice(1))
 		return attr
 	}
 	function validateObj(key, spec, val, out, full, ext){
@@ -123,17 +124,13 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 			else set(out, k, !!val)
 			return
 		}
-		if (void 0 === val) {
+		if (null == val) {
+			if (getV(full, s.notnull, ext)) return k
 			set(out, k, val)
 			return
 		}
 		if (Array.isArray(t)){
 			if (!t.includes(val)) return k
-			set(out, k, val)
-			return
-		}
-		if (null === val) {
-			if (getV(full, s.notnull, ext)) return k
 			set(out, k, val)
 			return
 		}

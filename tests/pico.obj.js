@@ -772,7 +772,8 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('validate dynamic spec with map op', function(cb){
-		var spec = {
+		// test default value
+		var spec1 = {
 			type: 'object',
 			required: 1,
 			spec: {
@@ -789,21 +790,50 @@ parallel('\npico/obj', function(){
 				}
 			}
 		}
-		var ext = {user: {0: {first_name: 'NA'}, 1: {first_name}}}
+		// test notnull as required
+		var spec2 = {
+			type: 'object',
+			required: 1,
+			spec: {
+				id: {
+					type: 'number',
+				},
+				first_name: {
+					type: 'string',
+					notnull: 1,
+					value: ['map',
+						['$', 'id'], 0,
+						['_', 'user'],
+					]
+				}
+			}
+		}
+		var ext1 = {user: {0: {first_name: 'NA'}, 1: {first_name}}}
+		var ext2 = {user: {0: 'NA', 1: first_name}}
 
 		var obj = {}
-		var res = pobj.validate(spec, {}, obj, ext)
-		if (res) return cb(null, false, res)
-		if (obj.first_name !== 'NA') return cb(null, false, obj)
+		var res = pobj.validate(spec1, {}, obj, ext1)
+		if (res || obj.first_name !== 'NA') return cb(null, false, res)
 
 		obj = {}
-		res = pobj.validate(spec, {id: 1}, obj, ext)
+		res = pobj.validate(spec1, {id: 1}, obj, ext1)
 		if (res) return cb(null, false, res)
 		if (obj.first_name !== first_name) return cb(null, false, obj)
 
 		obj = {}
-		res = pobj.validate(spec, {id: 2}, obj, ext)
-		if (res) return cb(null, false, res)
-		return cb(null, obj.first_name === 'error', obj)
+		res = pobj.validate(spec1, {id: 2}, obj, ext1)
+		if (res && obj.first_name !== 'error') return cb(null, false, res)
+
+		obj = {}
+		res = pobj.validate(spec2, {}, obj, ext2)
+		if (res || obj.first_name !== 'NA') return cb(null, false, res)
+
+		obj = {}
+		res = pobj.validate(spec2, {id: 1}, obj, ext2)
+		if (res || obj.first_name !== first_name) return cb(null, false, res)
+
+		obj = {}
+		res = pobj.validate(spec2, {id: 2}, obj, ext2)
+		return cb(null, '$.first_name' === res, res)
 	})
 })
