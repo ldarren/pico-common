@@ -113,10 +113,15 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 	}
 	function validate(k, s, val, out, full, ext){
 		var t = getV(full, s.type, ext) || s
-		if (!t) return k
+		if (!t || !t.includes) return k
 		if (void 0 === val) {
 			if (getV(full, s.required, ext)) return k
 			val = getV(full, s.value, ext)
+		}
+		if (Array.isArray(t)){
+			if (!t.includes(val)) return k
+			set(out, k, val)
+			return
 		}
 		var vt = typeof val
 		if (t.includes('bool')) {
@@ -126,11 +131,6 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		}
 		if (null == val) {
 			if (getV(full, s.notnull, ext)) return k
-			set(out, k, val)
-			return
-		}
-		if (Array.isArray(t)){
-			if (!t.includes(val)) return k
 			set(out, k, val)
 			return
 		}
