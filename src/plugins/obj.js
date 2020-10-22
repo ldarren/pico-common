@@ -15,7 +15,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 			if (!map) return
 			var to = attrdot(this, ext, fromP, fromDef)
 			var val = map[to]
-			if (toP) return attrdot(val, null, toP, toDef)
+			if (toP) return attrdot(val, val, toP, toDef)
 			return val
 		},
 	}
