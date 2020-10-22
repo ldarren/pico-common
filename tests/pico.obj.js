@@ -762,18 +762,18 @@ parallel('\npico/obj', function(){
 		cb(null, !res && 'b' === obj.ref)
 	})
 
-	this.test('validate dynamic spec with invert op', function(cb){
+	this.test('validate dynamic spec with inv op', function(cb){
 		var spec = {
 			type: 'object',
 			required: 1,
 			spec: {
 				idx: {
 					type: 'number',
-					required: ['invert', ['ref'], 0]
+					required: ['inv', ['ref'], 0]
 				},
 				ref: {
 					type: 'string',
-					required: ['invert', ['idx'], 0]
+					required: ['inv', ['idx'], 0]
 				},
 			}
 		}
@@ -789,6 +789,33 @@ parallel('\npico/obj', function(){
 
 		res = pobj.validate(spec, {})
 		cb(null, '$.idx' === res, res)
+	})
+
+	this.test('validate dynamic spec with eq op', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				choice: {
+					type: 'number',
+					required: 1
+				},
+				discount: {
+					type: 'bool',
+					value: ['eq', ['choice'], 0, null, [1,2,3]]
+				},
+				free_delivery: {
+					type: 'bool',
+					value: ['eq', ['choice'], 0, null, 1, 1]
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {choice: 2}, out)
+		if (res || !out.discount || !out.free_delivery) return cb(null, false, res)
+
+		res = pobj.validate(spec, {choice: 1})
+		cb(null, res || !out.discount || out.free_delivery, out)
 	})
 
 	this.test('validate dynamic spec with map op', function(cb){

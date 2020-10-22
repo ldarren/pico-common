@@ -7,8 +7,15 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		ref: function(ext, p, def){
 			return attrdot(this, ext, p, def)
 		},
-		invert: function(ext, p, def){
+		inv: function(ext, p, def){
 			return attrdot(this, ext, p, def) ? 0 : 1
+		},
+		eq: function(ext, aP, aDef, bP, bDef, inv){
+			var a = attrdot(this, ext, aP, aDef)
+			var b = attrdot(this, ext, bP, bDef)
+			var i = inv ? 1 : 0
+			if (Array.isArray(b)) return (b.includes(a) ? 1 : 0) ^ i
+			return (a === b ? 1 : 0) ^ i
 		},
 		map: function(ext, fromP, fromDef, mapP, toP, toDef){
 			var map = attrdot(this, ext, mapP)
@@ -35,7 +42,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		}
 	}
 	function dot(obj, p, def){
-		if (!p || !Array.isArray(p)) return void 0 === obj ? def : obj
+		if (!p || !Array.isArray(p)) return def
 		if (void 0 === obj) return def
 		var v = obj
 		for (var i = 0, l = p.length, pi; i < l; i++){
