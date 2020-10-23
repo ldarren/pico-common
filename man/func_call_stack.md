@@ -19,3 +19,25 @@ pFunc.reflect return reflection of a given function, it returns
 __function__: _function_, function to be analyzed
 
 __limit__, _optional limit_, call stack limit
+
+## import
+
+with es6 module
+
+```js
+import pCommon from 'pico-common'
+
+const pFunc = pCommon.export('pico/func')
+```
+
+with nodejs commonjs
+
+```js
+const pFunc = require('pico-common').export('pico/func')
+```
+
+with pico-common amd
+
+```js
+const pFunc = require('pico/func')
+```
