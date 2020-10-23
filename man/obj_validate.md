@@ -97,11 +97,11 @@ const spec = {
   spec: {
     idx: {
       type: 'number',
-      required: ['invert', ['ref'], 0] // required = 1 if ref is undefined
+      required: ['inv', ['ref'], 0] // required = 1 if ref is undefined
     },
     ref: {
       type: 'string',
-      required: ['invert', ['idx'], 0] // required = 1 if idx is undefined
+      required: ['inv', ['idx'], 0] // required = 1 if idx is undefined
     }
   }
 }
