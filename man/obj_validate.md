@@ -68,13 +68,27 @@ __regex__: regular expression, _valid for string_
 __*__: object key, _valid for object's spec_
 
 ### dynamic attribute
-> dynamc attribute syntax: ['operation_name', 'path_to_value', 'default_value']
+all attributes supported dynamic values by using operators. there are four operators supported
 
-__operation_name__: _string_, currently supported `ref`, `invert` or `map`
+#### ref operator
+> syntax: ['operator_name', 'path_to_value', 'default_value']
+
+__operator_name__: _string_, `ref` for reference
 
 __path_to_value__: _array_, an array of string for the path to referencing value, e.g. [{id: 1}, {id: 2}, {id: 3}], the _path_to_value_ of `id:3` is [2, 'id']
 
 __default_value__: if value not found in the given _path_to_value_, the default value will be used instead
+
+
+#### inv operator
+> syntax: ['operator_name', 'path', 'default']
+
+__operator_name__: _string_, `inv` for inverting a value
+
+__path__: _array_, an array of string for the path to referencing value, e.g. [{id: 1}, {id: 2}, {id: 3}], the _path_to_value_ of `id:3` is [2, 'id']
+
+__default__: if value not found in the given _path_to_value_, the default value will be used instead
+
 
 an dynamic attribute example to have either `idx` or `ref` be mandatory
 ```js
@@ -96,6 +110,37 @@ pObj.validate(spec, {
   idx: 42
 })
 ```
+
+#### eq operator
+> syntax: ['operator_name', 'A path', 'A default', 'B path', 'B default', 'invertor']
+
+__operator_name__: _string_, `eq` for comparing value `A` and `B`
+
+__A_path__: _array_, path to value A
+
+__A_default__: default value A if path not found
+
+__B_path__: _array_, path to value B
+
+__B_default__: default value B if path not found
+
+__invertor__: _bool_, if invertor === true, eq operator return true if A === B, if false, eq operator return true if A !== B
+
+#### map operator
+> syntax: ['operator_name', 'A path', 'A default', 'map path', 'B path', 'B default']
+
+__operator_name__: _string_, `map` for mapping value A to B
+
+__A_path__: _array_, path to value A
+
+__A_default__: default value A if path not found
+
+__map_path__: path to find mapping object, mapping object can in input or extension object
+
+__B_path__: _array_, path to value B
+
+__B_default__: default value B if path not found
+
 
 ### validate nested object
 unlimited nested object can be validated with the help of `spec` attributes
