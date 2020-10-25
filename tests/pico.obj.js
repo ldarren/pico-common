@@ -883,4 +883,64 @@ parallel('\npico/obj', function(){
 		res = pobj.validate(spec2, {id: 2}, obj, ext2)
 		return cb(null, '$.first_name' === res, res)
 	})
+
+	this.test('ensure force attribue works on array and string', function(cb){
+		// test default value
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				arr: {
+					type: 'array',
+					force: 1
+				},
+				str: {
+					type: 'string',
+					force: 1
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {arr:1, str:1}, out)
+		if (res || out.arr[0] !== 1 || out.str !== '1') return cb(null, false, res)
+
+		out = {}
+		res = pobj.validate(spec, {arr:{a:1}, str:{a:1}}, out)
+		cb(null, !res && out.arr[0].a === 1 && out.str !== '{a:1}')
+	})
+
+	this.test('ensure int attribue works on number', function(cb){
+		// test default value
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				round: {
+					type: 'number',
+					int: true
+				},
+				down: {
+					type: 'number',
+					int: 'd'
+				},
+				floor: {
+					type: 'number',
+					int: 'f'
+				},
+				up: {
+					type: 'number',
+					int: 'u'
+				},
+				ceil: {
+					type: 'number',
+					int: 'c'
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {round: 3.6, down: 3.6, floor: 3.6, up: 3.6, ceil: 3.6}, out)
+		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4)
+	})
 })

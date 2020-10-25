@@ -1,4 +1,7 @@
 define('pico/obj',function(exports,require,module,define,inherit,pico){
+	var Round = Math.round
+	var Ceil = Math.ceil
+	var Floor = Math.floor
 	var objfun = ['object','function']
 	var specialFunc = ['nstructor']
 	var ROOT = '$'
@@ -104,7 +107,10 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 	}
 	function validateArr(key, spec, val, out, full, ext){
 		if (spec.sep && val && val.split) val = val.split(getV(full, spec.sep, ext))
-		if (!Array.isArray(val)) return key
+		if (!Array.isArray(val)) {
+			if (!spec.force) return key
+			val = [val]
+		}
 		if (notin(val.length, getV(full, spec.lt, ext), getV(full, spec.gt, ext))) return key
 		var s = spec.spec
 		if (s) {
@@ -145,12 +151,24 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		var ret
 		switch(t){
 		case 'string':
-			if (t !== vt || notin(val.length, getV(full, s.lt, ext), getV(full, s.gt, ext)) || !RegExp(getV(full, s.regex, ext)).test(val)) return k
+			if (t !== vt){
+				if (!s.force) return k
+				val = JSON.stringify(val)
+			}
+			if (notin(val.length, getV(full, s.lt, ext), getV(full, s.gt, ext)) || !RegExp(getV(full, s.regex, ext)).test(val)) return k
 			set(out, k, val)
 			break
 		case 'number':
 			val = parseFloat(val)
-			if (!isFinite(val) || notin(val, getV(full, s.lt, ext), getV(full, s.gt, ext))) return k
+			if (!isFinite(val)) return k
+			switch(s.int){
+			case 'd':
+			case 'f': val = Floor(val); break
+			case 'u':
+			case 'c': val = Ceil(val); break
+			default: val = Round(val); break
+			}
+			if (notin(val, getV(full, s.lt, ext), getV(full, s.gt, ext))) return k
 			set(out, k, val)
 			break
 		case 'date':
