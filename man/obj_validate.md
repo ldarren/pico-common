@@ -49,13 +49,17 @@ pObj.validate(spec, 'US') // returns '$'
 ### validation attributes
 __type__: data type, _valid for all_
 
-__required__: mandatory, error if `undefined` is given, but no error if `null` is given, _valid for all_. 
+__required__: mandatory, `required` test is runs before `value`, `notnull`, it returns error if `undefined` is given, but no error if `null` is given, _valid for all_. 
 
 __value__: default value, `value` will be used if `undefined` is given and `required` is false, _valid for all_. 
 
-__notnull__: not null, error if `null` or `undefined` is given and `value` is undefined, _valid for all_. 
+__notnull__: not nullable, it runs after `required` and `value`, it returns error if `null` or `undefined` is given and `value` is not defined, _valid for all_. 
 
-__spec__: nested object schema, _valid for array and string_
+__spec__: nested object schema, _valid for array and object_
+
+__force__: force type, given value type if force to the defined type if a non-conform value is given, _valid for array and string_
+
+__int__: integer, round the given number, 'f' or 'd' for round down, 'c' or 'u' for round up, _valid for number_
 
 __gt__: greater than, _valid for `string`, `number`, `date` and `array`_
 
