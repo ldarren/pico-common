@@ -50,6 +50,7 @@ parallel('\npico/str', function(){
 		`)
 		cb(null, '<p>2</p>' === tmpl({type: 'minus', x: 4, y: 2}))
 	})
+
 	this.test('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
 		var
 			route='url/v%version/pushPackage/:pushId',
@@ -101,6 +102,16 @@ parallel('\npico/str', function(){
 			api=pstr.execRest('/msair',build,params)
 		cb(null, api===route && 'msair'===params.appName)
 	})
+	this.test('ensure execRest recognise tailing static path',function(cb){
+		var build = []
+		var params = {}
+		var matchedRoute = '/events/:id/comments'
+		pstr.compileRest('/events/:id', build)
+		pstr.compileRest(matchedRoute, build)
+		// no exception here
+		var url=pstr.execRest('/events/123abc/comments', build, params)
+		cb(null, matchedRoute === url && '123abc' === params.id)
+	})
 	this.test('ensure restful builder for relative url works',function(cb){
 		var route=':DOMAIN/s3/read/:Key'
 		var build=pstr.compileRest(route)
@@ -133,6 +144,7 @@ parallel('\npico/str', function(){
 		var url=pstr.buildRest(route, build)
 		cb(null, !url)
 	})
+
 	this.test('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
 		var
 			data = JSON.stringify({data:123}),
