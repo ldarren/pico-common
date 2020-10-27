@@ -1,61 +1,97 @@
 define('pico/tree', function(){
+	var Min = Math.min
 	var SEP = '/'
-	var TOKEN = ':'
-	var CAPTURE = '#'
+	var PARAM = ':'
+	var CAPTURE = '*'
 
-	function name(item){
-		if (Array.isArray(item)) return item.join('')
-		return item || ''
+	function tokenizer(route, tokens){
+		tokens = tokens || []
+		var last = 0
+		if (tokens.length){
+			last = tokens[tokens.length - 1][0]	+ 1
+		}
+		var p0 = route.indexOf(PARAM, last)
+		if (-1 === p0) {
+			p0 = route.indexOf(CAPTURE, last)
+			if (-1 === p0) return route
+		}
+		var p1 = route.indexOf(SEP, p0)
+		if (-1 === p1) p1 = route.length
+		tokens.push([p0, route.slice(p0 + 1, p1)])
+
+		return tokenizer(route.slice(0, p0 + 1) + route.slice(p1), tokens)
 	}
 
-	function add(route, items, tree){
-		var init = name(items[0])
-		if (!tree[init]) return tree[init] = [items, route]
+	function getCD(route){
+		var end = route.indexOf(SEP)
+		if (-1 === end) end = route.length
+		else end += 1
 
-		var value = tree[init]
-		var indices = value[0]
-		var l1 = items.length
-		var l2 = indices.length
+		return route.slice(0, end)
+	}
 
-		for (var i = 1, item; i < l1; i++){
-			item = items[i]
-
-			if (i >= l2){
-				value[1] = {
-					'': [[], value[1]],
-					[name(item)]: [[items.slice(i)], route]
-				}
-				break
+	function compare(a, b){
+		var min = Min(a.length, b.length)
+		for (var i = 0, l = min; i < l; i++){
+			if (a.codePointAt(i) !== b.codePointAt(i)) {
+				var lastSep = a.lastIndexOf(SEP, i) 
+				if (-1 === lastSep) return i
+				return lastSep
 			}
-
-			if (name(item) === name(indices[i])) continue
-
-			value[0] = indices.slice(0, i)
-			value[1] = {
-				[name(indices[i])]: [indices.slice(i), value[1]],
-				[name(item)]: [[items.slice(i)], route]
-			}
-			break
 		}
 
-		value[1] = {
-			[name(indices[l1])]: [indices.slice(l1), value[1]],
-			'': [[], route]
+		if (min !== a.length || min !== b.length) return min
+		return
+	}
+
+	function tokenLeft(lastPos, tokens){
+		var left = []
+		for (var i = 0, t; (t = tokens[i]); i++){
+			if (lastPos < t[0]) left.push(t)
+		}
+		return left
+	}
+
+	function makeBranch(full){
+		if (!full.codePointAt) return
+		return {
+			'': ['', [], full]
+		}
+	}
+
+	function insertTree(tree, route, tokens, full){
+		var cd = getCD(route)
+
+		var node = tree[cd]
+		if (node){
+			var nodeSection = node[0]
+			var nodeTokens = node[1]
+			var nodeFull = node[2]
+			var lastPos = compare(route, nodeSection)
+			if (null == lastPos) {
+				if (full === nodeFull) return
+				insertTree(makeBranch(nodeFull), '', [], full)
+			} else {
+				var branch = {}
+				insertTree(branch, nodeSection.slice(lastPos), tokenLeft(lastPos, nodeTokens), nodeFull)
+				insertTree(branch, route.slice(lastPos), tokenLeft(lastPos, tokens), full)
+				node[2] = branch
+			}
+		}else{
+			tree[cd] = [route, tokens, full]
 		}
 	}
 
 	return {
+		tokenizer,
+		getCD,
+		compare,
 		add: function callee(route, tree){
-			if (!route || !route.split) return
-			var items = route.split(SEP)
-			for (var i = 0, l = items.length, item, idx; i < l; i++){
-				item = items[i]
-				idx = item.indexOf(TOKEN)
-				if (-1 === idx) idx = item.indexOf(CAPTURE)
-				if (idx > 0) items[i] = [item.substr(0, idx - 1), item.substr(idx)]
-			}
+			if (!route || !route.slice) return
+			var tokens = []
+			var normalized = tokenizer(route, tokens)
 
-			add(route, items, tree)
+			insertTree(tree, normalized, tokens, normalized)
 		},
 		match: function(path, tree, params){
 		},
