@@ -75,7 +75,7 @@ __*__: object key, _valid for object's spec_
 all attributes supported dynamic values by using operators. there are four operators supported
 
 #### ref operator
-> syntax: ['operator_name', 'path_to_value', 'default_value']
+> syntax: ['operator_name', 'path_to_value', ['default_value']]
 
 __operator_name__: _string_, `ref` for reference
 
@@ -84,15 +84,17 @@ __path_to_value__: _array_, an array of string for the path to referencing value
 __default_value__: if value not found in the given _path_to_value_, the default value will be used instead
 
 
-#### inv operator
-> syntax: ['operator_name', 'path', 'default']
+#### bool operator
+convert value to boolean value: 1 or 0
+> syntax: ['operator_name', 'path', ['default'], [invertor]]
 
-__operator_name__: _string_, `inv` for inverting a value
+__operator_name__: _string_, `bool` for inverting a value
 
 __path__: _array_, an array of string for the path to referencing value, e.g. [{id: 1}, {id: 2}, {id: 3}], the _path_to_value_ of `id:3` is [2, 'id']
 
 __default__: if value not found in the given _path_to_value_, the default value will be used instead
 
+__invertor__: _bool_, if invertor === false, bool operator return true if path's value is true, if true, bool operator return true if path's value is empty or does not exisit
 
 an dynamic attribute example to have either `idx` or `ref` be mandatory
 ```js
@@ -116,7 +118,7 @@ pObj.validate(spec, {
 ```
 
 #### eq operator
-> syntax: ['operator_name', 'A path', 'A default', 'B path', 'B default', 'invertor']
+> syntax: ['operator_name', 'A path', 'A default', 'B path', ['B default'], ['invertor']]
 
 __operator_name__: _string_, `eq` for comparing value `A` and `B`
 
@@ -128,10 +130,10 @@ __B_path__: _array_, path to value B
 
 __B_default__: default value B if path not found
 
-__invertor__: _bool_, if invertor === true, eq operator return true if A === B, if false, eq operator return true if A !== B
+__invertor__: _bool_, if invertor === false, eq operator return true if A === B, if true, eq operator return true if A !== B
 
 #### map operator
-> syntax: ['operator_name', 'A path', 'A default', 'map path', 'B path', 'B default']
+> syntax: ['operator_name', 'A path', 'A default', 'map path', 'B path', ['B default']]
 
 __operator_name__: _string_, `map` for mapping value A to B
 
