@@ -2,6 +2,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 	var Round = Math.round
 	var Ceil = Math.ceil
 	var Floor = Math.floor
+	var negative = ['false', 'no']
 	var objfun = ['object','function']
 	var specialFunc = ['nstructor']
 	var ROOT = '$'
@@ -10,8 +11,8 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		ref: function(ext, p, def){
 			return attrdot(this, ext, p, def)
 		},
-		inv: function(ext, p, def){
-			return attrdot(this, ext, p, def) ? 0 : 1
+		bool: function(ext, p, def, inv){
+			return (attrdot(this, ext, p, def) ? 1 : 0) ^ (inv ? 1 : 0)
 		},
 		eq: function(ext, aP, aDef, bP, bDef, inv){
 			var a = attrdot(this, ext, aP, aDef)
@@ -138,7 +139,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 		}
 		var vt = typeof val
 		if (t.includes('bool')) {
-			if ('string' === vt) set(out, k, val && 'false' !== val.toLowerCase())
+			if ('string' === vt) set(out, k, val && !negative.includes(val.toLowerCase()))
 			else set(out, k, !!val)
 			return
 		}

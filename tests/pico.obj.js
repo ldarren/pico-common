@@ -698,13 +698,20 @@ parallel('\npico/obj', function(){
 					required: 1
 				},
 				bool4: 'bool',
+				bool5: 'bool',
 			}
 		}
 
 		var out = {}
-		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null}, out)
+		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null, bool5: 'no'}, out)
 		if (res) return cb(null, false)
-		return cb(null, false === out.bool1 && true === out.bool2 && false === out.bool3 && false === out.bool4)
+		return cb(null,
+			false === out.bool1 &&
+			true === out.bool2 &&
+			false === out.bool3 &&
+			false === out.bool4 &&
+			false === out.bool5
+		)
 	})
 
 	this.test('validate dynamic spec with out-of-spec value', function(cb){
@@ -762,18 +769,18 @@ parallel('\npico/obj', function(){
 		cb(null, !res && 'b' === obj.ref)
 	})
 
-	this.test('validate dynamic spec with inv op', function(cb){
+	this.test('validate dynamic spec with bool op', function(cb){
 		var spec = {
 			type: 'object',
 			required: 1,
 			spec: {
 				idx: {
 					type: 'number',
-					required: ['inv', ['ref'], 0]
+					required: ['bool', ['ref'], 0, 1]
 				},
 				ref: {
 					type: 'string',
-					required: ['inv', ['idx'], 0]
+					required: ['bool', ['idx'], 0, 1]
 				},
 			}
 		}
