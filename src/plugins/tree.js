@@ -22,12 +22,18 @@ define('pico/tree', function(){
 		return tokenizer(route.slice(0, p0 + 1) + route.slice(p1), tokens)
 	}
 
-	function getCD(route){
-		var end = route.indexOf(SEP)
+	function getCD(route, startPos, mask, withSep){
+		startPos = startPos || 0
+		var end = route.indexOf(SEP, startPos)
 		if (-1 === end) end = route.length
-		else end += 1
+		else if (withSep) end += 1
 
-		return route.slice(0, end)
+		var cd = route.slice(startPos, end)
+		if (mask){
+			if (-1 !== cd.indexOf(PARAM)) return PARAM
+			else if (-1 !== cd.indexOf(CAPTURE)) return CAPTURE
+		}
+		return cd
 	}
 
 	function compare(a, b){
@@ -49,7 +55,7 @@ define('pico/tree', function(){
 		for (var i = 0, t; (t = tokens[i]); i++){
 			if (lastPos < t[0]) left.push(t)
 		}
-		return left
+		return left.length ? left : null
 	}
 
 	function makeBranch(full){
@@ -60,7 +66,7 @@ define('pico/tree', function(){
 	}
 
 	function insertTree(tree, route, tokens, full){
-		var cd = getCD(route)
+		var cd = getCD(route, 0, 1, 1)
 
 		var node = tree[cd]
 		if (node){
@@ -82,6 +88,35 @@ define('pico/tree', function(){
 		}
 	}
 
+	function findTree(tree, startPos, path, params){
+		var cd = getCD(path, startPos, 1, 1)
+
+		var node = tree[cd]
+		if (!node) return
+
+		var nodeSection = node[0]
+		var nodeTokens = node[1]
+		var nodeFull = node[2]
+
+		var lastPos = startPos
+		if (nodeTokens){
+			for (var i = 0, t, v; (t = nodeTokens[i]; i++){
+				lastPos = t[0]
+				if (CAPTURE === nodeSection[lastPos]){
+					params[t[3]] = path.substring(t[1])
+					return nodeFull
+				}
+				startPos += lastPos
+				cd = getCD(path, startPos, 0, 0)
+				v = params[t[3]] = cd.substring(t[1])
+				startPos += v.length
+			}
+		}
+
+		if (nodeFull.codePointAt) return nodeFull
+		return findTree(tree, startPos + (nodeSection.length - lastPos), path, params)
+	}
+
 	return {
 		tokenizer,
 		getCD,
@@ -91,11 +126,17 @@ define('pico/tree', function(){
 			var tokens = []
 			var normalized = tokenizer(route, tokens)
 
+			tree = tree || {}
 			insertTree(tree, normalized, tokens, normalized)
+			return tree
 		},
-		match: function(path, tree, params){
+		match: function(tree, path, params){
+			if (!tree || !path) return
+
+			params = params || {}
+			return findTree(tree, 0, path, params)
 		},
-		build: function(path, tree, params){
+		build: function(tree, path, params){
 		}
 	}
 })
