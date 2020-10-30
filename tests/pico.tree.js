@@ -4,28 +4,27 @@ const { parallel } = pico.export('pico/test')
 
 parallel('\npico/tree', function(){
 	this.test('ensure tokenizer work', function(cb){
+		// ['/events/e', ':id', '/comments/', ':cid', '/', '*path']
 		const route = '/events/e:id/comments/:cid/*path'
-		const tokens = []
-		const normalized = pTree.tokenizer(route, tokens)
+		const tokens = pTree.tokenizer(route)
 
 		cb(null,
-			'/events/e:/comments/:/*' === normalized &&
-			3 === tokens.length &&
-			9 === tokens[0][0] &&
-			'id' === tokens[0][1] &&
-			20 === tokens[1][0] &&
-			'cid' === tokens[1][1] &&
-			22 === tokens[2][0] &&
-			'path' === tokens[2][1]
+			6 === tokens.length &&
+			'/events/e' === tokens[0] &&
+			':id' === tokens[1] &&
+			'/comments/' === tokens[2] &&
+			':cid' === tokens[3] &&
+			'/' === tokens[4] &&
+			'*path' === tokens[5]
 		)
 	})
 
 	this.test('ensure getCD returns tail slash', function(cb){
-		var cd = pTree.getCD('/r:id')
+		var cd = pTree.getCD('/r:id', 1)
 		if ('/' !== cd) return cb(null, false, cd)
-		cd = pTree.getCD('r:id/')
+		cd = pTree.getCD('r:id/', 1)
 		if ('r:id/' !== cd) return cb(null, false, cd)
-		cd = pTree.getCD('r:id')
+		cd = pTree.getCD('r:id', 1)
 		cb(null, 'r:id' === cd)
 	})
 
@@ -41,11 +40,28 @@ parallel('\npico/tree', function(){
 		pTree.add('/events/:id', tree)
 		pTree.add('/events/:id/comments', tree)
 
-		console.log('=====>', JSON.stringify(tree, '\t'))
 		cb(null, true)
 	})
 
 	this.test('ensure start with param has no issue', function(cb){
 		cb(null, false)
+	})
+
+	this.test('ensure find route works', function(cb){
+		var tree = {
+			'/': [['/events/e', ':id'], {
+				'': [[], '/events/e:id'],
+				'/': [['/comments'], '/events/e:id/comments'],
+			}]
+		}
+		var path = '/events/e1'
+		var params = {}
+		var route = pTree.match(tree, path, params)
+		if ('/events/e:id' !== route || '1' !== params.id) return cb(null, false)
+
+		path = '/events/e1/comments'
+		params = {}
+		route = pTree.match(tree, path, params)
+		cb(null, '/events/e:id/comments' === route && '1' === params.id)
 	})
 })

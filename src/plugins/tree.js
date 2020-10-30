@@ -3,32 +3,43 @@ define('pico/tree', function(){
 	var SEP = '/'
 	var PARAM = ':'
 	var CAPTURE = '*'
+	var WILD = '?'
 
-	function tokenizer(route, tokens){
+	// tokenize /events/E:id/upload/p*path to [9, [':', 'id'], 8, ['*', 'path']]
+	function tokenizer(route, tokens, pos){
 		tokens = tokens || []
-		var last = 0
-		if (tokens.length){
-			last = tokens[tokens.length - 1][0]	+ 1
-		}
-		var p0 = route.indexOf(PARAM, last)
-		if (-1 === p0) {
-			p0 = route.indexOf(CAPTURE, last)
-			if (-1 === p0) return route
-		}
-		var p1 = route.indexOf(SEP, p0)
-		if (-1 === p1) p1 = route.length
-		tokens.push([p0, route.slice(p0 + 1, p1)])
+		pos = pos || 0
+		if (pos >= route.length) return tokens
 
-		return tokenizer(route.slice(0, p0 + 1) + route.slice(p1), tokens)
+		var p0 = route.indexOf(PARAM, pos)
+		if (-1 === p0) {
+			p0 = route.indexOf(CAPTURE, pos)
+			if (-1 === p0) {
+				tokens.push(route.slice(pos))
+				return tokens
+			}else{
+				tokens.push(route.slice(pos, p0))
+				tokens.push(route.slice(p0))
+				return tokens
+			}
+		}
+
+		tokens.push(route.slice(pos, p0))
+
+		var nextPos = route.indexOf(SEP, p0)
+		if (-1 === nextPos) nextPos = route.length
+		tokens.push(route.slice(p0, nextPos))
+
+		return tokenizer(route, tokens, nextPos)
 	}
 
-	function getCD(route, startPos, mask, withSep){
-		startPos = startPos || 0
-		var end = route.indexOf(SEP, startPos)
+	function getCD(route, withSep, mask, pos){
+		pos = pos || 0
+		var end = route.indexOf(SEP, pos)
 		if (-1 === end) end = route.length
 		else if (withSep) end += 1
 
-		var cd = route.slice(startPos, end)
+		var cd = route.slice(pos, end)
 		if (mask){
 			if (-1 !== cd.indexOf(PARAM)) return PARAM
 			else if (-1 !== cd.indexOf(CAPTURE)) return CAPTURE
@@ -88,33 +99,41 @@ define('pico/tree', function(){
 		}
 	}
 
-	function findTree(tree, startPos, path, params){
-		var cd = getCD(path, startPos, 1, 1)
+	function findTree(tree, path, params, pos){
+		var cd = getCD(path, 1, 0, pos)
 
 		var node = tree[cd]
-		if (!node) return
+		if (!node) {
+			node = tree[WILD]
+			if (!node) return
+		}
 
-		var nodeSection = node[0]
-		var nodeTokens = node[1]
-		var nodeFull = node[2]
+		var tokens = node[0]
+		var route = node[1]
 
-		var lastPos = startPos
-		if (nodeTokens){
-			for (var i = 0, t, v; (t = nodeTokens[i]; i++){
-				lastPos = t[0]
-				if (CAPTURE === nodeSection[lastPos]){
-					params[t[3]] = path.substring(t[1])
-					return nodeFull
+		if (tokens){
+			for (var i = 0, t, v; (t = tokens[i]); i++){
+				switch(t.charAt(0)){
+				case PARAM:
+					v = getCD(path, 0, 0, pos)
+					params[t.slice(1)] = v
+					pos += v.length
+					break
+				case CAPTURE:
+					v = path.slice(pos)
+					params[t.slice(1)] = v
+					pos += v.length
+					return route
+				default:
+					if (pos !== path.indexOf(t, pos)) return
+					pos += t.length
+					break
 				}
-				startPos += lastPos
-				cd = getCD(path, startPos, 0, 0)
-				v = params[t[3]] = cd.substring(t[1])
-				startPos += v.length
 			}
 		}
 
-		if (nodeFull.codePointAt) return nodeFull
-		return findTree(tree, startPos + (nodeSection.length - lastPos), path, params)
+		if (route.charAt) return route
+		return findTree(route, path, params, pos)
 	}
 
 	return {
@@ -134,7 +153,7 @@ define('pico/tree', function(){
 			if (!tree || !path) return
 
 			params = params || {}
-			return findTree(tree, 0, path, params)
+			return findTree(tree, path, params, 0, 0)
 		},
 		build: function(tree, path, params){
 		}
