@@ -7,8 +7,6 @@ define('pico/tree', function(){
 
 	// tokenize /events/E:id/upload/p*path to [9, [':', 'id'], 8, ['*', 'path']]
 	function tokenizer(route, tokens, pos){
-		tokens = tokens || []
-		pos = pos || 0
 		if (pos >= route.length) return tokens
 
 		var p0 = route.indexOf(PARAM, pos)
@@ -76,8 +74,8 @@ define('pico/tree', function(){
 		}
 	}
 
-	function insertTree(tree, route, tokens, full){
-		var cd = getCD(route, 0, 1, 1)
+	function insertTree(tree, route, tokens, pos){
+		var cd = getCD(route, 1, 0, pos)
 
 		var node = tree[cd]
 		if (node){
@@ -137,10 +135,12 @@ define('pico/tree', function(){
 	}
 
 	return {
-		tokenizer,
+		tokenizer: function (route, tokens, pos){
+			return tokenizer(route, tokens || [], pos || 0)
+		},
 		getCD,
 		compare,
-		add: function callee(route, tree){
+		add: function (route, tree){
 			if (!route || !route.slice) return
 			var tokens = []
 			var normalized = tokenizer(route, tokens)
