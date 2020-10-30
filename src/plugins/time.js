@@ -1,5 +1,6 @@
-define('pico/time',function(){
+define('pico/time',function(exports,require){
 	var
+		pStr = require('pico/str'),
 		Max=Math.max,
 		Min=Math.min,
 		Floor=Math.floor,
@@ -171,6 +172,23 @@ define('pico/time',function(){
 			locale=locale||'en-US'
 			if (now.getFullYear()===date.getFullYear() && weeknum(now)===weeknum(date)) return date.toLocaleDateString(locale, ytt[3])
 			return date.toLocaleDateString(locale,ytt[4])
+		},
+		validate: function(str, format){
+			if (!Array.isArray(format)) return new Date(str)
+			var date = {}
+			for (var i = -1, l = str.length, p = 0, j = 0, key; i < l; i++){
+				if (pStr.isBase36(str.charCodeAt(i))){
+					p = 0
+					date[key] += str.charAt(i)
+					continue
+				}else{
+					if (p) continue
+					p = 1
+					key = format[j++]
+					date[key] = ''
+				}
+			}
+			return new Date(`${date.M} ${date.D} ${date.Y} ${date.h || '00'}:${date.m || '00'}:${date.s || '00'}`)
 		}
 	}
 })

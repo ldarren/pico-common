@@ -1,4 +1,5 @@
-define('pico/obj',function(exports,require,module,define,inherit,pico){
+define('pico/obj',function(exports,require){
+	var pTime = require('pico/time')
 	var Round = Math.round
 	var Ceil = Math.ceil
 	var Floor = Math.floor
@@ -173,7 +174,7 @@ define('pico/obj',function(exports,require,module,define,inherit,pico){
 			set(out, k, val)
 			break
 		case 'date':
-			val = new Date(val)
+			val = pTime.validate(val, getV(full, s.format, ext))
 			if (!val.getTime() || notin(val.getTime(), getV(full, s.lt, ext), getV(full, s.gt, ext))) return k
 			set(out, k, val)
 			break

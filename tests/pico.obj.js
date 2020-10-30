@@ -714,6 +714,23 @@ parallel('\npico/obj', function(){
 		)
 	})
 
+	this.test('validate date format', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				cat: {
+					type: 'date',
+					format: ['D', 'Y', 'M']
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {cat: '31 2020 10'}, out)
+		if (res) return cb(null, false)
+		return cb(null, (new Date(2020, 9, 31)).getTime() === out.cat.getTime())
+	})
+
 	this.test('validate dynamic spec with out-of-spec value', function(cb){
 		var spec = {
 			type: 'object',
@@ -891,7 +908,7 @@ parallel('\npico/obj', function(){
 		return cb(null, '$.first_name' === res, res)
 	})
 
-	this.test('ensure force attribue works on array and string', function(cb){
+	this.test('ensure force attribute works on array and string', function(cb){
 		// test default value
 		var spec = {
 			type: 'object',
@@ -917,7 +934,7 @@ parallel('\npico/obj', function(){
 		cb(null, !res && out.arr[0].a === 1 && out.str !== '{a:1}')
 	})
 
-	this.test('ensure int attribue works on number', function(cb){
+	this.test('ensure int attribute works on number', function(cb){
 		// test default value
 		var spec = {
 			type: 'object',

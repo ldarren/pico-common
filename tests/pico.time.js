@@ -45,6 +45,14 @@ parallel('\npico/time', function(){
 		if ('Wed' !== ptime.day(new Date(2020, 9, 28, 21), null, ytt, now)) return cb(null, false)
 		cb(null, '4' === ptime.day(new Date(2020, 10, 4, 21), null, ytt, now))
 	})
+	this.test('ensure date validate work', function(cb){
+		var time = (new Date('Oct 31 20')).getTime()
+		if (time !== ptime.validate('31-10-20', ['D', 'M', 'Y']).getTime()) return cb(null, false)
+		if (time !== ptime.validate('31/10/20', ['D', 'M', 'Y']).getTime()) return cb(null, false)
+		if (time !== ptime.validate('2020 10 31', ['Y', 'M', 'D']).getTime()) return cb(null, false)
+
+		cb(null, Date.parse('2020-10-31T01:01:01') === ptime.validate('31/10/20 01:01:01', ['D', 'M', 'Y', 'h', 'm', 's']).getTime())
+	})
 	this.test('ensure "* * * * * *" return less than two min', function(cb){
 		const diff = ptime.nearest(...ptime.parse('* * * * * *')) - Date.now()
 		cb(null, diff < 2 * 60 * 1000 && diff > 0, diff)
