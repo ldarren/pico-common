@@ -29,8 +29,21 @@ parallel('\npico/time', function(){
 		ret = ret && parsed[4].includes(t.getDay())
 		cb(null, ret)
 	})
+	this.test('ensure daynum from 1/Mar/2016 to 30/Oct/2020 is 1704', function(cb){
+		cb(null, 1704===ptime.daynum('2020-10-30', '2016-03-01T00:00:00Z'))
+	})
 	this.test('ensure weeknum of 1/Mar/2016 is 9', function(cb){
-		cb(null, 9===ptime.weeknum(new Date(2016,2,1,0,0,0)))
+		cb(null, 9===ptime.weeknum(new Date(2016,2,1)))
+	})
+	this.test('ensure day() return user friendly day', function(cb){
+		var now = new Date(2020, 9, 30, 18, 10, 0)
+		var ytt = [ -1, 0, 1, {weekday:'short'}, {day: 'numeric'}]
+
+		if (0 !== ptime.day(new Date(2020, 9, 30, 21), null, ytt, now)) return cb(null, false)
+		if (-1 !== ptime.day(new Date(2020, 9, 29, 21), null, ytt, now)) return cb(null, false)
+		if (1 !== ptime.day(new Date(2020, 9, 31, 21), null, ytt, now)) return cb(null, false)
+		if ('Wed' !== ptime.day(new Date(2020, 9, 28, 21), null, ytt, now)) return cb(null, false)
+		cb(null, '4' === ptime.day(new Date(2020, 10, 4, 21), null, ytt, now))
 	})
 	this.test('ensure "* * * * * *" return less than two min', function(cb){
 		const diff = ptime.nearest(...ptime.parse('* * * * * *')) - Date.now()
