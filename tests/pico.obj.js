@@ -720,13 +720,16 @@ parallel('\npico/obj', function(){
 			spec: {
 				cat: {
 					type: 'date',
-					format: ['D', 'Y', 'M']
+					formats: ['D/Y/M', 'D-Y-M', 'Y M D']
 				}
 			}
 		}
 
+		var res = pobj.validate(spec, {cat: '2020 40 40'}, out)
+		if (!res) return cb(null, false)
+
 		var out = {}
-		var res = pobj.validate(spec, {cat: '31 2020 10'}, out)
+		var res = pobj.validate(spec, {cat: '2020 10 31'}, out)
 		if (res) return cb(null, false)
 		return cb(null, (new Date(2020, 9, 31)).getTime() === out.cat.getTime())
 	})

@@ -173,22 +173,27 @@ define('pico/time',function(exports,require){
 			if (now.getFullYear()===date.getFullYear() && weeknum(now)===weeknum(date)) return date.toLocaleDateString(locale, ytt[3])
 			return date.toLocaleDateString(locale,ytt[4])
 		},
-		validate: function(str, format){
-			if (!Array.isArray(format)) return new Date(str)
+		convert: function callee(str, formats, idx){
+			idx = idx || 0
+			if (!Array.isArray(formats) || idx >= formats.length) return new Date(str)
+			var format = formats[idx++]
 			var date = {}
-			for (var i = -1, l = str.length, p = 0, j = 0, key; i < l; i++){
-				if (pStr.isBase36(str.charCodeAt(i))){
-					p = 0
-					date[key] += str.charAt(i)
-					continue
-				}else{
-					if (p) continue
-					p = 1
+			var pos = 0
+			for (var l = str.length, c, p, j = 0, key; pos < l; pos++){
+				c = pStr.isBase36(str.charCodeAt(pos))
+				if (p !== c) {
+					if (j >= format.length) break
 					key = format[j++]
-					date[key] = ''
 				}
+				if (c){
+					if (!date[key]) date[key] = str[pos]
+					else date[key] += str[pos]
+				}else{
+					if (key !== str[pos]) return callee(str, formats, idx)
+				}
+				p = c
 			}
-			return new Date(`${date.M} ${date.D} ${date.Y} ${date.h || '00'}:${date.m || '00'}:${date.s || '00'}`)
+			return new Date(`${date.M} ${date.D} ${date.Y} ${str.slice(pos)}`)
 		}
 	}
 })

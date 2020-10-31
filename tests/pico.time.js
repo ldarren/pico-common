@@ -45,13 +45,13 @@ parallel('\npico/time', function(){
 		if ('Wed' !== ptime.day(new Date(2020, 9, 28, 21), null, ytt, now)) return cb(null, false)
 		cb(null, '4' === ptime.day(new Date(2020, 10, 4, 21), null, ytt, now))
 	})
-	this.test('ensure date validate work', function(cb){
+	this.test('ensure date convert work', function(cb){
 		var time = (new Date('Oct 31 20')).getTime()
-		if (time !== ptime.validate('31-10-20', ['D', 'M', 'Y']).getTime()) return cb(null, false)
-		if (time !== ptime.validate('31/10/20', ['D', 'M', 'Y']).getTime()) return cb(null, false)
-		if (time !== ptime.validate('2020 10 31', ['Y', 'M', 'D']).getTime()) return cb(null, false)
-
-		cb(null, Date.parse('2020-10-31T01:01:01') === ptime.validate('31/10/20 01:01:01', ['D', 'M', 'Y', 'h', 'm', 's']).getTime())
+		var formats = ['D-M-Y', 'D/M/Y', 'Y M D']
+		if (time !== ptime.convert('31-10-20', formats).getTime()) return cb(null, false)
+		if (time !== ptime.convert('31/10/20', formats).getTime()) return cb(null, false)
+		if (time !== ptime.convert('2020 10 31', formats).getTime()) return cb(null, false)
+		cb(null, (new Date('Oct 31 20 01:01:01')).getTime() === ptime.convert('2020 10 31 01:01:01.000', formats).getTime())
 	})
 	this.test('ensure "* * * * * *" return less than two min', function(cb){
 		const diff = ptime.nearest(...ptime.parse('* * * * * *')) - Date.now()

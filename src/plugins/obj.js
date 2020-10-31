@@ -174,7 +174,7 @@ define('pico/obj',function(exports,require){
 			set(out, k, val)
 			break
 		case 'date':
-			val = pTime.validate(val, getV(full, s.format, ext))
+			val = pTime.convert(val, getV(full, s.formats, ext))
 			if (!val.getTime() || notin(val.getTime(), getV(full, s.lt, ext), getV(full, s.gt, ext))) return k
 			set(out, k, val)
 			break
