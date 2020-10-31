@@ -22,7 +22,7 @@ define('pico/tree', function(){
 			}
 		}
 
-		tokens.push(route.slice(pos, p0))
+		if (pos !== p0) tokens.push(route.slice(pos, p0))
 
 		var nextPos = route.indexOf(SEP, p0)
 		if (-1 === nextPos) nextPos = route.length
@@ -39,62 +39,59 @@ define('pico/tree', function(){
 
 		var cd = route.slice(pos, end)
 		if (mask){
-			if (-1 !== cd.indexOf(PARAM)) return PARAM
-			else if (-1 !== cd.indexOf(CAPTURE)) return CAPTURE
+			if (-1 !== cd.indexOf(PARAM)) return WILD
+			if (-1 !== cd.indexOf(CAPTURE)) return WILD
 		}
 		return cd
 	}
 
 	function compare(a, b){
 		var min = Min(a.length, b.length)
-		for (var i = 0, l = min; i < l; i++){
-			if (a.codePointAt(i) !== b.codePointAt(i)) {
-				var lastSep = a.lastIndexOf(SEP, i) 
-				if (-1 === lastSep) return i
-				return lastSep
-			}
+		for (var i = 0, l = min, c; i < l; i++){
+			c = a.charCodeAt(i)
+			if (c !== b.charCodeAt(i)) return i
+			if (42 === c || 58 === c ) return
 		}
 
 		if (min !== a.length || min !== b.length) return min
 		return
 	}
 
-	function tokenLeft(lastPos, tokens){
-		var left = []
-		for (var i = 0, t; (t = tokens[i]); i++){
-			if (lastPos < t[0]) left.push(t)
-		}
-		return left.length ? left : null
+	function split(left, i, lastPos){
+		var right = left.splice(i)
+		if (null == lastPos) return right
+
+		var token = left.shift()
+		left.push(token.slice(0, lastPos))
+		right.unshift(token.slice(lastPos))
+		return right
 	}
 
-	function makeBranch(full){
-		if (!full.codePointAt) return
-		return {
-			'': ['', [], full]
-		}
-	}
-
-	function insertTree(tree, route, tokens, pos){
-		var cd = getCD(route, 1, 0, pos)
+	function insertTree(tree, tokens, route){
+		if (!Array.isArray(tokens)) return
+		if (!tokens.length) return tree[''] = [tokens, route]
+		var cd = getCD(tokens[0], 1, 1)
 
 		var node = tree[cd]
 		if (node){
-			var nodeSection = node[0]
-			var nodeTokens = node[1]
-			var nodeFull = node[2]
-			var lastPos = compare(route, nodeSection)
-			if (null == lastPos) {
-				if (full === nodeFull) return
-				insertTree(makeBranch(nodeFull), '', [], full)
-			} else {
-				var branch = {}
-				insertTree(branch, nodeSection.slice(lastPos), tokenLeft(lastPos, nodeTokens), nodeFull)
-				insertTree(branch, route.slice(lastPos), tokenLeft(lastPos, tokens), full)
-				node[2] = branch
+			var nodeTokens = node[0]
+			var nodeRoute = node[1]
+			var min = Min(tokens.length, nodeTokens.length)
+			var i = 0
+			var lastPos
+			for (; i < min; i++){
+				lastPos = compare(tokens[i], nodeTokens[i])
 			}
-		}else{
-			tree[cd] = [route, tokens, full]
+			if (i === tokens.length && null == lastPos) {
+				if (nodeRoute.slice) return tree
+				return insertTree(nodeRoute, [], route)
+			}
+			var branch = {}
+			insertTree(branch, split(nodeTokens, i, lastPos), nodeRoute)
+			insertTree(branch, split(tokens, i, lastPos), route)
+			return node[1] = branch
 		}
+		tree[cd] = [tokens, route]
 	}
 
 	function findTree(tree, path, params, pos){
@@ -142,11 +139,9 @@ define('pico/tree', function(){
 		compare,
 		add: function (route, tree){
 			if (!route || !route.slice) return
-			var tokens = []
-			var normalized = tokenizer(route, tokens)
 
 			tree = tree || {}
-			insertTree(tree, normalized, tokens, normalized)
+			insertTree(tree, tokenizer(route, [], 0), route, 0)
 			return tree
 		},
 		match: function(tree, path, params){

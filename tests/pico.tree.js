@@ -1,4 +1,5 @@
 const pico = require('../bin/pico-cli')
+const pObj = pico.export('pico/obj')
 const pTree = pico.export('pico/tree')
 const { parallel } = pico.export('pico/test')
 
@@ -36,15 +37,13 @@ parallel('\npico/tree', function(){
 	})
 
 	this.test('ensure route add', function(cb){
-		var tree = {}
-		pTree.add('/events/:id', tree)
-		pTree.add('/events/:id/comments', tree)
+		var route1 = '/events/e:id'
+		var route2 = '/events/e:id/comments'
+		var tree = pTree.add(route1)
+		pTree.add(route2, tree)
 
-		cb(null, true)
-	})
-
-	this.test('ensure start with param has no issue', function(cb){
-		cb(null, false)
+		if (route1 !== pObj.dot(tree, ['/', 1, '', 1])) return cb(null, false)
+		cb(null, route2 === pObj.dot(tree, ['/', 1, '/', 1]))
 	})
 
 	this.test('ensure find route works', function(cb){
@@ -63,5 +62,12 @@ parallel('\npico/tree', function(){
 		params = {}
 		route = pTree.match(tree, path, params)
 		cb(null, '/events/e:id/comments' === route && '1' === params.id)
+	})
+
+	this.test('ensure start with param has no issue', function(cb){
+		var route = ':date/:month/:year'
+		var tree = pTree.add(route)
+		var matched = pTree.match(tree, '1/11/20')
+		cb(null, matched === route)
 	})
 })
