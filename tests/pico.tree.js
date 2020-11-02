@@ -36,14 +36,30 @@ parallel('\npico/tree', function(){
 		cb(null, 3 === pTree.compare('112', '1121'))
 	})
 
-	this.test('ensure route add', function(cb){
-		var route1 = '/events/e:id'
-		var route2 = '/events/e:id/comments'
-		var tree = pTree.add(route1)
-		pTree.add(route2, tree)
+	this.test('ensure route add works', function(cb){
+  		var routes = [
+			'/user',
+			'/user/comments',
+			'/user/avatar',
+			/*'/user/lookup/username/:username',
+			'/user/lookup/email/:address',
+			'/event/e:id',
+			'/event/e:id/comments',
+			'/event/e:id/comment',
+			'/map/:location/events',
+			'/status',
+			'/very/deeply/nested/route/hello/there',
+			'/static/*rest',
+		*/]
 
-		if (route1 !== pObj.dot(tree, ['/', 1, '', 1])) return cb(null, false)
-		cb(null, route2 === pObj.dot(tree, ['/', 1, '/', 1]))
+		var tree = {}
+		for (var i = 0, r; (r = routes[i]); i++){
+			pTree.add(r, tree)
+		}
+console.log('=======>', JSON.stringify(tree, null, '\t'))
+
+		if (routes[0] !== pObj.dot(tree, ['/', 1, '', 1])) return cb(null, false)
+		cb(null, routes[1] === pObj.dot(tree, ['/', 1, '/', 1]))
 	})
 
 	this.test('ensure find route works', function(cb){
