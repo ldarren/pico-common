@@ -58,8 +58,9 @@ define('pico/tree', function(){
 	}
 
 	function split(left, i, lastPos){
-		var right = left.splice(i)
-		if (null == lastPos) return right
+		if (i >= left.length) return []
+		var right = left.splice(i + (null == lastPos ? 0 : 1))
+		if (null == lastPos || lastPos >= left[0].length) return right
 
 		var token = left.shift()
 		left.push(token.slice(0, lastPos))
@@ -69,7 +70,10 @@ define('pico/tree', function(){
 
 	function insertTree(tree, tokens, route){
 		if (!Array.isArray(tokens)) return
-		if (!tokens.length) return tree[''] = [tokens, route]
+		if (!tokens.length) {
+			tree[''] = [tokens, route]
+			return
+		}
 		var cd = getCD(tokens[0], 1, 1)
 
 		var node = tree[cd]
@@ -81,16 +85,40 @@ define('pico/tree', function(){
 			var lastPos
 			for (; i < min; i++){
 				lastPos = compare(tokens[i], nodeTokens[i])
+				if (null !== lastPos) break
 			}
-			if (i === tokens.length && null == lastPos) {
-				if (nodeRoute.slice) return tree
-				return insertTree(nodeRoute, [], route)
+
+console.log('#0', nodeTokens, tokens, i, lastPos)
+			if (null != lastPos){
+				var branch = {}
+				insertTree(branch, split(nodeTokens, i, lastPos), nodeRoute)
+				insertTree(branch, split(tokens, i, lastPos), route)
+				node[1] = branch
+console.log('#1', tree)
+				return
+			}
+			if (tokens.length === nodeTokens.length) {
+				if (nodeRoute.slice) return
+				insertTree(nodeRoute, null, route)
+console.log('#2', tree)
+				return
+			}
+			if (tokens.length > nodeTokens.length) {
+				var branch = {}
+				insertTree(branch, tokens.slice(i), route)
+				insertTree(branch, [], nodeRoute)
+				node[1] = branch
+console.log('#3', tree)
+				return
 			}
 			var branch = {}
-			insertTree(branch, split(nodeTokens, i, lastPos), nodeRoute)
-			insertTree(branch, split(tokens, i, lastPos), route)
-			return node[1] = branch
+			insertTree(branch, nodeTokens.splice(i), nodeRoute)
+			insertTree(branch, [], route)
+			node[1] = branch
+console.log('#4', tree)
+			return
 		}
+console.log('#5', cd, tree)
 		tree[cd] = [tokens, route]
 	}
 
