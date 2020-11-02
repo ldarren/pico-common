@@ -51,7 +51,7 @@ parallel('\npico/time', function(){
 		if (time !== ptime.convert('31-10-20', formats).getTime()) return cb(null, false)
 		if (time !== ptime.convert('31/10/20', formats).getTime()) return cb(null, false)
 		if (time !== ptime.convert('2020 10 31', formats).getTime()) return cb(null, false)
-		cb(null, (new Date('Oct 31 20 01:01:01')).getTime() === ptime.convert('2020 10 31 01:01:01.000', formats).getTime())
+		cb(null, (new Date('Oct 31 20 01:01:01')).getTime() === ptime.convert('2020 Oct 31, 01:01:01.000', formats).getTime())
 	})
 	this.test('ensure "* * * * * *" return less than two min', function(cb){
 		const diff = ptime.nearest(...ptime.parse('* * * * * *')) - Date.now()
