@@ -1,7 +1,7 @@
-## syntax
+# syntax
 > pObj.validate(spec, input, [output], [external])
 
-### parameters
+## parameters
 __spec__: a js object that defined the target object schema
 
 __input__: a value to be validated, it can be any js value such as object, array, string or number
@@ -10,12 +10,12 @@ __output [optional]__: an optional js object to store transformed data of the ta
 
 __external [optional]__: an optional js object, any data needed to transform the input to output should be placed here. external data is accessable by [dynamic attributes](#dynamic attribute)
 
-### returns
+## returns
 it returns a string when encountered an error. the string is a [jsonpath](https://www.baeldung.com/guide-to-jayway-jsonpath) to indicator the location of
 the first encountered error. return `undefined` if no error encountered.
 
-## spec format
-simplest spec can be just the [type](#supported-types)
+# spec format
+the simplest spec can be just the [type](#supported-types)
 ```js
 const spec = 'number'
 pObj.validate(spec, 1) // returns undefined
@@ -29,7 +29,7 @@ pObj.validate(spec, 5) // returns undefined
 pObj.validate(spec, 10) // returns '$'
 ```
 
-### supported types
+## supported types
 - number
 - string
 - bool, _false for undefined, null, "", "false", false, 0_
@@ -46,7 +46,7 @@ pObj.validate(spec, 'SG') // returns undefined
 pObj.validate(spec, 'US') // returns '$'
 ```
 
-### validation attributes
+## validation attributes
 __type__: data type, _valid for all_
 
 __required__: mandatory, `required` test is runs before `value`, `notnull`, it returns error if `undefined` is given, but no error if `null` is given, _valid for all_. 
@@ -73,10 +73,10 @@ __formats__: array of time format such as ['Y/M/D', 'D M Y'], _valid for date_
 
 __*__: object key, _valid for object's spec_
 
-### dynamic attribute
+## dynamic attribute
 all attributes supported dynamic values by using operators. there are four operators supported
 
-#### ref operator
+### ref operator
 > syntax: ['operator_name', 'path_to_value', ['default_value']]
 
 __operator_name__: _string_, `ref` for reference
@@ -86,7 +86,7 @@ __path_to_value__: _array_, an array of string for the path to referencing value
 __default_value__: if value not found in the given _path_to_value_, the default value will be used instead
 
 
-#### bool operator
+### bool operator
 convert value to boolean value: 1 or 0
 > syntax: ['operator_name', 'path', ['default'], [invertor]]
 
@@ -119,7 +119,7 @@ pObj.validate(spec, {
 })
 ```
 
-#### eq operator
+### eq operator
 > syntax: ['operator_name', 'A path', 'A default', 'B path', ['B default'], ['invertor']]
 
 __operator_name__: _string_, `eq` for comparing value `A` and `B`
@@ -134,7 +134,7 @@ __B_default__: default value B if path not found
 
 __invertor__: _bool_, if invertor === false, eq operator return true if A === B, if true, eq operator return true if A !== B
 
-#### map operator
+### map operator
 > syntax: ['operator_name', 'A path', 'A default', 'map path', 'B path', ['B default']]
 
 __operator_name__: _string_, `map` for mapping value A to B
@@ -150,7 +150,7 @@ __B_path__: _array_, path to value B
 __B_default__: default value B if path not found
 
 
-### validate nested object
+## validate nested object
 unlimited nested object can be validated with the help of `spec` attributes
 
 A sample nested objects
@@ -204,7 +204,7 @@ const spec = {
   }
 }
 ```
-### object transformation
+## object transformation
 if the target is container (object or array), a third parameter provides the transformation output
 
 number transformation
@@ -271,7 +271,7 @@ const output = {}
 pObj.validate(spec, {foo: 1}, output) // output === {foo: true}
 ```
 
-## import
+# import
 
 with es6 module
 
