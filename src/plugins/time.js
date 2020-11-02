@@ -175,7 +175,7 @@ define('pico/time',function(exports,require){
 		},
 		convert: function callee(str, formats, idx){
 			idx = idx || 0
-			if (!Array.isArray(formats) || idx >= formats.length) return new Date(str)
+			if (!Array.isArray(formats) || idx >= formats.length || !str.slice) return new Date(str)
 			var format = formats[idx++]
 			var date = {}
 			var pos = 0
@@ -193,7 +193,8 @@ define('pico/time',function(exports,require){
 				}
 				p = c
 			}
-			return new Date(`${date.M} ${date.D} ${date.Y} ${str.slice(pos)}`)
+			var d = new Date(`${date.M} ${date.D} ${date.Y} ${str.slice(pos)}`)
+			return d.getTime() ? d : new Date(str)
 		}
 	}
 })
