@@ -69,6 +69,8 @@ __sep__: separator, separator to split string value to array, _valid for array_.
 
 __regex__: regular expression, _valid for string_
 
+__formats__: array of time format such as ['Y/M/D', 'D M Y'], _valid for date_
+
 __*__: object key, _valid for object's spec_
 
 ### dynamic attribute
