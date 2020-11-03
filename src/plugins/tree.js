@@ -53,7 +53,8 @@ define('pico/tree', function(){
 			if (42 === c || 58 === c ) return
 		}
 
-		if (min !== a.length || min !== b.length) return min
+		if (min !== a.length) return -1 * min
+		if (min !== b.length) return min
 		return
 	}
 
@@ -80,45 +81,59 @@ define('pico/tree', function(){
 		if (node){
 			var nodeTokens = node[0]
 			var nodeRoute = node[1]
-			var min = Min(tokens.length, nodeTokens.length)
-			var i = 0
+			var isLeaf = !!nodeRoute.slice
+			var lastT = 0
 			var lastPos
-			for (; i < min; i++){
-				lastPos = compare(tokens[i], nodeTokens[i])
-				if (null !== lastPos) break
+			var breaks = 0
+
+			for (; lastT < nodeTokens.length; lastT++){
+				if (lastT >= tokens.length){
+					breaks = 0x2
+					break
+				}
+
+				lastPos = compare(tokens[lastT], nodeTokens[lastT])
+				if (null != lastPos) {
+					break
+				}
 			}
 
-console.log('#0', nodeTokens, tokens, i, lastPos)
-			if (null != lastPos){
-				var branch = {}
-				insertTree(branch, split(nodeTokens, i, lastPos), nodeRoute)
-				insertTree(branch, split(tokens, i, lastPos), route)
+			if (0 < lastPos){
+				breaks = 0x1 | 0x2
+			}else if (0 > lastPos){
+				breaks = 0x1
+			}
+
+			var branch
+			switch (breaks){
+			case 0:
+				if (isLeaf) return
+				insertTree(nodeRoute, [], route)
+				break
+			case 1:
+				if (isLeaf){
+					branch = {}
+					insertTree(branch, [], nodeRoute)
+					insertTree(branch, split(tokens, lastT, -1 * lastPos), route)
+					node[1] = branch
+					return
+				}
+				insertTree(nodeRoute, split(tokens, lastT, -1 * lastPos), route)
+				return
+			case 2:
+				branch = {}
+				insertTree(branch, split(nodeTokens, lastT, lastPos), nodeRoute)
+				insertTree(branch, [], route)
 				node[1] = branch
-console.log('#1', tree)
 				return
-			}
-			if (tokens.length === nodeTokens.length) {
-				if (nodeRoute.slice) return
-				insertTree(nodeRoute, null, route)
-console.log('#2', tree)
-				return
-			}
-			if (tokens.length > nodeTokens.length) {
-				var branch = {}
-				insertTree(branch, tokens.slice(i), route)
-				insertTree(branch, [], nodeRoute)
+			case 3:
+				branch = {}
+				insertTree(branch, split(nodeTokens, lastT, lastPos), nodeRoute)
+				insertTree(branch, split(tokens, lastT, lastPos), route)
 				node[1] = branch
-console.log('#3', tree)
 				return
 			}
-			var branch = {}
-			insertTree(branch, nodeTokens.splice(i), nodeRoute)
-			insertTree(branch, [], route)
-			node[1] = branch
-console.log('#4', tree)
-			return
 		}
-console.log('#5', cd, tree)
 		tree[cd] = [tokens, route]
 	}
 

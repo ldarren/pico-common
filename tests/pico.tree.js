@@ -37,11 +37,11 @@ parallel('\npico/tree', function(){
 	})
 
 	this.test('ensure route add works', function(cb){
-  		var routes = [
+		var routes = [
 			'/user',
 			'/user/comments',
 			'/user/avatar',
-			/*'/user/lookup/username/:username',
+			'/user/lookup/username/:username',
 			'/user/lookup/email/:address',
 			'/event/e:id',
 			'/event/e:id/comments',
@@ -50,18 +50,17 @@ parallel('\npico/tree', function(){
 			'/status',
 			'/very/deeply/nested/route/hello/there',
 			'/static/*rest',
-		*/]
+		]
 
 		var tree = {}
 		for (var i = 0, r; (r = routes[i]); i++){
 			pTree.add(r, tree)
 		}
-console.log('=======>', JSON.stringify(tree, null, '\t'))
 
 		if (routes[0] !== pObj.dot(tree, ['/', 1, '', 1])) return cb(null, false)
 		cb(null, routes[1] === pObj.dot(tree, ['/', 1, '/', 1]))
 	})
-
+	return
 	this.test('ensure find route works', function(cb){
 		var tree = {
 			'/': [['/events/e', ':id'], {
