@@ -30,6 +30,10 @@ define('pico/obj',function(exports,require){
 			if (toP) return attrdot(val, val, toP, toDef)
 			return val
 		},
+		now: function(ext, p, def){
+			var offset = attrdot(this, ext, p, def || 0)
+			return new Date(Date.now() + offset)
+		}
 	}
 	function attrdot(obj, ext, p, def){
 		if (!p) return dot(obj, p, def)
