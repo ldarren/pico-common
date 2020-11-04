@@ -56,7 +56,7 @@ parallel('\npico/tree', function(){
 		for (var i = 0, r; (r = routes[i]); i++){
 			pTree.add(r, tree)
 		}
-
+console.log('===>', JSON.stringify(tree, null, '\t'))
 		if (routes[0] !== pObj.dot(tree, ['/', 1, '', 1])) return cb(null, false)
 		cb(null, routes[1] === pObj.dot(tree, ['/', 1, '/', 1]))
 	})
