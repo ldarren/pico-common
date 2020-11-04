@@ -153,11 +153,11 @@ define('pico/time',function(exports,require){
 		// ./configure --with-intl=small-icu --download=all
 		day: function(date, locale, ytt, now){
 			ytt = ytt || [
-			'Yesterday',
-			'Today', 
-			'Tomorrow',
-			{weekday:'long'},
-			{weekday: 'short', month: 'short', day: 'numeric'}]
+				'Yesterday',
+				'Today',
+				'Tomorrow',
+				{weekday:'long'},
+				{weekday: 'short', month: 'short', day: 'numeric'}]
 			now = now || new Date
 			var
 				mid=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12,0,0),

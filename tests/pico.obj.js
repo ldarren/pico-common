@@ -725,11 +725,12 @@ parallel('\npico/obj', function(){
 			}
 		}
 
+		var out = {}
 		var res = pobj.validate(spec, {cat: '2020 40 40'}, out)
 		if (!res) return cb(null, false)
 
-		var out = {}
-		var res = pobj.validate(spec, {cat: '2020 10 31'}, out)
+		out = {}
+		res = pobj.validate(spec, {cat: '2020 10 31'}, out)
 		if (res) return cb(null, false)
 		return cb(null, (new Date(2020, 9, 31)).getTime() === out.cat.getTime())
 	})
