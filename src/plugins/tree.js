@@ -60,10 +60,10 @@ define('pico/tree', function(){
 
 	function split(left, i, lastPos){
 		if (i >= left.length) return []
-		var right = left.splice(i + (null == lastPos ? 0 : 1))
-		if (null == lastPos || lastPos >= left[0].length) return right
+		var right = left.splice(i)
+		if (null == lastPos || lastPos >= right[0].length) return right
 
-		var token = left.shift()
+		var token = right.shift()
 		left.push(token.slice(0, lastPos))
 		right.unshift(token.slice(lastPos))
 		return right
@@ -99,9 +99,12 @@ define('pico/tree', function(){
 			}
 
 			if (0 < lastPos){
-				breaks = 0x1 | 0x2
+				if (lastPos < tokens[lastT].length) breaks |= 0x1
+				if (lastPos < nodeTokens[lastT].length) breaks |= 0x2
 			}else if (0 > lastPos){
 				breaks = 0x1
+			}else if (null == lastPos){
+				if (lastT < tokens.length) breaks |= 0x1
 			}
 
 			var branch
@@ -142,8 +145,11 @@ define('pico/tree', function(){
 
 		var node = tree[cd]
 		if (!node) {
-			node = tree[WILD]
-			if (!node) return
+			node = tree[cd.slice(0, -1)]
+			if (!node){
+				node = tree[WILD]
+				if (!node) return
+			}
 		}
 
 		var tokens = node[0]
