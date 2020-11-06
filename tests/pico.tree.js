@@ -38,18 +38,18 @@ parallel('\npico/tree', function(){
 
 	this.test('ensure route add works', function(cb){
 		var routes = [
-			'/user',
+/*			'/user',
 			'/user/comments',
 			'/user/avatar',
 			'/user/lookup/username/:username',
 			'/user/lookup/email/:address',
-			'/event/e:id',
+			'/event/e:id',*/
 			'/event/e:id/comments',
 			'/event/e:id/comment',
-			'/map/:location/events',
+			/*'/map/:location/events',
 			'/status',
 			'/very/deeply/nested/route/hello/there',
-			'/static/*rest',
+			'/static/*rest',*/
 		]
 
 		var tree = {}
