@@ -738,7 +738,6 @@ parallel('\npico/obj', function(){
 	this.test('validate dynamic spec with out-of-spec value', function(cb){
 		var spec = {
 			type: 'object',
-			required: 1,
 			spec: {
 				src: {
 					type: 'object',
@@ -792,31 +791,27 @@ parallel('\npico/obj', function(){
 
 	this.test('validate dynamic spec with bool op', function(cb){
 		var spec = {
-			type: 'object',
-			required: 1,
+			type: 'array',
 			spec: {
-				idx: {
-					type: 'number',
-					required: ['bool', ['ref'], 0, 1]
-				},
-				ref: {
-					type: 'string',
-					required: ['bool', ['idx'], 0, 1]
-				},
+				type: 'object',
+				spec: {
+					idx: {
+						type: 'number',
+						required: ['bool', ['.', 'ref'], 0, 1]
+					},
+					ref: {
+						type: 'string',
+						required: ['bool', ['.', 'idx'], 0, 1]
+					},
+				}
 			}
 		}
 
-		var res = pobj.validate(spec, {idx: 42})
+		var res = pobj.validate(spec, [{idx: 42}, {ref: 'd'}, {idx: 43, ref: 'e'}])
 		if (res) return cb(null, false, res)
 
-		res = pobj.validate(spec, {ref: 'd'})
-		if (res) return cb(null, false, res)
-
-		res = pobj.validate(spec, {idx: 42, ref: 'd'})
-		if (res) return cb(null, false, res)
-
-		res = pobj.validate(spec, {})
-		cb(null, '$.idx' === res, res)
+		res = pobj.validate(spec, [{idx: 42}, {ref: 'd'}, {}])
+		cb(null, '$.2.idx' === res, res)
 	})
 
 	this.test('validate dynamic spec with eq op', function(cb){
