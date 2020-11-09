@@ -1,17 +1,52 @@
 define('pico/tree', function(){
-	var Min = Math.min
-	var SEP = '/'
 	var PARAM = ':'
 	var CAPTURE = '*'
+	var SEP = '/'
 	var WILD = '?'
+	var DYN = [0x3A, 0x2A]
 
-	// tokenize /events/E:id/upload/p*path to [9, [':', 'id'], 8, ['*', 'path']]
-	function tokenizer(route, tokens, pos){
+	function getKey(route, pos, D, S){
+		if (!route) return ''
+		pos = pos || 0
+		D = D || DYN
+		S = S || SEP
+
+		if (-1 !== D.indexOf(route.charCodeAt(pos))) return WILD
+
+		var p = route.indexOf(SEP, pos)
+		if (-1 === p) return route.slice(pos)
+		return route.slice(pos, p + 1)
+	}
+
+	function getCD(route, pos, withSep, S){
+		if (!route) return ''
+		pos = pos || 0
+		S = S || SEP
+
+		var p = route.indexOf(SEP, pos)
+		if (-1 === p) return route.slice(pos)
+		return route.slice(pos, p + (withSep ? 1 : 0))
+	}
+
+	function addNode(tree, tokens, route, key, D, S){
+		key = key || getKey(tokens[0], 0, D, S)
+		tree[key] = [tokens, route]
+		return tree
+	}
+
+	// tokenize /events/E:id/upload/p*path to ['/events/E', ':id', '/upload/p', '*path']
+	function tokenizer(route, tokens, pos, P, C, S){
+		tokens = tokens || []
+		pos = pos || 0
+		P = P || PARAM
+		C = C || CAPTURE
+		S = S || SEP
+
 		if (pos >= route.length) return tokens
 
-		var p0 = route.indexOf(PARAM, pos)
+		var p0 = route.indexOf(P, pos)
 		if (-1 === p0) {
-			p0 = route.indexOf(CAPTURE, pos)
+			p0 = route.indexOf(C, pos)
 			if (-1 === p0) {
 				tokens.push(route.slice(pos))
 				return tokens
@@ -24,133 +59,87 @@ define('pico/tree', function(){
 
 		if (pos !== p0) tokens.push(route.slice(pos, p0))
 
-		var nextPos = route.indexOf(SEP, p0)
-		if (-1 === nextPos) nextPos = route.length
+		var nextPos = route.indexOf(S, p0)
+		if (-1 === nextPos) {
+			tokens.push(route.slice(p0))
+			return tokens
+		}
 		tokens.push(route.slice(p0, nextPos))
 
-		return tokenizer(route, tokens, nextPos)
+		return tokenizer(route, tokens, nextPos, P, C, S)
 	}
 
-	function getCD(route, withSep, mask, pos){
-		pos = pos || 0
-		var end = route.indexOf(SEP, pos)
-		if (-1 === end) end = route.length
-		else if (withSep) end += 1
-
-		var cd = route.slice(pos, end)
-		if (mask){
-			if (-1 !== cd.indexOf(PARAM)) return WILD
-			if (-1 !== cd.indexOf(CAPTURE)) return WILD
+	function compare(a, b, D){
+		D = D || DYN
+		var l = a.length
+		for (var i = 0, ai, bi; i < l; i++){
+			ai = a[i]
+			bi = b[i]
+			if (ai === bi) continue
+			if (-1 === D.indexOf(ai.charCodeAt(0)) || -1 === D.indexOf(bi.charCodeAt(0))) return i
 		}
-		return cd
+		return l === b.length ? null : l
 	}
 
-	function compare(a, b){
-		var min = Min(a.length, b.length)
-		for (var i = 0, l = min, c; i < l; i++){
-			c = a.charCodeAt(i)
-			if (c !== b.charCodeAt(i)) return i
-			if (42 === c || 58 === c ) return
+	function lastCommonSep(a, b, S){
+		S = S || SEP
+		var lastSep
+		var l = a.length
+		for (var i = 0, ai, bi; i < l; i++){
+			ai = a[i]
+			bi = b[i]
+			if (ai !== bi) return lastSep
+			if (S === ai) lastSep = i + 1
 		}
-
-		if (min !== a.length) return -1 * min
-		if (min !== b.length) return min
-		return
+		return l === b.length ? null : lastSep
 	}
 
-	function split(left, i, lastPos){
-		if (i >= left.length) return []
-		var right = left.splice(i)
-		if (null == lastPos || lastPos >= right[0].length) return right
-
-		var token = right.shift()
-		left.push(token.slice(0, lastPos))
-		right.unshift(token.slice(lastPos))
+	function split(left, pos, lastSep){
+		var right = []
+		if (null == pos) return right
+		right = left.splice(pos)
+		if (!right.length || !lastSep) return right
+		var r0 = right.shift(lastSep)
+		left.push(r0.slice(0, lastSep))
+		if (r0.length !== lastSep) right.unshift(r0.slice(lastSep))
 		return right
 	}
 
-	function insertTree(tree, tokens, route){
-		if (!Array.isArray(tokens)) return
-		if (!tokens.length) {
-			tree[''] = [tokens, route]
+	function add(tree, tokens, route, SEP){
+		if (1 === tokens.length && -1 === DYN.indexOf(tokens[0].charCodeAt(0))) {
+			addNode(tree, tokens, route, tokens[0])
 			return
 		}
-		var cd = getCD(tokens[0], 1, 1)
 
-		var node = tree[cd]
-		if (node){
-			var nodeTokens = node[0]
-			var nodeRoute = node[1]
-			var isLeaf = !!nodeRoute.slice
-			var lastT = 0
-			var lastPos
-			var breaks = 0
+		var key = getKey(tokens[0], 0, null, SEP)
+		var val = tree[key]
+		if (!val) return addNode(tree, tokens, route, key)
 
-			for (; lastT < nodeTokens.length; lastT++){
-				if (lastT >= tokens.length){
-					breaks = 0x2
-					break
-				}
+		var nodeTokens = val[0]
+		var nodeRoute = val[1]
 
-				lastPos = compare(tokens[lastT], nodeTokens[lastT])
-				if (null != lastPos) {
-					break
-				}
-			}
+		var diff = compare(nodeTokens, tokens)
 
-			if (0 < lastPos){
-				if (lastPos < tokens[lastT].length) breaks |= 0x1
-				if (lastPos < nodeTokens[lastT].length) breaks |= 0x2
-			}else if (0 > lastPos){
-				breaks = 0x1
-			}else if (null == lastPos){
-				if (lastT < tokens.length) breaks |= 0x1
-			}
-
-			var branch
-			switch (breaks){
-			case 0:
-				if (isLeaf) return
-				insertTree(nodeRoute, [], route)
-				break
-			case 1:
-				if (isLeaf){
-					branch = {}
-					insertTree(branch, [], nodeRoute)
-					insertTree(branch, split(tokens, lastT, -1 * lastPos), route)
-					node[1] = branch
-					return
-				}
-				insertTree(nodeRoute, split(tokens, lastT, -1 * lastPos), route)
-				return
-			case 2:
-				branch = {}
-				insertTree(branch, split(nodeTokens, lastT, lastPos), nodeRoute)
-				insertTree(branch, [], route)
-				node[1] = branch
-				return
-			case 3:
-				branch = {}
-				insertTree(branch, split(nodeTokens, lastT, lastPos), nodeRoute)
-				insertTree(branch, split(tokens, lastT, lastPos), route)
-				node[1] = branch
-				return
-			}
+		// exact same
+		if (null == diff) {
+			if (nodeRoute.slice) return
+			return add(nodeRoute, '', [], route)
 		}
-		tree[cd] = [tokens, route]
+		var lastSep = lastCommonSep(nodeTokens[diff] || '', tokens[diff])
+		if (diff + (lastSep && lastSep < nodeTokens[diff].length ? 0 : 1) < nodeTokens.length) {
+			nodeRoute = val[1] = addNode({}, split(nodeTokens, diff, lastSep), nodeRoute)
+		}else if (nodeRoute.slice){
+			nodeRoute = val[1] = addNode({}, [], nodeRoute)
+		}
+		add(nodeRoute, split(tokens, diff, lastSep), route, SEP)
 	}
 
-	function findTree(tree, path, params, pos){
-		var cd = getCD(path, 1, 0, pos)
+	function find(tree, path, params, pos, S){
+		S = S || SEP
+		var key = getCD(path, pos, 1, S)
 
-		var node = tree[cd]
-		if (!node) {
-			node = tree[cd.slice(0, -1)]
-			if (!node){
-				node = tree[WILD]
-				if (!node) return
-			}
-		}
+		var node = tree[key] || tree[WILD]
+		if (!node) return
 
 		var tokens = node[0]
 		var route = node[1]
@@ -159,9 +148,11 @@ define('pico/tree', function(){
 			for (var i = 0, t, v; (t = tokens[i]); i++){
 				switch(t.charAt(0)){
 				case PARAM:
-					v = getCD(path, 0, 0, pos)
+					v = getCD(path, pos, 0, S)
 					params[t.slice(1)] = v
 					pos += v.length
+					v = route[path.slice(pos)]
+					if (v && v[1].charAt) return v[1]
 					break
 				case CAPTURE:
 					v = path.slice(pos)
@@ -177,29 +168,47 @@ define('pico/tree', function(){
 		}
 
 		if (route.charAt) return route
-		return findTree(route, path, params, pos)
+		return find(route, path, params, pos)
+	}
+
+	function Radix(opt, tree){
+		opt = Object.assign({
+			SEP: SEP,
+			PARAM: PARAM,
+			CAPTURE: CAPTURE,
+		}, opt)
+		this.SEP = opt.SEP
+		this.PARAM = opt.PARAM
+		this.CAPTURE = opt.CAPTURE
+		this.DYN = [opt.PARAM.charCodeAt(0), opt.CAPTURE.charCodeAt(0)]
+		this.tree = tree || {}
+	}
+
+	Radix.prototype = {
+		add: function(route){
+			var S = this.SEP
+			var tree = this.tree
+			var tokens = tokenizer(route, [], 0, this.PARAM, this.CAPTURE, S)
+
+			add(tree, tokens, route, S)
+		},
+		match: function(path, params){
+			if (!path) return
+			var tree = this.tree
+			var val = tree[path]
+			if (val && val[1].charAt) return val[1]
+
+			params = params || {}
+			return find(tree, path, params, 0)
+		},
+		build: function(route, params){
+		}
 	}
 
 	return {
-		tokenizer: function (route, tokens, pos){
-			return tokenizer(route, tokens || [], pos || 0)
-		},
-		getCD,
-		compare,
-		add: function (route, tree){
-			if (!route || !route.slice) return
-
-			tree = tree || {}
-			insertTree(tree, tokenizer(route, [], 0), route, 0)
-			return tree
-		},
-		match: function(tree, path, params){
-			if (!tree || !path) return
-
-			params = params || {}
-			return findTree(tree, path, params, 0, 0)
-		},
-		build: function(tree, path, params){
-		}
+		Radix: Radix,
+		compare: compare,
+		lastCommonSep: lastCommonSep,
+		tokenizer: tokenizer,
 	}
 })
