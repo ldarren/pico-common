@@ -17,11 +17,10 @@ test('ensure pico properties no leak', function(cb){
 	cb(null, globalKeys.length === Object.keys(global).length)
 })
 
-/*require('./pico.amd.js')
+require('./pico.amd.js')
 require('./pico.func.js')
 require('./pico.json.js')
 require('./pico.obj.js')
 require('./pico.str.js')
 require('./pico.test.js')
-require('./pico.time.js')*/
-require('./pico.tree.js')
+require('./pico.time.js')
