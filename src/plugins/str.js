@@ -244,6 +244,9 @@ define('pico/str', function(){
 			var c=n-String(val).length+1
 			return Array(c>0?c:0).join(str||'0')
 		},
+		isBase36:function(c){
+			return ((c >= 0x30 && c <= 0x39) || (c >= 0x41 && c <= 0x5e) || (c >= 0x61 && c <= 0x7e))
+		},
 		// src:https://raw.githubusercontent.com/krasimir/absurd/master/lib/processors/html/helpers/TemplateEngine.js
 		// caveat: semicolon is required
 		template:function(html){

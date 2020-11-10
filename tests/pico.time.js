@@ -29,8 +29,29 @@ parallel('\npico/time', function(){
 		ret = ret && parsed[4].includes(t.getDay())
 		cb(null, ret)
 	})
+	this.test('ensure daynum from 1/Mar/2016 to 30/Oct/2020 is 1704', function(cb){
+		cb(null, 1704===ptime.daynum('2020-10-30', '2016-03-01T00:00:00Z'))
+	})
 	this.test('ensure weeknum of 1/Mar/2016 is 9', function(cb){
-		cb(null, 9===ptime.weeknum(new Date(2016,2,1,0,0,0)))
+		cb(null, 9===ptime.weeknum(new Date(2016,2,1)))
+	})
+	this.test('ensure day() return user friendly day', function(cb){
+		var now = new Date(2020, 9, 30, 18, 10, 0)
+		var ytt = [ -1, 0, 1, {weekday:'short'}, {day: 'numeric'}]
+
+		if (0 !== ptime.day(new Date(2020, 9, 30, 21), null, ytt, now)) return cb(null, false)
+		if (-1 !== ptime.day(new Date(2020, 9, 29, 21), null, ytt, now)) return cb(null, false)
+		if (1 !== ptime.day(new Date(2020, 9, 31, 21), null, ytt, now)) return cb(null, false)
+		if ('Wed' !== ptime.day(new Date(2020, 9, 28, 21), null, ytt, now)) return cb(null, false)
+		cb(null, '4' === ptime.day(new Date(2020, 10, 4, 21), null, ytt, now))
+	})
+	this.test('ensure date convert work', function(cb){
+		var time = (new Date('Oct 31 20')).getTime()
+		var formats = ['D-M-Y', 'D/M/Y', 'Y M D']
+		if (time !== ptime.convert('31-10-20', formats).getTime()) return cb(null, false)
+		if (time !== ptime.convert('31/10/20', formats).getTime()) return cb(null, false)
+		if (time !== ptime.convert('2020 10 31', formats).getTime()) return cb(null, false)
+		cb(null, (new Date('Oct 31 20 01:01:01')).getTime() === ptime.convert('2020 Oct 31, 01:01:01.000', formats).getTime())
 	})
 	this.test('ensure "* * * * * *" return less than two min', function(cb){
 		const diff = ptime.nearest(...ptime.parse('* * * * * *')) - Date.now()
