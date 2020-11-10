@@ -2,6 +2,8 @@ const pico = require('../bin/pico-cli')
 const pobj = pico.export('pico/obj')
 const { parallel } = pico.export('pico/test')
 
+const first_name = 'Darren'
+
 parallel('\npico/obj', function(){
 	this.test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
 		pico.define('ancestor0',function(exports,require,module,define,inherit,pico){
@@ -239,9 +241,9 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('ensure dot doesnt mutate params', function(cb){
-		var obj = {a: {b: {c: 'ok'}}}
-		var params = ['a', 'b', 'c']
-		cb(null, 'ok' === pobj.dot(obj, params) && 3 === params.length && 'c' === params[2])
+		var obj = {a: [{b: {c: ['o', 'k']}}]}
+		var params = ['a', 0, 'b', 'c', 'length']
+		cb(null, 2 === pobj.dot(obj, params) && 5 === params.length && 'c' === params[3])
 	})
 
 	this.test('ensure dot optional params work', function(cb){
@@ -414,9 +416,28 @@ parallel('\npico/obj', function(){
 			}
 		}
 		var ret = pobj.validate(koSpec, obj)
-		cb(null, ret === '$.a.d')
-	})
+		if (ret !== '$.a.d') cb(null, false, ret)
 
+		var koSpec2 = {
+			type: 'object',
+			spec: {
+				a: {
+					type: 'object',
+					required: 1,
+					spec: {
+						type: 'object',
+						required: 1,
+						spec: {
+							d: 'string',
+							e: 'string',
+						}
+					}
+				}
+			}
+		}
+		ret = pobj.validate(koSpec2, obj)
+		cb(null, ret === '$.a.required', ret)
+	})
 	this.test('ensure validate default value works', function(cb){
 		var obj = [{a: {b: [{d: '1'}]}}]
 		var okSpec = {
@@ -624,7 +645,14 @@ parallel('\npico/obj', function(){
 		var out = {}
 		var res = pobj.validate(spec, input, out)
 		if (res) return cb(null, false, res)
-		cb(null, (null === out.a && null === out.b && false === out.c && false === out.d && null === out.e && null === out.f))
+		cb(null, (
+			null === out.a &&
+			null === out.b &&
+			false === out.c &&
+			false === out.d &&
+			null === out.e &&
+			null === out.f
+		))
 	})
 
 	this.test('validate support not nullable', function(cb){
@@ -647,38 +675,36 @@ parallel('\npico/obj', function(){
 		return cb(null, '$.e' === res)
 	})
 
-	this.test('validate dynamic spec support', function(cb){
+	this.test('validate array error position', function(cb){
 		var spec = {
-			type: 'object',
-			required: 1,
+			type: 'array',
 			spec: {
-				dropoff: {
-					type: 'bool',
-					required: 1
-				},
-				src: {
-					type: 'object',
-					required: [['dropoff'], 0],
-					spec: {
-						first_name: {
-							type: 'string',
-							required: 1
-						},
-						last_name: 'string',
-					}
-				}
+				type: 'number'
 			}
 		}
 
-		var res = pobj.validate(spec, {dropoff: 0})
-		if (res) return cb(null, false, res)
+		var res = pobj.validate(spec, ['a', 'b'])
+		return cb(null, res === '$.0')
+	})
 
-		res = pobj.validate(spec, {dropoff: 1})
-		if ('$.src' !== res) return cb(null, false, res)
+	this.test('validate boolean', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				bool1: 'bool',
+				bool2: 'bool',
+				bool3: {
+					type: 'bool',
+					required: 1
+				},
+				bool4: 'bool',
+			}
+		}
 
 		var out = {}
-		res = pobj.validate(spec, {dropoff: 1, src: {first_name: 'Darren'}}, out)
-		return cb(null, !res && out.dropoff && out.src.first_name === 'Darren')
+		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null}, out)
+		if (res) return cb(null, false)
+		return cb(null, false === out.bool1 && true === out.bool2 && false === out.bool3 && false === out.bool4)
 	})
 
 	this.test('validate dynamic spec with out-of-spec value', function(cb){
@@ -688,7 +714,7 @@ parallel('\npico/obj', function(){
 			spec: {
 				src: {
 					type: 'object',
-					required: [['opt', 0, 'dropoff'], 0],
+					required: ['ref', ['opt', 0, 'dropoff'], 0],
 					spec: {
 						first_name: {
 							type: 'string',
@@ -707,7 +733,214 @@ parallel('\npico/obj', function(){
 		if ('$.src' !== res) return cb(null, false, res)
 
 		var out = {}
-		res = pobj.validate(spec, {opt: [{dropoff:1}], src: {first_name: 'Darren'}}, out)
-		return cb(null, !res && !out.opt && out.src.first_name === 'Darren')
+		res = pobj.validate(spec, {opt: [{dropoff:1}], src: {first_name}}, out)
+		return cb(null, !res && !out.opt && out.src.first_name === first_name)
+	})
+
+	this.test('validate dynamic spec with ref op', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				id: {
+					type: 'string',
+					required: 1
+				},
+				ref: {
+					type: 'string',
+					value: ['ref', ['id']]
+				}
+			}
+		}
+
+		var obj = {}
+		var res = pobj.validate(spec, {id: 'a' }, obj)
+		if (res) return cb(null, false, res)
+		if (obj.id !== obj.ref) return cb(null, false, obj)
+
+		res = pobj.validate(spec, {id: 'a', ref: 'b' }, obj)
+		cb(null, !res && 'b' === obj.ref)
+	})
+
+	this.test('validate dynamic spec with inv op', function(cb){
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				idx: {
+					type: 'number',
+					required: ['inv', ['ref'], 0]
+				},
+				ref: {
+					type: 'string',
+					required: ['inv', ['idx'], 0]
+				},
+			}
+		}
+
+		var res = pobj.validate(spec, {idx: 42})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {ref: 'd'})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {idx: 42, ref: 'd'})
+		if (res) return cb(null, false, res)
+
+		res = pobj.validate(spec, {})
+		cb(null, '$.idx' === res, res)
+	})
+
+	this.test('validate dynamic spec with eq op', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				choice: {
+					type: 'number',
+					required: 1
+				},
+				discount: {
+					type: 'bool',
+					value: ['eq', ['choice'], 0, null, [1,2,3]]
+				},
+				free_delivery: {
+					type: 'bool',
+					value: ['eq', ['choice'], 0, null, 1, 1]
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {choice: 2}, out)
+		if (res || !out.discount || !out.free_delivery) return cb(null, false, res)
+
+		res = pobj.validate(spec, {choice: 1})
+		cb(null, res || !out.discount || out.free_delivery, out)
+	})
+
+	this.test('validate dynamic spec with map op', function(cb){
+		// test default value
+		var spec1 = {
+			type: 'object',
+			required: 1,
+			spec: {
+				id: {
+					type: 'number',
+				},
+				first_name: {
+					type: 'string',
+					value: ['map',
+						['$', 'id'], 0,
+						['_', 'user'],
+						['$', 'first_name'], 'error'
+					]
+				}
+			}
+		}
+		// test notnull as required
+		var spec2 = {
+			type: 'object',
+			required: 1,
+			spec: {
+				id: {
+					type: 'number',
+				},
+				first_name: {
+					type: 'string',
+					notnull: 1,
+					value: ['map',
+						['$', 'id'], 0,
+						['_', 'user'],
+					]
+				}
+			}
+		}
+		var ext1 = {user: {0: {first_name: 'NA'}, 1: {first_name}}}
+		var ext2 = {user: {0: 'NA', 1: first_name}}
+
+		var obj = {}
+		var res = pobj.validate(spec1, {}, obj, ext1)
+		if (res || obj.first_name !== 'NA') return cb(null, false, res)
+
+		obj = {}
+		res = pobj.validate(spec1, {id: 1}, obj, ext1)
+		if (res) return cb(null, false, res)
+		if (obj.first_name !== first_name) return cb(null, false, obj)
+
+		obj = {}
+		res = pobj.validate(spec1, {id: 2}, obj, ext1)
+		if (res && obj.first_name !== 'error') return cb(null, false, res)
+
+		obj = {}
+		res = pobj.validate(spec2, {}, obj, ext2)
+		if (res || obj.first_name !== 'NA') return cb(null, false, res)
+
+		obj = {}
+		res = pobj.validate(spec2, {id: 1}, obj, ext2)
+		if (res || obj.first_name !== first_name) return cb(null, false, res)
+
+		obj = {}
+		res = pobj.validate(spec2, {id: 2}, obj, ext2)
+		return cb(null, '$.first_name' === res, res)
+	})
+
+	this.test('ensure force attribue works on array and string', function(cb){
+		// test default value
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				arr: {
+					type: 'array',
+					force: 1
+				},
+				str: {
+					type: 'string',
+					force: 1
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {arr:1, str:1}, out)
+		if (res || out.arr[0] !== 1 || out.str !== '1') return cb(null, false, res)
+
+		out = {}
+		res = pobj.validate(spec, {arr:{a:1}, str:{a:1}}, out)
+		cb(null, !res && out.arr[0].a === 1 && out.str !== '{a:1}')
+	})
+
+	this.test('ensure int attribue works on number', function(cb){
+		// test default value
+		var spec = {
+			type: 'object',
+			required: 1,
+			spec: {
+				round: {
+					type: 'number',
+					int: true
+				},
+				down: {
+					type: 'number',
+					int: 'd'
+				},
+				floor: {
+					type: 'number',
+					int: 'f'
+				},
+				up: {
+					type: 'number',
+					int: 'u'
+				},
+				ceil: {
+					type: 'number',
+					int: 'c'
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {round: 3.6, down: 3.6, floor: 3.6, up: 3.6, ceil: 3.6}, out)
+		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4)
 	})
 })
