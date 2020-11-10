@@ -1,5 +1,6 @@
-define('pico/time',function(){
+define('pico/time',function(exports,require){
 	var
+		pStr = require('pico/str'),
 		Max=Math.max,
 		Min=Math.min,
 		Floor=Math.floor,
@@ -10,7 +11,7 @@ define('pico/time',function(){
 		HR = 60*MIN,
 		DAY= 24*HR,
 		daynum=function(end,start){
-			return (end-start) / DAY
+			return (new Date(end)-new Date(start)) / DAY
 		},
 		weeknum=function(date, us, yearoff){
 			var
@@ -150,21 +151,50 @@ define('pico/time',function(){
 		// node.js should compile with
 		// ./configure --with-intl=full-icu --download=all
 		// ./configure --with-intl=small-icu --download=all
-		day: function(date, locale){
+		day: function(date, locale, ytt, now){
+			ytt = ytt || [
+				'Yesterday',
+				'Today',
+				'Tomorrow',
+				{weekday:'long'},
+				{weekday: 'short', month: 'short', day: 'numeric'}]
+			now = now || new Date
 			var
-				now=new Date,
 				mid=new Date(now.getFullYear(),now.getMonth(),now.getDate(),12,0,0),
 				diff=mid-date,
 				DAY15=DAY*1.5
 			if ((diff >= 0 && diff <= DAY15) || (diff <= 0 && diff > -DAY15)){
-				if (now.getDate()===date.getDate())return'Today'
-				if (now > date) return 'Yesterday'
-				return 'Tomorrow'
+				if (now.getDate()===date.getDate())return ytt[1]
+				if (now > date) return ytt[0]
+				return ytt[2]
 			}
 
 			locale=locale||'en-US'
-			if (now.getFullYear()===date.getFullYear() && weeknum(now)===weeknum(date)) return date.toLocaleDateString(locale, {weekday:'long'})
-			return date.toLocaleDateString(locale,{weekday: 'short', month: 'short', day: 'numeric'})
+			if (now.getFullYear()===date.getFullYear() && weeknum(now)===weeknum(date)) return date.toLocaleDateString(locale, ytt[3])
+			return date.toLocaleDateString(locale,ytt[4])
+		},
+		convert: function callee(str, formats, idx){
+			idx = idx || 0
+			if (!Array.isArray(formats) || idx >= formats.length || !str.slice) return new Date(str)
+			var format = formats[idx++]
+			var date = {}
+			var pos = 0
+			for (var l = str.length, c, p, j = 0, key; pos < l; pos++){
+				c = pStr.isBase36(str.charCodeAt(pos))
+				if (p !== c) {
+					if (j >= format.length) break
+					key = format[j++]
+				}
+				if (c){
+					if (!date[key]) date[key] = str[pos]
+					else date[key] += str[pos]
+				}else{
+					if (key !== str[pos]) return callee(str, formats, idx)
+				}
+				p = c
+			}
+			var d = new Date(`${date.M} ${date.D} ${date.Y} ${str.slice(pos)}`)
+			return d.getTime() ? d : new Date(str)
 		}
 	}
 })

@@ -698,19 +698,46 @@ parallel('\npico/obj', function(){
 					required: 1
 				},
 				bool4: 'bool',
+				bool5: 'bool',
 			}
 		}
 
 		var out = {}
-		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null}, out)
+		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null, bool5: 'no'}, out)
 		if (res) return cb(null, false)
-		return cb(null, false === out.bool1 && true === out.bool2 && false === out.bool3 && false === out.bool4)
+		return cb(null,
+			false === out.bool1 &&
+			true === out.bool2 &&
+			false === out.bool3 &&
+			false === out.bool4 &&
+			false === out.bool5
+		)
+	})
+
+	this.test('validate date format', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				cat: {
+					type: 'date',
+					formats: ['D/Y/M', 'D-Y-M', 'Y M D']
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {cat: '2020 40 40'}, out)
+		if (!res) return cb(null, false)
+
+		out = {}
+		res = pobj.validate(spec, {cat: '2020 10 31'}, out)
+		if (res) return cb(null, false)
+		return cb(null, (new Date(2020, 9, 31)).getTime() === out.cat.getTime())
 	})
 
 	this.test('validate dynamic spec with out-of-spec value', function(cb){
 		var spec = {
 			type: 'object',
-			required: 1,
 			spec: {
 				src: {
 					type: 'object',
@@ -753,42 +780,38 @@ parallel('\npico/obj', function(){
 			}
 		}
 
-		var obj = {}
-		var res = pobj.validate(spec, {id: 'a' }, obj)
+		var out = {}
+		var res = pobj.validate(spec, {id: 'a' }, out)
 		if (res) return cb(null, false, res)
-		if (obj.id !== obj.ref) return cb(null, false, obj)
+		if (out.id !== out.ref) return cb(null, false, out)
 
-		res = pobj.validate(spec, {id: 'a', ref: 'b' }, obj)
-		cb(null, !res && 'b' === obj.ref)
+		res = pobj.validate(spec, {id: 'a', ref: 'b' }, out)
+		cb(null, !res && 'b' === out.ref)
 	})
 
-	this.test('validate dynamic spec with inv op', function(cb){
+	this.test('validate dynamic spec with bool op', function(cb){
 		var spec = {
-			type: 'object',
-			required: 1,
+			type: 'array',
 			spec: {
-				idx: {
-					type: 'number',
-					required: ['inv', ['ref'], 0]
-				},
-				ref: {
-					type: 'string',
-					required: ['inv', ['idx'], 0]
-				},
+				type: 'object',
+				spec: {
+					idx: {
+						type: 'number',
+						required: ['bool', ['.', 'ref'], 0, 1]
+					},
+					ref: {
+						type: 'string',
+						required: ['bool', ['.', 'idx'], 0, 1]
+					},
+				}
 			}
 		}
 
-		var res = pobj.validate(spec, {idx: 42})
+		var res = pobj.validate(spec, [{idx: 42}, {ref: 'd'}, {idx: 43, ref: 'e'}])
 		if (res) return cb(null, false, res)
 
-		res = pobj.validate(spec, {ref: 'd'})
-		if (res) return cb(null, false, res)
-
-		res = pobj.validate(spec, {idx: 42, ref: 'd'})
-		if (res) return cb(null, false, res)
-
-		res = pobj.validate(spec, {})
-		cb(null, '$.idx' === res, res)
+		res = pobj.validate(spec, [{idx: 42}, {ref: 'd'}, {}])
+		cb(null, '$.2.idx' === res, res)
 	})
 
 	this.test('validate dynamic spec with eq op', function(cb){
@@ -858,33 +881,57 @@ parallel('\npico/obj', function(){
 		var ext1 = {user: {0: {first_name: 'NA'}, 1: {first_name}}}
 		var ext2 = {user: {0: 'NA', 1: first_name}}
 
-		var obj = {}
-		var res = pobj.validate(spec1, {}, obj, ext1)
-		if (res || obj.first_name !== 'NA') return cb(null, false, res)
+		var out = {}
+		var res = pobj.validate(spec1, {}, out, ext1)
+		if (res || out.first_name !== 'NA') return cb(null, false, res)
 
-		obj = {}
-		res = pobj.validate(spec1, {id: 1}, obj, ext1)
+		out = {}
+		res = pobj.validate(spec1, {id: 1}, out, ext1)
 		if (res) return cb(null, false, res)
-		if (obj.first_name !== first_name) return cb(null, false, obj)
+		if (out.first_name !== first_name) return cb(null, false, out)
 
-		obj = {}
-		res = pobj.validate(spec1, {id: 2}, obj, ext1)
-		if (res && obj.first_name !== 'error') return cb(null, false, res)
+		out = {}
+		res = pobj.validate(spec1, {id: 2}, out, ext1)
+		if (res && out.first_name !== 'error') return cb(null, false, res)
 
-		obj = {}
-		res = pobj.validate(spec2, {}, obj, ext2)
-		if (res || obj.first_name !== 'NA') return cb(null, false, res)
+		out = {}
+		res = pobj.validate(spec2, {}, out, ext2)
+		if (res || out.first_name !== 'NA') return cb(null, false, res)
 
-		obj = {}
-		res = pobj.validate(spec2, {id: 1}, obj, ext2)
-		if (res || obj.first_name !== first_name) return cb(null, false, res)
+		out = {}
+		res = pobj.validate(spec2, {id: 1}, out, ext2)
+		if (res || out.first_name !== first_name) return cb(null, false, res)
 
-		obj = {}
-		res = pobj.validate(spec2, {id: 2}, obj, ext2)
+		out = {}
+		res = pobj.validate(spec2, {id: 2}, out, ext2)
 		return cb(null, '$.first_name' === res, res)
 	})
 
-	this.test('ensure force attribue works on array and string', function(cb){
+	this.test('validate dynamic spec with now op', function(cb){
+		// test default value
+		var DAY = 1000 * 60 * 60 * 24
+		var spec = {
+			type: 'object',
+			spec: {
+				today: {
+					type: 'date',
+					value: ['now']
+				},
+				yesterday: {
+					type: 'date',
+					value: ['now', null, -1 * DAY]
+				}
+			}
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, {}, out)
+		if (res || !out.today || !out.yesterday) return cb(null, false, res)
+
+		return cb(null, DAY === out.today.getTime() - out.yesterday.getTime())
+	})
+
+	this.test('ensure force attribute works on array and string', function(cb){
 		// test default value
 		var spec = {
 			type: 'object',
@@ -910,7 +957,7 @@ parallel('\npico/obj', function(){
 		cb(null, !res && out.arr[0].a === 1 && out.str !== '{a:1}')
 	})
 
-	this.test('ensure int attribue works on number', function(cb){
+	this.test('ensure int attribute works on number', function(cb){
 		// test default value
 		var spec = {
 			type: 'object',
