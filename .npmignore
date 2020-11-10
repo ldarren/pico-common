@@ -1,4 +1,5 @@
 .git
 tests/
 src/
+man/
 tests.js
