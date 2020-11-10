@@ -1,20 +1,20 @@
 const pico = require('../bin/pico-cli')
-const pstr = pico.export('pico/str')
+const pStr = pico.export('pico/str')
 const { parallel } = pico.export('pico/test')
 
 parallel('\npico/str', function(){
 	this.test('ensure left pad 8 for a number', function(cb){
-		cb(null, '00000019'===pstr.pad(19,8))
+		cb(null, '00000019'===pStr.pad(19,8))
 	})
 	this.test('ensure str.template works', function(cb){
 		const
-			tmpl=pstr.template('<%d.text%>'),
+			tmpl=pStr.template('<%d.text%>'),
 			obj={text:'Hello World'}
 
 		cb(null, obj.text===tmpl(obj))
 	})
 	this.test('ensure str.template mix well with js', function(cb){
-		const tmpl=pstr.template('<%for(let i=0; i<5; i++){%>1<%}%>')
+		const tmpl=pStr.template('<%for(let i=0; i<5; i++){%>1<%}%>')
 		cb(null, '11111'===tmpl())
 	})
 	this.test('ensure str.template has pico as argument', function(cb){
@@ -23,15 +23,15 @@ parallel('\npico/str', function(){
 			cb
 		}
 		pico.run({ env }, function(){
-			const pstr = require('pico/str')
-			const tmpl = pstr.template('<%pico.env("secret")%>')
+			const pStr = require('pico/str')
+			const tmpl = pStr.template('<%pico.env("secret")%>')
 			return function(){
 				pico.env('cb')(null, pico.env('secret') === tmpl())
 			}
 		})
 	})
 	this.test('ensure str.template work with multiline', function(cb){
-		const tmpl = pstr.template(`
+		const tmpl = pStr.template(`
 			<%
 			function plus(x, y){
 				return x + y
@@ -50,106 +50,117 @@ parallel('\npico/str', function(){
 		`)
 		cb(null, '<p>2</p>' === tmpl({type: 'minus', x: 4, y: 2}))
 	})
-	this.test('ensure restful params parser supported: url/v%version/pushPackage/:pushId',function(cb){
-		var
-			route='url/v%version/pushPackage/:pushId',
-			build=pstr.compileRest(route),
-			params={},
-			api=pstr.execRest('url/v1/pushPackage/web.com.domain.app',build,params)
-		cb(null, api===route && 1===params.version && 'web.com.domain.app'===params.pushId)
-	})
-	this.test('ensure restful wildcard parser supported: url/ver%version/path/#path',function(cb){
-		var
-			route='url/ver%version/path/#path',
-			build=pstr.compileRest(route),
-			params={},
-			api=pstr.execRest('url/ver1/path/web/com/domain/app',build,params)
 
-		cb(null, api===route && 1===params.version && 'web/com/domain/app'===params.path)
-	})
-	this.test('ensure restful multiple build supported: /:appName|#appPath',function(cb){
-		var
-			route='/:appName|#appPath',
-			build=pstr.compileRest('ERR|*msg'),
-			params={}
+	this.test('ensure tokenizer work', function(cb){
+		// ['/events/e', ':id', '/comments/', ':cid', '/', '*path']
+		const route = '/events/:id/comments/:cid/*path'
+		const tokens = pStr.tokenizer({}, route)
 
-		pstr.compileRest(route, build)
-
-		var api=pstr.execRest('/msair',build,params)
-		cb(null, api===route && 'msair'===params.appName)
+		cb(null,
+			6 === tokens.length &&
+			'/events/' === tokens[0] &&
+			':id' === tokens[1] &&
+			'/comments/' === tokens[2] &&
+			':cid' === tokens[3] &&
+			'/' === tokens[4] &&
+			'*path' === tokens[5]
+		)
 	})
-	this.test('ensure restful optional parser: url/v%version|device/:deviceToken|path/#path',function(cb){
-		var
-			route='url/v%version|device/:deviceToken|path/#path',
-			build=pstr.compileRest(route),
-			params={},
-			api=pstr.execRest('url/v1/device/ab45/path/web/com/domain/app',build,params)
-		if(api!==route || 1!==params.version || 'ab45'!==params.deviceToken || 'web/com/domain/app'!==params.path) return cb(null, false)
-		params={}
-		api=pstr.execRest('url/v1/device/ab45',build,params)
-		if(api!==route || 1!==params.version || 'ab45'!==params.deviceToken) return cb(null, false)
-		params={}
-		api=pstr.execRest('url/v1',build,params)
-		if(api!==route || 1!==params.version) return cb(null, false)
+
+	this.test('ensure compare return last common position', function(cb){
+		const ctx = {}
+		if (2 !== pStr.compare(ctx, ['1','1','2'], ['1','1','3'])) return cb(null, false)
+
+		if (null != pStr.compare(ctx, ['1',':1','2'], ['1',':2','2'])) return cb(null, false)
+		if (3 !== pStr.compare(ctx, ['1',':1','2','1'], ['1',':1','2'])) return cb(null, false)
+		if (3 !== pStr.compare(ctx, ['1',':1','2'], ['1',':1','2','1'])) return cb(null, false)
+		cb(null, 0 === pStr.compare(ctx, ['1',':1','2'], ['2',':1','2','1']))
+	})
+
+	this.test('ensure lastCommonSep returns last common SEP', function(cb){
+		const ctx = {}
+		if (1 !== pStr.lastCommonSep(ctx, '/users', '/events')) return cb(null, false)
+		cb(null, 6 === pStr.lastCommonSep(ctx, '/user/comment', '/user/comments'))
+	})
+
+	this.test('ensure route add and match work', function(cb){
+		var routes = [
+			['/user', '/user', null],
+			['/very/deeply/nested/route/hello/there', '/very/deeply/nested/route/hello/there', null],
+			['/user/lookup/:id', '/user/lookup/darren', {id: 'darren'}],
+			['/user/lookup/email/:email', '/user/lookup/email/darren@mail.co', {email: 'darren@mail.co'}],
+			['/event/:id', '/event/1', {id: '1'}],
+			['/event/:id/comments', '/event/2/comments', {id: '2'}],
+			['/event/:id/comment', '/event/3/comment', {id: '3'}],
+			['/user/:id/comment/:cid', '/user/1/comment/2', {id: '1', cid: '2'}],
+			['/static/*rest', '/static/foo/bar', {rest: 'foo/bar'}],
+		]
+
+		var radix = new pStr.Radix
+		var i, r
+		for (i = 0; (r = routes[i]); i++){
+			radix.add(r[0])
+		}
+		i = 0
+		for (var params, res; (r = routes[i]); i++){
+			params = {}
+			res = radix.match(r[1], params)
+			if (res !== r[0] || JSON.stringify(r[2]) !== JSON.stringify(r[2] ? params : null)) return cb(null, false)
+		}
 		cb(null, true)
 	})
-	this.test('ensure restful optional parser2: /:appName|#appPath',function(cb){
-		var
-			route='/:appName|#appPath',
-			build=pstr.compileRest(route),
-			params={},
-			api=pstr.execRest('/msair',build,params)
-		cb(null, api===route && 'msair'===params.appName)
+
+	this.test('ensure router ignore same route with diff params', function(cb){
+		var routes = [
+			'/user/lookup/:id',
+			'/user/lookup/:username',
+			'/user/lookup/*rest'
+		]
+
+		var radix = new pStr.Radix
+		for (var i = 0, r; (r = routes[i]); i++){
+			radix.add(r)
+		}
+		var params = {}
+		var res = radix.match('/user/lookup/darren', params)
+		if (routes[0] !== res || 'darren' !== params.id) return cb(null, false)
+
+		params = {}
+		res = radix.match('/user/lookup/foo/abr', params)
+		if (routes[0] !== res || 'foo' !== params.id) return cb(null, false)
+		cb(null, true)
 	})
-	this.test('ensure restful builder for relative url works',function(cb){
-		var route=':DOMAIN/s3/read/:Key'
-		var build=pstr.compileRest(route)
-		var url=pstr.buildRest(route, build, {DOMAIN: 'domain', Key: '123'}, true)
-		cb(null, 'domain/s3/read/123' === url)
+
+	this.test('ensure router build', function(cb){
+		var routes = [
+			['/users/:id/parcels', {id: 1}, '/users/1/parcels'],
+			['/users/:id/devices/:did', {id: 1, did: 'abc'}, '/users/1/devices/abc'],
+		]
+
+		var radix = new pStr.Radix
+		for (var i = 0, r; (r = routes[i]); i++){
+			if (r[2] !== radix.build(r[0], r[1])) return cb(null, false)
+		}
+		cb(null, true)
 	})
-	var route='http://localhost:3000/v%ver/users/:email|#profile'
-	var build=pstr.compileRest(route)
-	this.test('ensure restful builder for abs url works',function(cb){
-		var url=pstr.buildRest(route, build, {ver:1.9, email:'test@email.com', profile: 'firstname/lastname'})
-		cb(null, 'http://localhost:3000/v1.9/users/test@email.com/firstname/lastname' ===  url)
-	})
-	this.test('ensure restful builder fails if missing mandatory params',function(cb){
-		var url=pstr.buildRest(route, build, {ver:1.9, profile: 'firstname/lastname'})
-		cb(null, false ===  url)
-	})
-	this.test('ensure restful builder success if missing non-mandatory params',function(cb){
-		var url=pstr.buildRest(route, build, {ver:1.9, email: 'test@email.com'})
-		cb(null, 'http://localhost:3000/v1.9/users/test@email.com' ===  url)
-	})
-	this.test('ensure restful builder return exact same route',function(cb){
-		var route = 'http://localhost:3000/api/2.0/user'
-		var url=pstr.buildRest(route, build, {ver:1.9})
-		cb(null, route ===  url)
-	})
-	this.test('ensure builder rest can handle empty params gracefully',function(cb){
-		var route = 'http://localhost:3000/api/%ver/cal'
-		pstr.compileRest(route, build)
-		// no exception here
-		var url=pstr.buildRest(route, build)
-		cb(null, !url)
-	})
+
 	this.test('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
 		var
 			data = JSON.stringify({data:123}),
 			key = parseInt('100007900715391')
-		cb(null, data===pstr.codec(key, pstr.codec(key, data)))
+		cb(null, data===pStr.codec(key, pStr.codec(key, data)))
 	})
 	this.test('ensure codec work on time based string', (cb)=>{
 		const
 			key='00mjvyn50022oq0000zbpt6c000014k2',
 			secret='3zuklpkl6k905e5kryoiozuxrkjhunr26vjnlaao',
 			now=Math.floor(Date.now()/(5*60*1000)),
-			hash=now+pstr.hash(secret),
-			token=pstr.codec(hash,key)
-		cb(null, key===pstr.codec(key, pstr.codec(hash, token)))
+			hash=now+pStr.hash(secret),
+			token=pStr.codec(hash,key)
+		cb(null, key===pStr.codec(key, pStr.codec(hash, token)))
 	})
 	this.test('ensure hash password to 32bit int', function(cb){
-		cb(null, pstr.hash('免费服务会立即翻译英文和英文之间的单词') < 0xFFFFFFFF)
+		cb(null, pStr.hash('免费服务会立即翻译英文和英文之间的单词') < 0xFFFFFFFF)
 	})
 	this.test('ensure hash dont collide in repeating char x9999', function(cb){
 		var
@@ -158,7 +169,7 @@ parallel('\npico/str', function(){
 			l=9999,
 			n=Date.now()
 		for(var i=0,h; i<l; i++){
-			h=pstr.hash(s)
+			h=pStr.hash(s)
 			if (~hist.indexOf(h)) break
 			hist.push(h)
 			s+='p'
@@ -171,7 +182,7 @@ parallel('\npico/str', function(){
 			l=9999,
 			n=Date.now()
 		for(var i=0,h; i<l; i++){
-			h=pstr.hash(pstr.rand())
+			h=pStr.hash(pStr.rand())
 			if (~hist.indexOf(h)) break
 			hist.push(h)
 		}

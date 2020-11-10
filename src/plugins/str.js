@@ -2,6 +2,212 @@ define('pico/str', function(){
 	var Random=Math.random
 	var re = /<%([\s\S]*?)%>/g
 	var reExp = /(^( )?(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|finally|for|function|if|import|let|return|super|switch|throw|try|var|while|with|yield|{|}|;))(.*)?/g
+	var PARAM = ':'
+	var CAPTURE = '*'
+	var SEP = '/'
+	var WILD = '?'
+	var DYN = [0x3A, 0x2A]
+
+	function getKey(ctx, route, pos){
+		if (!route) return ''
+		pos = pos || 0
+
+		if (-1 !== (ctx.DYN || DYN).indexOf(route.charCodeAt(pos))) return WILD
+		var p = route.indexOf(ctx.SEP || SEP, pos)
+		if (-1 === p) return route.slice(pos)
+		return route.slice(pos, p + 1)
+	}
+
+	function getCD(ctx, route, pos, withSep){
+		if (!route) return ''
+		pos = pos || 0
+
+		var p = route.indexOf(ctx.SEP || SEP, pos)
+		if (-1 === p) return route.slice(pos)
+		return route.slice(pos, p + (withSep ? 1 : 0))
+	}
+
+	function addNode(ctx, tree, tokens, route, key){
+		key = key || getKey(ctx, tokens[0], 0)
+		tree[key] = [tokens, route]
+		return tree
+	}
+
+	// tokenize /events/:id/upload/p*path to ['/events/', ':id', '/upload/p', '*path']
+	function tokenizer(ctx, route, tokens, pos){
+		tokens = tokens || []
+		pos = pos || 0
+
+		if (pos >= route.length) return tokens
+
+		var p0 = route.indexOf(ctx.PARAM || PARAM, pos)
+		if (-1 === p0) {
+			p0 = route.indexOf(ctx.CAPTURE || CAPTURE, pos)
+			if (-1 === p0) {
+				tokens.push(route.slice(pos))
+				return tokens
+			}else{
+				tokens.push(route.slice(pos, p0))
+				tokens.push(route.slice(p0))
+				return tokens
+			}
+		}
+
+		if (pos !== p0) tokens.push(route.slice(pos, p0))
+
+		var nextPos = route.indexOf(ctx.SEP || SEP, p0)
+		if (-1 === nextPos) {
+			tokens.push(route.slice(p0))
+			return tokens
+		}
+		tokens.push(route.slice(p0, nextPos))
+
+		return tokenizer(ctx, route, tokens, nextPos)
+	}
+
+	function compare(ctx, a, b){
+		var D = ctx.DYN || DYN
+		var l = a.length
+		for (var i = 0, ai, bi; i < l; i++){
+			ai = a[i]
+			bi = b[i]
+			if (ai === bi) continue
+			if (-1 === D.indexOf(ai.charCodeAt(0)) || -1 === D.indexOf(bi.charCodeAt(0))) return i
+		}
+		return l === b.length ? null : l
+	}
+
+	function lastCommonSep(ctx, a, b){
+		var S = ctx.SEP || SEP
+		var lastSep
+		var l = a.length
+		for (var i = 0, ai, bi; i < l; i++){
+			ai = a[i]
+			bi = b[i]
+			if (ai !== bi) return lastSep
+			if (S === ai) lastSep = i + 1
+		}
+		return l === b.length ? null : lastSep
+	}
+
+	function split(left, pos, lastSep){
+		var right = []
+		if (null == pos) return right
+		right = left.splice(pos)
+		if (!right.length || !lastSep) return right
+		var r0 = right.shift(lastSep)
+		left.push(r0.slice(0, lastSep))
+		if (r0.length !== lastSep) right.unshift(r0.slice(lastSep))
+		return right
+	}
+
+	function add(ctx, tree, tokens, route){
+		if (1 === tokens.length && -1 === (ctx.DYN || DYN).indexOf(tokens[0].charCodeAt(0))) {
+			addNode(ctx, tree, tokens, route, tokens[0])
+			return
+		}
+
+		var key = getKey(ctx, tokens[0], 0, null, SEP)
+		var val = tree[key]
+		if (!val) return addNode(ctx, tree, tokens, route, key)
+
+		var nodeTokens = val[0]
+		var nodeRoute = val[1]
+
+		var diff = compare(ctx, nodeTokens, tokens)
+
+		// exact same
+		if (null == diff) {
+			if (nodeRoute.slice) return
+			return add(nodeRoute, '', [], route)
+		}
+		var lastSep = lastCommonSep(ctx, nodeTokens[diff] || '', tokens[diff])
+		if (diff + (lastSep && lastSep < nodeTokens[diff].length ? 0 : 1) < nodeTokens.length) {
+			nodeRoute = val[1] = addNode(ctx, {}, split(nodeTokens, diff, lastSep), nodeRoute)
+		}else if (nodeRoute.slice){
+			nodeRoute = val[1] = addNode(ctx, {}, [], nodeRoute)
+		}
+		add(ctx, nodeRoute, split(tokens, diff, lastSep), route)
+	}
+
+	function find(ctx, tree, path, params, pos){
+		var key = getCD(ctx, path, pos, 1)
+
+		var node = tree[key] || tree[WILD]
+		if (!node) return
+
+		var tokens = node[0]
+		var route = node[1]
+
+		if (tokens){
+			for (var i = 0, t, v; (t = tokens[i]); i++){
+				switch(t.charAt(0)){
+				case PARAM:
+					v = getCD(ctx, path, pos, 0)
+					params[t.slice(1)] = v
+					pos += v.length
+					v = route[path.slice(pos)]
+					if (v && v[1].charAt) return v[1]
+					break
+				case CAPTURE:
+					v = path.slice(pos)
+					params[t.slice(1)] = v
+					pos += v.length
+					return route
+				default:
+					if (pos !== path.indexOf(t, pos)) return
+					pos += t.length
+					break
+				}
+			}
+		}
+
+		if (route.charAt) return route
+		return find(ctx, route, path, params, pos)
+	}
+
+	function Radix(opt, tree){
+		opt = Object.assign({
+			SEP: SEP,
+			PARAM: PARAM,
+			CAPTURE: CAPTURE,
+		}, opt)
+		this.SEP = opt.SEP
+		this.PARAM = opt.PARAM
+		this.CAPTURE = opt.CAPTURE
+		this.DYN = [opt.PARAM.charCodeAt(0), opt.CAPTURE.charCodeAt(0)]
+		this.tree = tree || {}
+	}
+
+	Radix.prototype = {
+		add: function(route){
+			var tree = this.tree
+			var tokens = tokenizer(this, route, [], 0)
+
+			add(this, tree, tokens, route)
+		},
+		match: function(path, params){
+			if (!path) return
+			var tree = this.tree
+			var val = tree[path]
+			if (val && val[1].charAt) return val[1]
+
+			params = params || {}
+			return find(this, tree, path, params, 0)
+		},
+		build: function(route, params){
+			var tokens = tokenizer(this, route, [], 0)
+
+			var path = ''
+			var D = this.DYN || DYN
+			for(var i = 0, t; (t = tokens[i]); i++){
+				if (-1 === D.indexOf(t.charCodeAt(0))) path += t
+				else path += params[t.slice(1)]
+			}
+			return path
+		}
+	}
+
 	function addCode(code, line, js) {
 		line = line.trim()
 		if (!line) return code
@@ -12,73 +218,6 @@ define('pico/str', function(){
 		return function(d){
 			return func(pico, d)
 		}
-	}
-	function compileRestUnit(unit){
-		var idx=unit.search(/[#:%][a-zA-Z]/)
-		switch(idx){
-		case -1:
-		case 0: return unit
-		}
-		return [unit.substring(0,idx),unit.substr(idx)]
-	}
-	function compileRestPath(path,idx,output,cb){
-		var nidx=path.indexOf('/',idx)
-		if (-1===nidx){
-			output.push(compileRestUnit(path.substring(idx)))
-			return cb(null, output)
-		}
-		output.push(compileRestUnit(path.substring(idx,nidx)))
-		compileRestPath(path,nidx+1,output,cb)
-	}
-	function compileRestOptional(optionals,output,cb){
-		if (!optionals.length) return cb(null,output)
-		compileRestPath(optionals.shift(),0,[],function(err,code){
-			if (err) return cb(err)
-			output.push(code)
-			compileRestOptional(optionals,output,cb)
-		})
-	}
-	function parseRestCode(code,unit,units,i,params){
-		switch(code[0]){
-		default: return code===unit
-		case '%': params[code.substr(1)]=parseFloat(unit); break
-		case ':': params[code.substr(1)]=unit; break
-		case '#': params[code.substr(1)]=units.slice(i).join('/'); break
-		}
-		return true
-	}
-	function matchRestCode(units,codes,params){
-		if (units.length < codes.length) return false
-		for(var i=0,u,c,l=codes.length; i<l; i++){
-			c=codes[i]
-			u=units[i]
-			if (Array.isArray(c)){
-				if (0!==u.indexOf(c[0])) return false
-				if (!parseRestCode(c[1],u.substr(c[0].length),units,i,params)) return false
-			}else{
-				if (!parseRestCode(c,u,units,i,params)) return false
-			}
-		}
-		units.splice(0,l)
-		return true
-	}
-	function buildRest(url, tokens, index, params, prefix, mandatory){
-		if (tokens.length <= index) return url
-		var token = tokens[index++]
-		if (!token.charAt) return buildRest(buildRest(url + prefix, token, 0, params, '', mandatory), tokens, index, params, prefix, mandatory)
-
-		if (token.length > 1){
-			switch(token.charAt(0)){
-			case '%':
-			case ':':
-			case '#':
-				token = params[token.slice(1)]
-				if (!token) return mandatory ? '' : url
-				break
-			}
-		}
-		url += prefix + token
-		return buildRest(url, tokens, index, params, prefix, mandatory)
 	}
 
 	return {
@@ -122,46 +261,10 @@ define('pico/str', function(){
 			code = addCode(code, html.substr(cursor, html.length - cursor))
 			return partial(new Function('pico', 'd', (code + 'return r.join("");').replace(/[\r\t\n]/g, ' ')))
 		},
-		// precedence | / # : %
-		compileRest:function(rest, output){
-			output=output||[]
-			if (-1 === rest.search(/[|#:%][a-zA-Z]/)) return output
-			compileRestOptional(rest.split('|'),[rest],function(err,codes){
-				if (err) throw err
-				output.push(codes)
-			})
-			return output
-		},
-		execRest:function(api,build,params){
-			var units=api.split('/')
-			for(var i=0,route,j,opt; (route=build[i]); i++){
-				if (matchRestCode(units, route[1], params)){
-					for(j=2; (opt=route[j]); j++){
-						if (!matchRestCode(units, opt, params)) break
-					}
-					return route[0]
-				}
-			}
-			return null
-		},
-		buildRest:function(api,build,params,relativePath){
-			var codes
-			for (var i=0, b; (b = build[i]); i++){
-				if (api === b[0]){
-					codes = b
-					break
-				}
-			}
-			if (!codes) return api
-			var url = buildRest('', codes[1], 0, params || {}, '/', true)
-			if (!url) return false
-			var c
-			for (i=2; (c = codes[i]); i++){
-				url = buildRest(url, c, 0, params, '/')
-			}
-			// remove the first slash
-			if (relativePath || 1 === url.indexOf('http')) url = url.slice(1)
-			return ~url.search(/[#%][a-zA-Z]/) ? false : url
-		}
+
+		Radix: Radix,
+		compare: compare,
+		lastCommonSep: lastCommonSep,
+		tokenizer: tokenizer,
 	}
 })
