@@ -1,7 +1,7 @@
 {
-    "name": "pico-common",
+    "name": "@pico/common",
     "version": "0.14.4",
-    "description": "pico common tools",
+    "description": "A small and zero dependency js lib for commonly overlooked utility functions",
     "type": "common.js",
     "main": "bin/pico.js",
     "module": "bin/pico-es.js",
