@@ -3,7 +3,7 @@ define('pico/obj',function(exports,require){
 	var Round = Math.round
 	var Ceil = Math.ceil
 	var Floor = Math.floor
-	var negative = ['false', 'no']
+	var negative = ['false', '0', 'no']
 	var objfun = ['object','function']
 	var specialFunc = ['nstructor']
 	var ROOT = '$'
