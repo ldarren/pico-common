@@ -189,11 +189,11 @@ parallel('\npico/str', function(){
 		cb(null, l===hist.length, 'count', hist.length, 'ms', Date.now() - n)
 	})
 	this.test('ensure rand generate exact len', function(cb){
-		var r = pstr.rand(64)
+		var r = pStr.rand(64)
 		cb(null, r.length === 64)
 	})
 	this.test('ensure rand generate sep', function(cb){
-		var r = pstr.rand(96, ' ')
+		var r = pStr.rand(96, ' ')
 		cb(null, r.length === 96 && -1 !== r.indexOf(' '))
 	})
 })
