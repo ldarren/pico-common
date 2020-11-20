@@ -699,18 +699,20 @@ parallel('\npico/obj', function(){
 				},
 				bool4: 'bool',
 				bool5: 'bool',
+				bool6: 'bool',
 			}
 		}
 
 		var out = {}
-		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null, bool5: 'no'}, out)
+		var res = pobj.validate(spec, {bool2: 'true', bool3: 'false', bool4: null, bool5: 'no', bool6: '0'}, out)
 		if (res) return cb(null, false)
 		return cb(null,
 			false === out.bool1 &&
 			true === out.bool2 &&
 			false === out.bool3 &&
 			false === out.bool4 &&
-			false === out.bool5
+			false === out.bool5 &&
+			false === out.bool6
 		)
 	})
 
