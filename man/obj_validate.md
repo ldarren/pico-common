@@ -71,6 +71,8 @@ __regex__: regular expression, _valid for string_
 
 __formats__: array of time format such as ['Y/M/D', 'D M Y'], _valid for date_
 
+__map__: [mapping operator](# map operator) but without value A, _valid for all_
+
 __*__: object key, _valid for object's spec_
 
 ## dynamic attribute
@@ -135,7 +137,7 @@ __B_default__: default value B if path not found
 __invertor__: _bool_, if invertor === false, eq operator return true if A === B, if true, eq operator return true if A !== B
 
 ### map operator
-> syntax: ['operator_name', 'A path', 'A default', 'map path', 'B path', ['B default']]
+> syntax: ['operator_name', 'A path', 'A default', 'map path', ['B path'], ['B default']]
 
 __operator_name__: _string_, `map` for mapping value A to B
 
@@ -145,9 +147,20 @@ __A_default__: default value A if path not found
 
 __map_path__: path to find mapping object, mapping object can in input or extension object
 
-__B_path__: _array_, path to value B
+__B_path__: _array_, path to value B, return value B if not defined
 
 __B_default__: default value B if path not found
+
+### spec operator
+> syntax: ['operator_name', 'path', ['default'], 'spec']
+
+__operator_name__: _string_, `spec`
+
+__path__: _array_, path to value A
+
+__default__: default value A if path not found
+
+__spec__: _object_, spec to validate value A
 
 
 ## validate nested object

@@ -15,6 +15,12 @@ define('pico/obj',function(exports,require){
 		ref: function(host, ext, p, def){
 			return attrdot(this, host, ext, p, def)
 		},
+		spec: function(host, ext, p, def, spec){
+			var obj = {obj: attrdot(this, host, ext, p, def) }
+			var out = {}
+			validate(ROOT, {type: 'object', spec: {obj: spec}}, obj, out, obj, null, ext)
+			return out.obj
+		},
 		bool: function(host, ext, p, def, inv){
 			return (attrdot(this, host, ext, p, def) ? 1 : 0) ^ (inv ? 1 : 0)
 		},
@@ -26,7 +32,6 @@ define('pico/obj',function(exports,require){
 			return (a === b ? 1 : 0) ^ i
 		},
 		map: function(host, ext, fromP, fromDef, mapP, toP, toDef){
-console.log('>>>>>>>>>map1', host, ext, fromP, fromDef, mapP, toP, toDef)
 			var map = attrdot(this, host, ext, mapP)
 			if (!map) return
 			var from = attrdot(this, host, ext, fromP, fromDef)
@@ -140,14 +145,14 @@ console.log('>>>>>>>>>map1', host, ext, fromP, fromDef, mapP, toP, toDef)
 		}
 	}
 	function validate(k, s, val, out, full, host, ext){
-		var run = Runner(full, val, ext)
+		var run = Runner(full, host, ext)
 		var t = run(s.type) || s
 		if (!t || !t.includes) return k
 		if (void 0 === val) {
 			if (run(s.required)) return k
 			val = run(s.value)
 		}
-		if (s.map){
+		if (Array.isArray(s.map)){
 			val = run(['map', null, val].concat(s.map))
 		}
 		if (Array.isArray(t)){

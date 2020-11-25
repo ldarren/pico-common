@@ -5,7 +5,6 @@ const { parallel } = pico.export('pico/test')
 const first_name = 'Darren'
 
 parallel('\npico/obj', function(){
-/*
 	this.test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
 		pico.define('ancestor0',function(exports,require,module,define,inherit,pico){
 			return {say:function(txt){
@@ -319,10 +318,10 @@ parallel('\npico/obj', function(){
 			}
 		}
 		var out1 = []
-		var ret1 = null == pobj.validate(okSpec, obj, out1)
+		var ret1 = pobj.validate(okSpec, obj, out1)
 		var ret2 = '$.0.a.b' === pobj.validate(koSpec, obj)
 		var o = out1[0].a.b[0]
-		cb(null, o.c === '123' && o.d === 1 && o.e === false && !!(o.f.getTime()) && ret1 && ret2)
+		cb(null, o.c === '123' && o.d === 1 && o.e === false && !!(o.f.getTime()) && !ret1 && ret2)
 	})
 
 	this.test('ensure primitive array type check', function(cb){
@@ -931,7 +930,7 @@ parallel('\npico/obj', function(){
 
 		return cb(null, DAY === out.today.getTime() - out.yesterday.getTime())
 	})
-*/
+
 	this.test('validate dynamic spec with validate op', function(cb){
 		var spec = {
 			type: 'object',
@@ -939,22 +938,25 @@ parallel('\npico/obj', function(){
 				idxs: {
 					type: 'array',
 					gt: 0,
-					value: ['validate', ['ids'], {type: 'array', sep: ','}],
-					spec: {
-						type: 'number',
-						map: [['_']],
-					}
+					value: ['spec', ['ids'], null, {
+						type: 'array',
+						sep: ',',
+						spec: {
+							type: 'number',
+							map: [['_']],
+						}
+					}],
+					spec: 'number'
 				}
 			}
 		}
 		var ext = { a: 1, b: 2, c: 3 }
 
 		var out = {}
-		var res = pobj.validate(spec, {ids: ['a', 'b', 'c']}, out, ext)
-console.log('=======>', out, res)
+		var res = pobj.validate(spec, {ids: 'a,b,c'}, out, ext)
 		return cb(null, !res && 3 === out.idxs.length && 2 === out.idxs[1], res)
 	})
-/*
+
 	this.test('ensure force attribute works on array and string', function(cb){
 		var spec = {
 			type: 'object',
@@ -1037,5 +1039,4 @@ console.log('=======>', out, res)
 		var res = pobj.validate(spec, obj)
 		return cb(null, void 0 === res)
 	})
-*/
 })
