@@ -5,6 +5,7 @@ const { parallel } = pico.export('pico/test')
 const first_name = 'Darren'
 
 parallel('\npico/obj', function(){
+/*
 	this.test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
 		pico.define('ancestor0',function(exports,require,module,define,inherit,pico){
 			return {say:function(txt){
@@ -844,7 +845,6 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('validate dynamic spec with map op', function(cb){
-		// test default value
 		var spec1 = {
 			type: 'object',
 			required: 1,
@@ -910,7 +910,6 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('validate dynamic spec with now op', function(cb){
-		// test default value
 		var DAY = 1000 * 60 * 60 * 24
 		var spec = {
 			type: 'object',
@@ -932,9 +931,31 @@ parallel('\npico/obj', function(){
 
 		return cb(null, DAY === out.today.getTime() - out.yesterday.getTime())
 	})
+*/
+	this.test('validate dynamic spec with validate op', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				idxs: {
+					type: 'array',
+					gt: 0,
+					value: ['validate', ['ids'], {type: 'array', sep: ','}],
+					spec: {
+						type: 'number',
+						map: [['_']],
+					}
+				}
+			}
+		}
+		var ext = { a: 1, b: 2, c: 3 }
 
+		var out = {}
+		var res = pobj.validate(spec, {ids: ['a', 'b', 'c']}, out, ext)
+console.log('=======>', out, res)
+		return cb(null, !res && 3 === out.idxs.length && 2 === out.idxs[1], res)
+	})
+/*
 	this.test('ensure force attribute works on array and string', function(cb){
-		// test default value
 		var spec = {
 			type: 'object',
 			required: 1,
@@ -960,7 +981,6 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('ensure int attribute works on number', function(cb){
-		// test default value
 		var spec = {
 			type: 'object',
 			required: 1,
@@ -1017,4 +1037,5 @@ parallel('\npico/obj', function(){
 		var res = pobj.validate(spec, obj)
 		return cb(null, void 0 === res)
 	})
+*/
 })

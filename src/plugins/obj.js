@@ -26,6 +26,7 @@ define('pico/obj',function(exports,require){
 			return (a === b ? 1 : 0) ^ i
 		},
 		map: function(host, ext, fromP, fromDef, mapP, toP, toDef){
+console.log('>>>>>>>>>map1', host, ext, fromP, fromDef, mapP, toP, toDef)
 			var map = attrdot(this, host, ext, mapP)
 			if (!map) return
 			var from = attrdot(this, host, ext, fromP, fromDef)
@@ -96,9 +97,11 @@ define('pico/obj',function(exports,require){
 		if (ROOT === key) return obj
 		if (obj) return obj[key]
 	}
-	function getV(obj, host, attr, ext){
-		if (Array.isArray(attr) && attrfun[attr[0]]) return attrfun[attr[0]].call(obj, host, ext, ...attr.slice(1))
-		return attr
+	function Runner(obj, host, ext){
+		return function(attr){
+			if (Array.isArray(attr) && attrfun[attr[0]]) return attrfun[attr[0]].call(obj, host, ext, ...attr.slice(1))
+			return attr
+		}
 	}
 	function validateObj(key, spec, val, out, full, ext){
 		if (!(val instanceof Object) || Array.isArray(val)) return key
@@ -116,12 +119,13 @@ define('pico/obj',function(exports,require){
 		}
 	}
 	function validateArr(key, spec, val, out, full, ext){
-		if (spec.sep && val && val.split) val = val.split(getV(full, val, spec.sep, ext))
+		var run = Runner(full, val, ext)
+		if (spec.sep && val && val.split) val = val.split(run(spec.sep))
 		if (!Array.isArray(val)) {
 			if (!spec.force) return key
 			val = [val]
 		}
-		if (notin(val.length, getV(full, val, spec.lt, ext), getV(full, val, spec.gt, ext))) return key
+		if (notin(val.length, run(spec.lt), run(spec.gt))) return key
 		var s = spec.spec
 		if (s) {
 			set(out, key, [])
@@ -136,11 +140,15 @@ define('pico/obj',function(exports,require){
 		}
 	}
 	function validate(k, s, val, out, full, host, ext){
-		var t = getV(full, host, s.type, ext) || s
+		var run = Runner(full, val, ext)
+		var t = run(s.type) || s
 		if (!t || !t.includes) return k
 		if (void 0 === val) {
-			if (getV(full, host, s.required, ext)) return k
-			val = getV(full, host, s.value, ext)
+			if (run(s.required)) return k
+			val = run(s.value)
+		}
+		if (s.map){
+			val = run(['map', null, val].concat(s.map))
 		}
 		if (Array.isArray(t)){
 			if (!t.includes(val)) return k
@@ -154,7 +162,7 @@ define('pico/obj',function(exports,require){
 			return
 		}
 		if (null == val) {
-			if (getV(full, host, s.notnull, ext)) return k
+			if (run(s.notnull)) return k
 			set(out, k, val)
 			return
 		}
@@ -166,7 +174,7 @@ define('pico/obj',function(exports,require){
 				if (!s.force) return k
 				val = JSON.stringify(val)
 			}
-			if (notin(val.length, getV(full, host, s.lt, ext), getV(full, host, s.gt, ext)) || !RegExp(getV(full, host, s.regex, ext)).test(val)) return k
+			if (notin(val.length, run(s.lt), run(s.gt)) || !RegExp(run(s.regex)).test(val)) return k
 			set(out, k, val)
 			break
 		case 'number':
@@ -179,12 +187,12 @@ define('pico/obj',function(exports,require){
 			case 'c': val = Ceil(val); break
 			default: val = Round(val); break
 			}
-			if (notin(val, getV(full, host, s.lt, ext), getV(full, host, s.gt, ext))) return k
+			if (notin(val, run(s.lt), run(s.gt))) return k
 			set(out, k, val)
 			break
 		case 'date':
-			val = pTime.convert(val, getV(full, host, s.formats, ext))
-			if (!val.getTime() || notin(val.getTime(), getV(full, host, s.lt, ext), getV(full, host, s.gt, ext))) return k
+			val = pTime.convert(val, run(s.formats))
+			if (!val.getTime() || notin(val.getTime(), run(s.lt), run(s.gt))) return k
 			set(out, k, val)
 			break
 		case 'object':
