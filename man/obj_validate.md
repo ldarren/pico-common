@@ -162,6 +162,17 @@ __default__: default value A if path not found
 
 __spec__: _object_, spec to validate value A
 
+### call operator
+> syntax: ['operator_name', 'path', ['default'], [...param]]
+
+__operator_name__: _string_, `call`
+
+__path__: _array_, path to js function
+
+__default__: default function if path not found
+
+__params__: _array_, variable number of `path` and `default` the result will be argument of the function
+
 
 ## validate nested object
 unlimited nested object can be validated with the help of `spec` attributes

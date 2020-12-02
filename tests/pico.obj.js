@@ -392,8 +392,9 @@ parallel('\npico/obj', function(){
 				g: 'object'
 			}
 		}
-		var ret = pobj.validate(okSpec, obj)
-		cb(null, !ret && void 0 === obj.b && void 0 === obj.g && void 0 === obj.a.c && void 0 === obj.a.d && void 0 === obj.a.e)
+		var out = {}
+		var ret = pobj.validate(okSpec, obj, out)
+		cb(null, !ret && void 0 === out.b && void 0 === out.g && void 0 === out.a.c && void 0 === out.a.d && void 0 === out.a.e)
 	})
 
 	this.test('ensure validate wrong type can handle gracefully', function(cb){
@@ -439,7 +440,7 @@ parallel('\npico/obj', function(){
 		cb(null, ret === '$.a.required', ret)
 	})
 	this.test('ensure validate default value works', function(cb){
-		var obj = [{a: {b: [{d: '1'}]}}]
+		var obj = [{a: {b: [{c: null, d: '1'}]}}]
 		var okSpec = {
 			type: 'array',
 			spec: {
@@ -644,8 +645,8 @@ parallel('\npico/obj', function(){
 		}
 		var out = {}
 		var res = pobj.validate(spec, input, out)
-		if (res) return cb(null, false, res)
 		cb(null, (
+			!res &&
 			null === out.a &&
 			null === out.b &&
 			false === out.c &&
@@ -955,6 +956,23 @@ parallel('\npico/obj', function(){
 		var out = {}
 		var res = pobj.validate(spec, {ids: 'a,b,c'}, out, ext)
 		return cb(null, !res && 3 === out.idxs.length && 2 === out.idxs[1], res)
+	})
+
+	this.test('validate dynamic spec with call operator', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				count: {
+					type: 'number',
+					value: ['call', ['_', 'func'], null, null, 1, null, 2]
+				}
+			}
+		}
+		var ext = { func: function(a, b) { return a + b} }
+
+		var out = {}
+		var res = pobj.validate(spec, {}, out, ext)
+		return cb(null, !res && 3 === out.count, res)
 	})
 
 	this.test('ensure force attribute works on array and string', function(cb){

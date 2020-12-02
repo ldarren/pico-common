@@ -42,6 +42,15 @@ define('pico/obj',function(exports,require){
 		now: function(host, ext, p, def){
 			var offset = attrdot(this, host, ext, p, def || 0)
 			return new Date(Date.now() + offset)
+		},
+		call: function(host, ext, p, def, ...args){
+			var func = attrdot(this, host, ext, p, def)
+			if (!func || !func.apply) return
+			var params = []
+			for (var i = 0, l = args.length; i < l; i += 2){
+				params.push(attrdot(this, host, ext, args[i], args[i+1]))
+			}
+			return func.apply(null, params)
 		}
 	}
 	function attrdot(obj, host, ext, p, def){
@@ -148,17 +157,14 @@ define('pico/obj',function(exports,require){
 		var run = Runner(full, host, ext)
 		var t = run(s.type) || s
 		if (!t || !t.includes) return k
-		if (void 0 === val) {
-			if (run(s.required)) return k
-			val = run(s.value)
+		if (null == val){
+			if (void 0 === val) {
+				if (run(s.required)) return k
+			}
+			val = run(s.value) || val
 		}
 		if (Array.isArray(s.map)){
 			val = run(['map', null, val].concat(s.map))
-		}
-		if (Array.isArray(t)){
-			if (!t.includes(val)) return k
-			set(out, k, val)
-			return
 		}
 		var vt = typeof val
 		if (t.includes('bool')) {
@@ -168,6 +174,11 @@ define('pico/obj',function(exports,require){
 		}
 		if (null == val) {
 			if (run(s.notnull)) return k
+			set(out, k, val)
+			return
+		}
+		if (Array.isArray(t)){
+			if (!t.includes(val)) return k
 			set(out, k, val)
 			return
 		}
