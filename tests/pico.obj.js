@@ -1033,6 +1033,57 @@ parallel('\npico/obj', function(){
 		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4)
 	})
 
+	this.test('ensure alias attribute works', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				a1: {
+					type: 'string',
+					alias: 'a'
+				},
+				b1: {
+					type: 'bool',
+					alias: 'b'
+				},
+				c1: {
+					type: 'number',
+					alias: 'c'
+				},
+				d1: {
+					type: 'date',
+					alias: 'd'
+				},
+				e1: {
+					type: 'null',
+					alias: 'e'
+				},
+				f1: {
+					type: 'array',
+					alias: 'f'
+				},
+				g1: {
+					type: 'object',
+					alias: 'g'
+				},
+			}
+		}
+
+		var res = pobj.validate(spec, {f1: 1})
+		if ('$.f' !== res) return cb(null, false)
+
+		var out = {}
+		res = pobj.validate(spec, {a1: '1', b1: true, c1: 3, d1: '2020-12-16', e1: 5, f1: [], g1: {}}, out)
+		cb(null, !res &&
+			'1' === out.a &&
+			true === out.b &&
+			3 === out.c &&
+			16 === out.d.getDate() &&
+			5 === out.e &&
+			0 === out.f.length &&
+			0 === Object.keys(out.g).length
+		)
+	})
+
 	this.test('validate pObj.create', function(cb){
 		var spec = {
 			type: 'array',

@@ -118,7 +118,7 @@ define('pico/obj',function(exports,require){
 		}
 	}
 	function validateObj(key, spec, val, out, full, ext){
-		if (!(val instanceof Object) || Array.isArray(val)) return key
+		if (!(spec.type === typeof val) || Array.isArray(val)) return key
 		var s = spec.spec
 		if (s) {
 			set(out, key, {})
@@ -153,8 +153,9 @@ define('pico/obj',function(exports,require){
 			set(out, key, val.slice())
 		}
 	}
-	function validate(k, s, val, out, full, host, ext){
+	function validate(key, s, val, out, full, host, ext){
 		var run = Runner(full, host, ext)
+		var k = run(s.alias) || key
 		var t = run(s.type) || s
 		if (!t || !t.includes) return k
 		if (null == val){
