@@ -968,7 +968,7 @@ parallel('\npico/obj', function(){
 				}
 			}
 		}
-		var ext = { func: function(a, b) { return a + b} }
+		var ext = { func: (a, b) => (a + b) }
 
 		var out = {}
 		var res = pobj.validate(spec, {}, out, ext)
