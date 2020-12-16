@@ -1,4 +1,4 @@
-name: Node CI
+name: Checks
 
 on: [push]
 
@@ -17,15 +17,13 @@ jobs:
       uses: actions/setup-node@v2
       with:
         node-version: ${{ matrix.node-version }}
-    - name: Install Eslint
-      run: npm i -g eslint
-    - name: eslint
-      run: npm run lint
-    - name: npm ci
+    - name: Lint
+      run: |
+        npm i -g eslint
+        npm run lint
+    - name: Test
       run: |
         npm ci
-    - name: npm test
-      run: |
         npm test
       env:
         CI: true
