@@ -121,14 +121,31 @@ parallel('\npico/str', function(){
 		for (var i = 0, r; (r = routes[i]); i++){
 			radix.add(r)
 		}
+
 		var params = {}
 		var res = radix.match('/user/lookup/darren', params)
 		if (routes[0] !== res || 'darren' !== params.id) return cb(null, false)
-
+		
 		params = {}
 		res = radix.match('/user/lookup/foo/abr', params)
-		if (routes[0] !== res || 'foo' !== params.id) return cb(null, false)
+		if (res || 'foo' !== params.id) return cb(null, false)
 		cb(null, true)
+	})
+
+	this.test('ensure router handle empty string', function(cb){
+		var radix = new pStr.Radix
+		radix.add('')
+		var params = {}
+		var res = radix.match('', params)
+		return cb(null, '' === res)
+	})
+
+	this.test('ensure router / is not wildcard', function(cb){
+		var radix = new pStr.Radix
+		radix.add('/user/:id')
+		var params = {}
+		var res = radix.match('/', params)
+		return cb(null, !res)
 	})
 
 	this.test('ensure router build', function(cb){

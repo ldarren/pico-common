@@ -142,6 +142,7 @@ define('pico/str', function(){
 		var route = node[1]
 
 		if (tokens){
+			var lastPos = pos
 			for (var i = 0, t, v; (t = tokens[i]); i++){
 				switch(t.charAt(0)){
 				case PARAM:
@@ -162,9 +163,10 @@ define('pico/str', function(){
 					break
 				}
 			}
+			if (lastPos === pos) return
 		}
 
-		if (route.charAt) return route
+		if (pos === path.length && route.charAt) return route
 		return find(ctx, route, path, params, pos)
 	}
 
@@ -189,10 +191,10 @@ define('pico/str', function(){
 			add(this, tree, tokens, route)
 		},
 		match: function(path, params){
-			if (!path) return
+			if (!path && !path.charAt) return
 			var tree = this.tree
 			var val = tree[path]
-			if (val && val[1].charAt) return val[1]
+			if (val && (val[0].length < 2) && val[1].charAt) return val[1]
 
 			params = params || {}
 			return find(this, tree, path, params, 0)
