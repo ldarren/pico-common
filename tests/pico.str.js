@@ -67,6 +67,26 @@ parallel('\npico/str', function(){
 		)
 	})
 
+	this.test('ensure tokenizer handle empty string', function(cb){
+		const route = ''
+		const tokens = pStr.tokenizer({}, route)
+
+		cb(null,
+			1 === tokens.length &&
+			route === tokens[0]
+		)
+	})
+
+	this.test('ensure tokenizer handle cronjob string', function(cb){
+		const route = '* * * * * *'
+		const tokens = pStr.tokenizer({}, route)
+
+		cb(null,
+			1 === tokens.length &&
+			route === tokens[0]
+		)
+	})
+
 	this.test('ensure compare return last common position', function(cb){
 		const ctx = {}
 		if (2 !== pStr.compare(ctx, ['1','1','2'], ['1','1','3'])) return cb(null, false)
@@ -132,9 +152,10 @@ parallel('\npico/str', function(){
 		cb(null, true)
 	})
 
-	this.test('ensure router handle empty string', function(cb){
+	this.test('ensure router handle empty and cron route', function(cb){
 		var radix = new pStr.Radix
 		radix.add('')
+		radix.add('* * * * * *')
 		var params = {}
 		var res = radix.match('', params)
 		return cb(null, '' === res)

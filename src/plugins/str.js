@@ -9,9 +9,11 @@ define('pico/str', function(){
 	var SEP = '/'
 	var WILD = '?'
 	var DYN = [0x3A, 0x2A]
+	var SPACE = ' '
 
 	function getKey(ctx, route, pos){
 		if (!route) return ''
+		if (route.includes(SPACE)) return route
 		pos = pos || 0
 
 		if (-1 !== (ctx.DYN || DYN).indexOf(route.charCodeAt(pos))) return WILD
@@ -39,8 +41,16 @@ define('pico/str', function(){
 	function tokenizer(ctx, route, tokens, pos){
 		tokens = tokens || []
 		pos = pos || 0
-
-		if (pos >= route.length) return tokens
+		if (pos >= route.length) {
+			// to handle empty string route
+			if (!pos && !tokens.length) tokens.push(route.slice(pos))
+			return tokens
+		}
+		// handle space in route
+		if (-1 !== route.indexOf(SPACE)){
+			tokens.push(route.slice(pos))
+			return tokens
+		}
 
 		var p0 = route.indexOf(ctx.PARAM || PARAM, pos)
 		if (-1 === p0) {
@@ -187,7 +197,6 @@ define('pico/str', function(){
 		add: function(route){
 			var tree = this.tree
 			var tokens = tokenizer(this, route, [], 0)
-
 			add(this, tree, tokens, route)
 		},
 		match: function(path, params){
