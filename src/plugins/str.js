@@ -1,5 +1,7 @@
 define('pico/str', function(){
-	var Random=Math.random
+	var Rand=Math.random
+	var Ceil=Math.ceil
+	var Min=Math.min
 	var re = /<%([\s\S]*?)%>/g
 	var reExp = /(^( )?(async|await|break|case|catch|class|const|continue|debugger|default|delete|do|else|finally|for|function|if|import|let|return|super|switch|throw|try|var|while|with|yield|{|}|;))(.*)?/g
 	var PARAM = ':'
@@ -7,9 +9,11 @@ define('pico/str', function(){
 	var SEP = '/'
 	var WILD = '?'
 	var DYN = [0x3A, 0x2A]
+	var SPACE = ' '
 
 	function getKey(ctx, route, pos){
 		if (!route) return ''
+		if (route.includes(SPACE)) return route
 		pos = pos || 0
 
 		if (-1 !== (ctx.DYN || DYN).indexOf(route.charCodeAt(pos))) return WILD
@@ -37,8 +41,16 @@ define('pico/str', function(){
 	function tokenizer(ctx, route, tokens, pos){
 		tokens = tokens || []
 		pos = pos || 0
-
-		if (pos >= route.length) return tokens
+		if (pos >= route.length) {
+			// to handle empty string route
+			if (!pos && !tokens.length) tokens.push(route.slice(pos))
+			return tokens
+		}
+		// handle space in route
+		if (-1 !== route.indexOf(SPACE)){
+			tokens.push(route.slice(pos))
+			return tokens
+		}
 
 		var p0 = route.indexOf(ctx.PARAM || PARAM, pos)
 		if (-1 === p0) {
@@ -140,6 +152,7 @@ define('pico/str', function(){
 		var route = node[1]
 
 		if (tokens){
+			var lastPos = pos
 			for (var i = 0, t, v; (t = tokens[i]); i++){
 				switch(t.charAt(0)){
 				case PARAM:
@@ -160,9 +173,10 @@ define('pico/str', function(){
 					break
 				}
 			}
+			if (lastPos === pos) return
 		}
 
-		if (route.charAt) return route
+		if (pos === path.length && route.charAt) return route
 		return find(ctx, route, path, params, pos)
 	}
 
@@ -183,14 +197,13 @@ define('pico/str', function(){
 		add: function(route){
 			var tree = this.tree
 			var tokens = tokenizer(this, route, [], 0)
-
 			add(this, tree, tokens, route)
 		},
 		match: function(path, params){
-			if (!path) return
+			if (!path && !path.charAt) return
 			var tree = this.tree
 			var val = tree[path]
-			if (val && val[1].charAt) return val[1]
+			if (val && (val[0].length < 2) && val[1].charAt) return val[1]
 
 			params = params || {}
 			return find(this, tree, path, params, 0)
@@ -234,8 +247,15 @@ define('pico/str', function(){
 			}
 			return h
 		},
-		rand: function(){
-			return Random().toString(36).substr(2)
+		rand: function(len, sep){
+			sep = sep || ''
+			len = Min(len || 10, 512)
+			var l = Ceil((len + sep.length) / 10)
+			var r = []
+			for (var i = 0; i < l; i++) {
+				r.push(Rand().toString(36).substr(2))
+			}
+			return r.join(sep).substring(0, len)
 		},
 		pad:function(val,n,str){
 			return this.tab(val,n,str)+val

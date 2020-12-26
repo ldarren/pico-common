@@ -1,7 +1,7 @@
 define('pico/web',function(exports,require,module,define,inherit,pico){
 	var
 		PJSON=require('pico/json'),
-		Floor=Math.floor,Random=Math.random,
+		Floor=Math.floor,Rand=Math.random,
 		OPTS = void 0,
 		API_ACK = 'ack',
 		PT_HEAD = 1,
@@ -115,7 +115,7 @@ define('pico/web',function(exports,require,module,define,inherit,pico){
 	function Net(cfg){
 		if (!cfg.url) return console.error('url is not set')
 		netConfig(this, Object.assign({delimiter:['&']}, cfg))
-		this.reqId = 1 + Floor(Random() * 1000)
+		this.reqId = 1 + Floor(Rand() * 1000)
 		this.inbox = []
 		this.outbox = []
 		this.uploads = []

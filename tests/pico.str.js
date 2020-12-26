@@ -67,6 +67,26 @@ parallel('\npico/str', function(){
 		)
 	})
 
+	this.test('ensure tokenizer handle empty string', function(cb){
+		const route = ''
+		const tokens = pStr.tokenizer({}, route)
+
+		cb(null,
+			1 === tokens.length &&
+			route === tokens[0]
+		)
+	})
+
+	this.test('ensure tokenizer handle cronjob string', function(cb){
+		const route = '* * * * * *'
+		const tokens = pStr.tokenizer({}, route)
+
+		cb(null,
+			1 === tokens.length &&
+			route === tokens[0]
+		)
+	})
+
 	this.test('ensure compare return last common position', function(cb){
 		const ctx = {}
 		if (2 !== pStr.compare(ctx, ['1','1','2'], ['1','1','3'])) return cb(null, false)
@@ -107,7 +127,9 @@ parallel('\npico/str', function(){
 			res = radix.match(r[1], params)
 			if (res !== r[0] || JSON.stringify(r[2]) !== JSON.stringify(r[2] ? params : null)) return cb(null, false)
 		}
-		cb(null, true)
+
+		res = radix.match('/')
+		cb(null, !res)
 	})
 
 	this.test('ensure router ignore same route with diff params', function(cb){
@@ -121,14 +143,32 @@ parallel('\npico/str', function(){
 		for (var i = 0, r; (r = routes[i]); i++){
 			radix.add(r)
 		}
+
 		var params = {}
 		var res = radix.match('/user/lookup/darren', params)
 		if (routes[0] !== res || 'darren' !== params.id) return cb(null, false)
 
 		params = {}
 		res = radix.match('/user/lookup/foo/abr', params)
-		if (routes[0] !== res || 'foo' !== params.id) return cb(null, false)
+		if (res || 'foo' !== params.id) return cb(null, false)
 		cb(null, true)
+	})
+
+	this.test('ensure router handle empty and cron route', function(cb){
+		var radix = new pStr.Radix
+		radix.add('')
+		radix.add('* * * * * *')
+		var params = {}
+		var res = radix.match('', params)
+		return cb(null, '' === res)
+	})
+
+	this.test('ensure router / is not wildcard', function(cb){
+		var radix = new pStr.Radix
+		radix.add('/user/:id')
+		var params = {}
+		var res = radix.match('/', params)
+		return cb(null, !res)
 	})
 
 	this.test('ensure router build', function(cb){
@@ -187,5 +227,13 @@ parallel('\npico/str', function(){
 			hist.push(h)
 		}
 		cb(null, l===hist.length, 'count', hist.length, 'ms', Date.now() - n)
+	})
+	this.test('ensure rand generate exact len', function(cb){
+		var r = pStr.rand(64)
+		cb(null, r.length === 64)
+	})
+	this.test('ensure rand generate sep', function(cb){
+		var r = pStr.rand(96, ' ')
+		cb(null, r.length === 96 && -1 !== r.indexOf(' '))
 	})
 })

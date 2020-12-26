@@ -71,13 +71,17 @@ __regex__: regular expression, _valid for string_
 
 __formats__: array of time format such as ['Y/M/D', 'D M Y'], _valid for date_
 
-__*__: object key, _valid for object's spec_
+__map__: [mapping operator](# map operator) but without value A, _valid for all_
+
+__alias__: alias of the key, _valid for all_
+
+__{any thing else}__: object key, _valid for object's spec_
 
 ## dynamic attribute
 all attributes supported dynamic values by using operators. there are four operators supported
 
 ### ref operator
-> syntax: ['operator_name', 'path_to_value', ['default_value']]
+> syntax: ['operator\_name', 'path\_to\_value', ['default\_value']]
 
 __operator_name__: _string_, `ref` for reference
 
@@ -88,7 +92,7 @@ __default_value__: if value not found in the given _path_to_value_, the default 
 
 ### bool operator
 convert value to boolean value: 1 or 0
-> syntax: ['operator_name', 'path', ['default'], [invertor]]
+> syntax: ['operator\_name', 'path', ['default'], [invertor]]
 
 __operator_name__: _string_, `bool` for inverting a value
 
@@ -120,7 +124,7 @@ pObj.validate(spec, {
 ```
 
 ### eq operator
-> syntax: ['operator_name', 'A path', 'A default', 'B path', ['B default'], ['invertor']]
+> syntax: ['operator\_name', 'A path', 'A default', 'B path', ['B default'], ['invertor']]
 
 __operator_name__: _string_, `eq` for comparing value `A` and `B`
 
@@ -135,7 +139,7 @@ __B_default__: default value B if path not found
 __invertor__: _bool_, if invertor === false, eq operator return true if A === B, if true, eq operator return true if A !== B
 
 ### map operator
-> syntax: ['operator_name', 'A path', 'A default', 'map path', 'B path', ['B default']]
+> syntax: ['operator\_name', 'A path', 'A default', 'map path', ['B path'], ['B default']]
 
 __operator_name__: _string_, `map` for mapping value A to B
 
@@ -145,9 +149,31 @@ __A_default__: default value A if path not found
 
 __map_path__: path to find mapping object, mapping object can in input or extension object
 
-__B_path__: _array_, path to value B
+__B_path__: _array_, path to value B, return value B if not defined
 
 __B_default__: default value B if path not found
+
+### spec operator
+> syntax: ['operator\_name', 'path', ['default'], 'spec']
+
+__operator_name__: _string_, `spec`
+
+__path__: _array_, path to value A
+
+__default__: default value A if path not found
+
+__spec__: _object_, spec to validate value A
+
+### call operator
+> syntax: ['operator\_name', 'path', ['default'], [...param]]
+
+__operator_name__: _string_, `call`
+
+__path__: _array_, path to js function
+
+__default__: default function if path not found
+
+__params__: _array_, variable number of `path` and `default` the result will be argument of the function
 
 
 ## validate nested object

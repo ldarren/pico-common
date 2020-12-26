@@ -318,10 +318,10 @@ parallel('\npico/obj', function(){
 			}
 		}
 		var out1 = []
-		var ret1 = null == pobj.validate(okSpec, obj, out1)
+		var ret1 = pobj.validate(okSpec, obj, out1)
 		var ret2 = '$.0.a.b' === pobj.validate(koSpec, obj)
 		var o = out1[0].a.b[0]
-		cb(null, o.c === '123' && o.d === 1 && o.e === false && !!(o.f.getTime()) && ret1 && ret2)
+		cb(null, o.c === '123' && o.d === 1 && o.e === false && !!(o.f.getTime()) && !ret1 && ret2)
 	})
 
 	this.test('ensure primitive array type check', function(cb){
@@ -392,8 +392,9 @@ parallel('\npico/obj', function(){
 				g: 'object'
 			}
 		}
-		var ret = pobj.validate(okSpec, obj)
-		cb(null, !ret && void 0 === obj.b && void 0 === obj.g && void 0 === obj.a.c && void 0 === obj.a.d && void 0 === obj.a.e)
+		var out = {}
+		var ret = pobj.validate(okSpec, obj, out)
+		cb(null, !ret && void 0 === out.b && void 0 === out.g && void 0 === out.a.c && void 0 === out.a.d && void 0 === out.a.e)
 	})
 
 	this.test('ensure validate wrong type can handle gracefully', function(cb){
@@ -439,7 +440,7 @@ parallel('\npico/obj', function(){
 		cb(null, ret === '$.a.required', ret)
 	})
 	this.test('ensure validate default value works', function(cb){
-		var obj = [{a: {b: [{d: '1'}]}}]
+		var obj = [{a: {b: [{c: null, d: '1'}]}}]
 		var okSpec = {
 			type: 'array',
 			spec: {
@@ -644,8 +645,8 @@ parallel('\npico/obj', function(){
 		}
 		var out = {}
 		var res = pobj.validate(spec, input, out)
-		if (res) return cb(null, false, res)
 		cb(null, (
+			!res &&
 			null === out.a &&
 			null === out.b &&
 			false === out.c &&
@@ -844,7 +845,6 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('validate dynamic spec with map op', function(cb){
-		// test default value
 		var spec1 = {
 			type: 'object',
 			required: 1,
@@ -910,7 +910,6 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('validate dynamic spec with now op', function(cb){
-		// test default value
 		var DAY = 1000 * 60 * 60 * 24
 		var spec = {
 			type: 'object',
@@ -933,8 +932,50 @@ parallel('\npico/obj', function(){
 		return cb(null, DAY === out.today.getTime() - out.yesterday.getTime())
 	})
 
+	this.test('validate dynamic spec with validate op', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				idxs: {
+					type: 'array',
+					gt: 0,
+					value: ['spec', ['ids'], null, {
+						type: 'array',
+						sep: ',',
+						spec: {
+							type: 'number',
+							map: [['_']],
+						}
+					}],
+					spec: 'number'
+				}
+			}
+		}
+		var ext = { a: 1, b: 2, c: 3 }
+
+		var out = {}
+		var res = pobj.validate(spec, {ids: 'a,b,c'}, out, ext)
+		return cb(null, !res && 3 === out.idxs.length && 2 === out.idxs[1], res)
+	})
+
+	this.test('validate dynamic spec with call operator', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				count: {
+					type: 'number',
+					value: ['call', ['_', 'func'], null, null, 1, null, 2]
+				}
+			}
+		}
+		var ext = { func: (a, b) => (a + b) }
+
+		var out = {}
+		var res = pobj.validate(spec, {}, out, ext)
+		return cb(null, !res && 3 === out.count, res)
+	})
+
 	this.test('ensure force attribute works on array and string', function(cb){
-		// test default value
 		var spec = {
 			type: 'object',
 			required: 1,
@@ -960,7 +1001,6 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('ensure int attribute works on number', function(cb){
-		// test default value
 		var spec = {
 			type: 'object',
 			required: 1,
@@ -991,5 +1031,81 @@ parallel('\npico/obj', function(){
 		var out = {}
 		var res = pobj.validate(spec, {round: 3.6, down: 3.6, floor: 3.6, up: 3.6, ceil: 3.6}, out)
 		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4)
+	})
+
+	this.test('ensure alias attribute works', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				a1: {
+					type: 'string',
+					alias: 'a'
+				},
+				b1: {
+					type: 'bool',
+					alias: 'b'
+				},
+				c1: {
+					type: 'number',
+					alias: 'c'
+				},
+				d1: {
+					type: 'date',
+					alias: 'd'
+				},
+				e1: {
+					type: 'null',
+					alias: 'e'
+				},
+				f1: {
+					type: 'array',
+					alias: 'f'
+				},
+				g1: {
+					type: 'object',
+					alias: 'g'
+				},
+			}
+		}
+
+		var res = pobj.validate(spec, {f1: 1})
+		if ('$.f' !== res) return cb(null, false)
+
+		var out = {}
+		res = pobj.validate(spec, {a1: '1', b1: true, c1: 3, d1: '2020-12-16', e1: 5, f1: [], g1: {}}, out)
+		cb(null, !res &&
+			'1' === out.a &&
+			true === out.b &&
+			3 === out.c &&
+			16 === out.d.getDate() &&
+			5 === out.e &&
+			0 === out.f.length &&
+			0 === Object.keys(out.g).length
+		)
+	})
+
+	this.test('validate pObj.create', function(cb){
+		var spec = {
+			type: 'array',
+			required: 1,
+			notnull: 1,
+			spec: {
+				type: 'object',
+				spec: {
+					num: 'number',
+					str: 'string',
+					bl: 'bool',
+					date: 'date',
+					empty: 'null',
+					county: ['CN', 'MY', 'US', 'SG']
+				}
+			}
+		}
+
+		var obj = pobj.create(spec)
+		if (!obj) return cb(null, false, 'failed to create')
+
+		var res = pobj.validate(spec, obj)
+		return cb(null, void 0 === res)
 	})
 })
