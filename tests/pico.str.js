@@ -147,7 +147,7 @@ parallel('\npico/str', function(){
 		var params = {}
 		var res = radix.match('/user/lookup/darren', params)
 		if (routes[0] !== res || 'darren' !== params.id) return cb(null, false)
-		
+
 		params = {}
 		res = radix.match('/user/lookup/foo/abr', params)
 		if (res || 'foo' !== params.id) return cb(null, false)
