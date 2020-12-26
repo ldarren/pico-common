@@ -127,7 +127,9 @@ parallel('\npico/str', function(){
 			res = radix.match(r[1], params)
 			if (res !== r[0] || JSON.stringify(r[2]) !== JSON.stringify(r[2] ? params : null)) return cb(null, false)
 		}
-		cb(null, true)
+
+		res = radix.match('/')
+		cb(null, !res)
 	})
 
 	this.test('ensure router ignore same route with diff params', function(cb){

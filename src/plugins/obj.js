@@ -228,7 +228,7 @@ define('pico/obj',function(exports,require){
 	}
 
 	function rand(min, max){
-		return min + Round(Rand() * (max - min))
+		return min + Round(Rand() * (max - 1 - min))
 	}
 
 	function createObj(s, opt){
@@ -261,7 +261,7 @@ define('pico/obj',function(exports,require){
 		case 'number':
 			return rand(s.gt || -10, s.lt || 10)
 		case 'string':
-			return s.regex ? randex(s.regex, s.gt || 32) : pStr.rand(rand(s.gt || 0, s.lt || 10), s.sep)
+			return s.regex ? randex(s.regex) : pStr.rand(rand(s.gt || 0, s.lt || 10), s.sep)
 		case 'boolean':
 		case 'bool':
 			return 1 === rand(0, 1)
