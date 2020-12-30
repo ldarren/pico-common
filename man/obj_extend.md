@@ -27,7 +27,7 @@ __output [optional]__: an optional object to define the option of extension.
 the target object
 
 ## option
-__tidy__: if tidy equal to true, undefined value in object will be ignored in the output
+__tidy__: if tidy = 1, undefined value in object will be ignored, 2 null value will be ignored
 
 __mergeArr__: if mergeArr equal to true, 
 

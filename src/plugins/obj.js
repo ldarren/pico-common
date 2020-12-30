@@ -140,17 +140,28 @@ define('pico/obj',function(exports,require){
 			val = [val]
 		}
 		if (notin(val.length, run(spec.lt), run(spec.gt))) return key
-		var s = spec.spec
+		set(out, key, [])
+		var o = get(out, key)
+		var specs = run(spec.specs)
+		var j = 0
+		var s, l, ret, v
+		if (specs) {
+			for (l = specs.length; (j < l); j++){
+				v = val[j]
+				s = specs[j]
+				ret = validate(j, s, v, o, full, val, ext)
+				if (void 0 !== ret) return [key, ret].join('.')
+			}
+		}
+		s = spec.spec
 		if (s) {
-			set(out, key, [])
-			var o = get(out, key)
-			for (var j = 0, l = val.length, ret, v; (j < l); j++){
+			for (l = val.length; (j < l); j++){
 				v = val[j]
 				ret = validate(j, s, v, o, full, val, ext)
 				if (void 0 !== ret) return [key, ret].join('.')
 			}
-		}else{
-			set(out, key, val.slice())
+		} else if (o) {
+			Array.prototype.push.apply(o, val.slice())
 		}
 	}
 	function validate(key, s, val, out, full, host, ext){
@@ -278,30 +289,37 @@ define('pico/obj',function(exports,require){
 		}
 	}
 
+	function ignore(val, tidy){
+		if (!tidy) return
+		if ((1 & tidy) && void 0 === val) return 1
+		if ((2 & tidy) && null === val) return 1
+	}
+
 	return  {
 		extend: function extend(to, from, options){
 			var tf=isObjFun(to)
 			var ft=isObjFun(from)
 			if (1 === tf) tf = isObjFun(to.__proto__)
 			if (1 === ft) ft = isObjFun(from.__proto__)
-			if (!to || null === from || (-1 === ft && ft === tf)) return (void 0 === from && tidy) ? to : from
+			options=options||{}
+			var tidy = options.tidy
+			if (!to || null === from || (-1 === ft && ft === tf)) return ignore(from, tidy) ? to : from
 			if (1===ft) {
 				if(ft === tf)from.prototype=to
 				return from
 			}
-			options=options||{}
-			var tidy = options.tidy, key, value
+			var key, value
 			if (Array.isArray(from)){
 				if (options.mergeArr){
 					to = to || []
 					// TODO: change unique to Set when it is more common on mobile
 					var i, l, unique={}
 					for (i=0,l=to.length; i<l; i++){
-						if (void 0 === (value = to[i]) && tidy) continue
+						if (ignore((value = to[i]), tidy)) continue
 						unique[value] = value
 					}
 					for (i=0,l=from.length; i<l; i++){
-						if (void 0 === (value = from[i]) && tidy) continue
+						if (ignore((value = from[i]),  tidy)) continue
 						unique[value] = value
 					}
 					to = []
@@ -313,7 +331,7 @@ define('pico/obj',function(exports,require){
 				to = to || {}
 				for (key in from){
 					value = from[key]
-					if (~specialFunc.indexOf(key) || (void 0 === value && tidy)) continue
+					if (~specialFunc.indexOf(key) || ignore(value, tidy)) continue
 					to[key] = extend(to[key], value, options)
 				}
 			}
@@ -330,6 +348,9 @@ define('pico/obj',function(exports,require){
 		validate: function(spec, obj, out, ext){
 			return validate(ROOT, spec, obj, out, obj, null, ext)
 		},
-		create: create
+		create: create,
+		has: function(obj, key){
+			return Object.prototype.hasOwnProperty.call(obj, key)
+		}
 	}
 })
