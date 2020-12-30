@@ -166,7 +166,7 @@ parallel('\npico/obj', function(){
 		if (!pobj.has(out, 'k1') || pobj.has(out, 'k2')) return cb(null, false)
 
 		out = pobj.extend({}, o2, {tidy: 2})
-		if (pobj.has(out, 'k1') || pobj.has(out, 'k2')) return cb(null, false)
+		if (pobj.has(out, 'k1') || !pobj.has(out, 'k2')) return cb(null, false)
 
 		out = pobj.extend({}, o2, {tidy: 3})
 		cb(null, !Object.keys(out).length)
