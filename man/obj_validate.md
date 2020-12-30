@@ -57,6 +57,8 @@ __notnull__: not nullable, it runs after `required` and `value`, it returns erro
 
 __spec__: nested object schema, _valid for array and object_
 
+__specs__: per array item schema, _valid for array_
+
 __force__: force type, given value type if force to the defined type if a non-conform value is given, _valid for array and string_
 
 __int__: integer, round the given number, 'f' or 'd' for round down, 'c' or 'u' for round up, _valid for number_
