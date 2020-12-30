@@ -144,9 +144,9 @@ define('pico/obj',function(exports,require){
 		var o = get(out, key)
 		var specs = run(spec.specs)
 		var j = 0
-		var s
+		var s, l, ret, v
 		if (specs) {
-			for (var l = specs.length, ret, v; (j < l); j++){
+			for (l = specs.length; (j < l); j++){
 				v = val[j]
 				s = specs[j]
 				ret = validate(j, s, v, o, full, val, ext)
@@ -155,13 +155,13 @@ define('pico/obj',function(exports,require){
 		}
 		s = spec.spec
 		if (s) {
-			for (var l = val.length, ret, v; (j < l); j++){
+			for (l = val.length; (j < l); j++){
 				v = val[j]
 				ret = validate(j, s, v, o, full, val, ext)
 				if (void 0 !== ret) return [key, ret].join('.')
 			}
 		} else if (o) {
-			Array.prototype.push.apply(o, val.slice())	
+			Array.prototype.push.apply(o, val.slice())
 		}
 	}
 	function validate(key, s, val, out, full, host, ext){
@@ -348,6 +348,9 @@ define('pico/obj',function(exports,require){
 		validate: function(spec, obj, out, ext){
 			return validate(ROOT, spec, obj, out, obj, null, ext)
 		},
-		create: create
+		create: create,
+		has: function(obj, key){
+			return Object.prototype.hasOwnProperty.call(obj, key)
+		}
 	}
 })

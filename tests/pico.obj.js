@@ -160,14 +160,14 @@ parallel('\npico/obj', function(){
 		var o2 = {k1: null, k2: void 0}
 
 		var out = pobj.extend({}, o2)
-		if (!out.hasOwnProperty('k1') || !out.hasOwnProperty('k2')) return cb(null, false)
+		if (!pobj.has(out, 'k1') || !pobj.has(out, 'k2')) return cb(null, false)
 
 		out = pobj.extend({}, o2, {tidy: 1})
-		if (!out.hasOwnProperty('k1') || out.hasOwnProperty('k2')) return cb(null, false)
+		if (!pobj.has(out, 'k1') || pobj.has(out, 'k2')) return cb(null, false)
 
 		out = pobj.extend({}, o2, {tidy: 2})
-		if (out.hasOwnProperty('k1') || !out.hasOwnProperty('k2')) return cb(null, false)
-	
+		if (pobj.has(out, 'k1') || pobj.has(out, 'k2')) return cb(null, false)
+
 		out = pobj.extend({}, o2, {tidy: 3})
 		cb(null, !Object.keys(out).length)
 	})
