@@ -156,16 +156,20 @@ parallel('\npico/obj', function(){
 		cb(null, t1 + 20 > t2, [t1,t2])
 	})
 
-	this.test('ensure options.tidy on is working. output should not contain any undefined key', function(cb){
-		var out = pobj.extend({key1:1}, {key2:void 0}, {tidy:1})
+	this.test('ensure options.tidy is working', function(cb){
+		var o2 = {k1: null, k2: void 0}
 
-		cb(null, 1 === Object.keys(out).length)
-	})
+		var out = pobj.extend({}, o2)
+		if (!out.hasOwnProperty('k1') || !out.hasOwnProperty('k2')) return cb(null, false)
 
-	this.test('ensure options.tidy off is working. output should contain an undefined key', function(cb){
-		var out = pobj.extend({key1:1}, {key2:void 0})
+		out = pobj.extend({}, o2, {tidy: 1})
+		if (!out.hasOwnProperty('k1') || out.hasOwnProperty('k2')) return cb(null, false)
 
-		cb(null, 2 ===  Object.keys(out).length)
+		out = pobj.extend({}, o2, {tidy: 2})
+		if (out.hasOwnProperty('k1') || !out.hasOwnProperty('k2')) return cb(null, false)
+	
+		out = pobj.extend({}, o2, {tidy: 3})
+		cb(null, !Object.keys(out).length)
 	})
 
 	this.test('ensure options.mergeArr on is working. output should contain[1,2,3] list', function(cb){
@@ -686,6 +690,25 @@ parallel('\npico/obj', function(){
 
 		var res = pobj.validate(spec, ['a', 'b'])
 		return cb(null, res === '$.0')
+	})
+
+	this.test('validate array with specs', function(cb){
+		var spec = {
+			type: 'array',
+			specs: ['number', { type: 'date', required: 1}],
+			spec: {
+				type: 'string',
+				force: 1
+			}
+		}
+
+		var res = pobj.validate(spec, ['a'])
+		if ('$.0' !== res) return cb(null, false, res)
+		res = pobj.validate(spec, [0])
+		if ('$.1' !== res) return cb(null, false, res)
+		var out = {}
+		res = pobj.validate(spec, [0, '2020-12-30', 0], out)
+		cb(null, !res && '0' === out[2])
 	})
 
 	this.test('validate boolean', function(cb){
