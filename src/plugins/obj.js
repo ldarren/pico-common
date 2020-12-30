@@ -140,17 +140,29 @@ define('pico/obj',function(exports,require){
 			val = [val]
 		}
 		if (notin(val.length, run(spec.lt), run(spec.gt))) return key
-		var s = spec.spec
+		var specs = spec.specs
+		var j = 0
+		var s
+		set(out, key, [])
+		var o = get(out, key)
+		if (specs) {
+			for (var l = specs.length, ret, v; (j < l); j++){
+				v = val[j]
+				if (!v) [key, j].join('.')
+				s = specs[j]
+				ret = validate(j, s, v, o, full, val, ext)
+				if (void 0 !== ret) return [key, ret].join('.')
+			}
+		}
+		s = spec.spec
 		if (s) {
-			set(out, key, [])
-			var o = get(out, key)
-			for (var j = 0, l = val.length, ret, v; (j < l); j++){
+			for (var l = val.length, ret, v; (j < l); j++){
 				v = val[j]
 				ret = validate(j, s, v, o, full, val, ext)
 				if (void 0 !== ret) return [key, ret].join('.')
 			}
 		}else{
-			set(out, key, val.slice())
+			Array.prototype.push.apply(o, val.slice())	
 		}
 	}
 	function validate(key, s, val, out, full, host, ext){
