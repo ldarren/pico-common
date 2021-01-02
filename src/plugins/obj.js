@@ -354,9 +354,6 @@ define('pico/obj',function(exports,require){
 			return validate(ROOT, spec, obj, out, obj, null, ext)
 		},
 		create: create,
-		validate: function(spec, obj, out, ext){
-			return validate(ROOT, spec, obj, out, obj, null, ext)
-		},
 		has: function(obj, key){
 			return Object.prototype.hasOwnProperty.call(obj, key)
 		}

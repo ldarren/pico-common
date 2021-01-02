@@ -992,7 +992,7 @@ parallel('\npico/obj', function(){
 				}
 			}
 		}
-		var ext = { 
+		var ext = {
 			type: 'object',
 			spec: {
 				product_idx: 'number',
