@@ -119,7 +119,8 @@ define('pico/obj',function(exports,require){
 	}
 	function validateObj(key, spec, val, out, full, ext){
 		if (!(spec.type === typeof val) || Array.isArray(val)) return key
-		var s = spec.spec
+		var run = Runner(full, val, ext)
+		var s = run(spec.spec)
 		if (s) {
 			set(out, key, {})
 			var o = get(out, key)
@@ -136,7 +137,7 @@ define('pico/obj',function(exports,require){
 		var run = Runner(full, val, ext)
 		if (spec.sep && val && val.split) val = val.split(run(spec.sep))
 		if (!Array.isArray(val)) {
-			if (!spec.force) return key
+			if (!run(spec.force)) return key
 			val = [val]
 		}
 		if (notin(val.length, run(spec.lt), run(spec.gt))) return key
@@ -153,7 +154,7 @@ define('pico/obj',function(exports,require){
 				if (void 0 !== ret) return [key, ret].join('.')
 			}
 		}
-		s = spec.spec
+		s = run(spec.spec)
 		if (s) {
 			for (l = val.length; (j < l); j++){
 				v = val[j]

@@ -981,6 +981,37 @@ parallel('\npico/obj', function(){
 		return cb(null, !res && 3 === out.idxs.length && 2 === out.idxs[1], res)
 	})
 
+	this.test('validate op can be applied to spec', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				id: 'string',
+				child: {
+					type: 'array',
+					spec: ['ref', ['_']]
+				}
+			}
+		}
+		var ext = { 
+			type: 'object',
+			spec: {
+				product_idx: 'number',
+				amount: 'number'
+			}
+		}
+		var input = {
+			id: 'E1',
+			child: [{
+				product_idx: '1',
+				amount: '10'
+			}]
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, input, out, ext)
+		return cb(null, !res && 1 === out.child.length && 1 === out.child[0].product_idx, res)
+	})
+
 	this.test('validate dynamic spec with call operator', function(cb){
 		var spec = {
 			type: 'object',
