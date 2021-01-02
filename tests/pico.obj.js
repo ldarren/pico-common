@@ -1162,4 +1162,30 @@ parallel('\npico/obj', function(){
 		var res = pobj.validate(spec, obj)
 		return cb(null, void 0 === res)
 	})
+
+	this.test('validate pObj.create with dynamic op', function(cb){
+		var spec = {
+			type: 'array',
+			required: 1,
+			notnull: 1,
+			spec: ['ref', ['_']]
+		}
+		var exp = {
+			type: 'object',
+			spec: {
+				num: 'number',
+				str: 'string',
+				bl: 'bool',
+				date: 'date',
+				empty: 'null',
+				county: ['CN', 'MY', 'US', 'SG']
+			}
+		}
+
+		var obj = pobj.create(spec, exp)
+		if (!obj) return cb(null, false, 'failed to create')
+
+		var res = pobj.validate(spec, obj)
+		return cb(null, void 0 === res)
+	})
 })

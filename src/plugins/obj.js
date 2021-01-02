@@ -165,8 +165,9 @@ define('pico/obj',function(exports,require){
 			Array.prototype.push.apply(o, val.slice())
 		}
 	}
-	function validate(key, s, val, out, full, host, ext){
+	function validate(key, spec, val, out, full, host, ext){
 		var run = Runner(full, host, ext)
+		var s = run(spec)
 		var k = run(s.alias) || key
 		var t = run(s.type) || s
 		if (!t || !t.includes) return k
@@ -243,50 +244,53 @@ define('pico/obj',function(exports,require){
 		return min + Round(Rand() * (max - 1 - min))
 	}
 
-	function createObj(s, opt){
+	function createObj(s, ext){
 		var out = {}
 		if (!s) return out
 		var keys = Object.keys(s)
 		for (var i = 0, k; (k = keys[i]); i++){
-			out[k] = create(s[k], opt)
+			out[k] = create(s[k], ext)
 		}
 		return out
 	}
 
-	function createArr(s, opt){
+	function createArr(s, ext){
+		var run = Runner(null, null, ext)
 		var out = []
 		if (!s) return out
-		var times = rand(s.gt || 0, s.lt || 10)
+		var times = rand(run(s.gt) || 0, run(s.lt) || 10)
 		for (var i = 0; i < times; i++){
-			out.push(create(s.spec, opt))
+			out.push(create(s.spec, ext))
 		}
 		return out
 	}
 
-	function create(s, randex){
-		var t = s.type || s
+	function create(spec, ext){
+		var run = Runner(null, null, ext)
+		var s = run(spec)
+		var t = run(s.type) || s
 
-		if (!s.required && 0 === rand(0, 100)) return s.value
-		if (!s.notnull&& 0 === rand(0, 100)) return null
+		if (!run(s.required) && 0 === rand(0, 100)) return s.value
+		if (!run(s.notnull) && 0 === rand(0, 100)) return null
 
 		switch(t){
 		case 'number':
-			return rand(s.gt || -10, s.lt || 10)
+			return rand(run(s.gt) || -10, run(s.lt) || 10)
 		case 'string':
-			return s.regex ? randex(s.regex) : pStr.rand(rand(s.gt || 0, s.lt || 10), s.sep)
+			return s.regex ? ext.randex(run(s.regex)) : pStr.rand(rand(run(s.gt) || 0, run(s.lt) || 10), run(s.sep))
 		case 'boolean':
 		case 'bool':
 			return 1 === rand(0, 1)
 		case 'date':
-			return new Date(rand(s.gt || Date.now() - 0x9A7EC800, s.lt || Date.now() + 0x9A7EC800))
+			return new Date(rand(run(s.gt) || Date.now() - 0x9A7EC800, run(s.lt) || Date.now() + 0x9A7EC800))
 		case 'object':
-			return createObj(s.spec, randex)
+			return createObj(run(s.spec), ext)
 		case 'array':
-			return createArr(s, randex)
+			return createArr(s, ext)
 		case 'null':
 			return null
 		default:
-			return s[rand(0, s.length - 1)]
+			return s[rand(0, run(s.length) - 1)]
 		}
 	}
 
@@ -350,6 +354,9 @@ define('pico/obj',function(exports,require){
 			return validate(ROOT, spec, obj, out, obj, null, ext)
 		},
 		create: create,
+		validate: function(spec, obj, out, ext){
+			return validate(ROOT, spec, obj, out, obj, null, ext)
+		},
 		has: function(obj, key){
 			return Object.prototype.hasOwnProperty.call(obj, key)
 		}
