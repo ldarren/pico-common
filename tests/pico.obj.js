@@ -981,6 +981,37 @@ parallel('\npico/obj', function(){
 		return cb(null, !res && 3 === out.idxs.length && 2 === out.idxs[1], res)
 	})
 
+	this.test('validate op can be applied to spec', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				id: 'string',
+				child: {
+					type: 'array',
+					spec: ['ref', ['_']]
+				}
+			}
+		}
+		var ext = {
+			type: 'object',
+			spec: {
+				product_idx: 'number',
+				amount: 'number'
+			}
+		}
+		var input = {
+			id: 'E1',
+			child: [{
+				product_idx: '1',
+				amount: '10'
+			}]
+		}
+
+		var out = {}
+		var res = pobj.validate(spec, input, out, ext)
+		return cb(null, !res && 1 === out.child.length && 1 === out.child[0].product_idx, res)
+	})
+
 	this.test('validate dynamic spec with call operator', function(cb){
 		var spec = {
 			type: 'object',
@@ -1126,6 +1157,32 @@ parallel('\npico/obj', function(){
 		}
 
 		var obj = pobj.create(spec)
+		if (!obj) return cb(null, false, 'failed to create')
+
+		var res = pobj.validate(spec, obj)
+		return cb(null, void 0 === res)
+	})
+
+	this.test('validate pObj.create with dynamic op', function(cb){
+		var spec = {
+			type: 'array',
+			required: 1,
+			notnull: 1,
+			spec: ['ref', ['_']]
+		}
+		var exp = {
+			type: 'object',
+			spec: {
+				num: 'number',
+				str: 'string',
+				bl: 'bool',
+				date: 'date',
+				empty: 'null',
+				county: ['CN', 'MY', 'US', 'SG']
+			}
+		}
+
+		var obj = pobj.create(spec, exp)
 		if (!obj) return cb(null, false, 'failed to create')
 
 		var res = pobj.validate(spec, obj)
