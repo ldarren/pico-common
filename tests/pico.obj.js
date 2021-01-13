@@ -1151,7 +1151,10 @@ parallel('\npico/obj', function(){
 					bl: 'bool',
 					date: 'date',
 					empty: 'null',
-					county: ['CN', 'MY', 'US', 'SG']
+					county: {
+						type: ['CN', 'MY', 'US', 'SG'],
+						required: 1
+					}
 				}
 			}
 		}
