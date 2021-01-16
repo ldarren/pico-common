@@ -70,8 +70,7 @@ define('pico/obj',function(exports,require){
 		}
 	}
 	function dot(obj, p, def){
-		if (!p || !Array.isArray(p)) return def
-		if (void 0 === obj) return def
+		if (!obj || !p || !Array.isArray(p)) return def
 		var v = obj
 		for (var i = 0, l = p.length, pi; i < l; i++){
 			pi = p[i]

@@ -855,16 +855,28 @@ parallel('\npico/obj', function(){
 				free_delivery: {
 					type: 'bool',
 					value: ['eq', ['choice'], 0, null, 1, 1]
+				},
+				insurance: {
+					type: 'number',
+					notnull: ['bool', ['policy'], 1],
+					value: ['map', ['policy'], 0, ['_', 'premium'], ['price']]
 				}
 			}
 		}
 
+		var ext = {premium: [null, {price: 50}, {price: 30}]}
 		var out = {}
-		var res = pobj.validate(spec, {choice: 2}, out)
-		if (res || !out.discount || !out.free_delivery) return cb(null, false, res)
 
-		res = pobj.validate(spec, {choice: 1})
-		cb(null, res || !out.discount || out.free_delivery, out)
+		var res = pobj.validate(spec, {choice: 2}, out, ext)
+		if (!res || '$.insurance' !== res) return cb(null, false, res)
+
+		out = {}
+		res = pobj.validate(spec, {choice: 2, insurance: 10}, out, ext)
+		if (res || !out.discount || !out.free_delivery || 10 !== out.insurance) return cb(null, false, res)
+
+		out = {}
+		res = pobj.validate(spec, {choice: 1, policy: 2}, out, ext)
+		cb(null, !res && out.discount && !out.free_delivery && 30 === out.insurance, out)
 	})
 
 	this.test('validate dynamic spec with map op', function(cb){
