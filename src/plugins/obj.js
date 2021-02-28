@@ -217,7 +217,7 @@ define('pico/obj',function(exports,require){
 			case 'f': val = Floor(val); break
 			case 'u':
 			case 'c': val = Ceil(val); break
-			default: val = Round(val); break
+			case 'r': val = Round(val); break
 			}
 			if (notin(val, run(s.lt), run(s.gt))) return k
 			set(out, k, val)
