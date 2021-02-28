@@ -212,12 +212,14 @@ define('pico/obj',function(exports,require){
 		case 'number':
 			val = parseFloat(val)
 			if (!isFinite(val)) return k
-			switch(s.int){
-			case 'd':
-			case 'f': val = Floor(val); break
-			case 'u':
-			case 'c': val = Ceil(val); break
-			case 'r': val = Round(val); break
+			if (s.int) {
+				switch(s.int){
+				case 'd':
+				case 'f': val = Floor(val); break
+				case 'u':
+				case 'c': val = Ceil(val); break
+				default: val = Round(val); break
+				}
 			}
 			if (notin(val, run(s.lt), run(s.gt))) return k
 			set(out, k, val)
@@ -242,8 +244,12 @@ define('pico/obj',function(exports,require){
 		}
 	}
 
-	function rand(min, max){ return min + Round(Rand() * (max - min)) }
-	function randIn(min, max){ return rand(min + 1, max - 1) }
+	function rand(min, max){
+		return min + Round(Rand() * (max - min))
+	}
+	function randIn(min, max){
+		return rand(min + 1, max - 1)
+	}
 
 	function createObj(s, ext){
 		var out = {}

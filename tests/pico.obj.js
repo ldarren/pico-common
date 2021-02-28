@@ -1090,13 +1090,14 @@ parallel('\npico/obj', function(){
 				ceil: {
 					type: 'number',
 					int: 'c'
-				}
+				},
+				none: 'number'
 			}
 		}
 
 		var out = {}
-		var res = pobj.validate(spec, {round: 3.6, down: 3.6, floor: 3.6, up: 3.6, ceil: 3.6}, out)
-		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4)
+		var res = pobj.validate(spec, {round: 3.6, down: 3.6, floor: 3.6, up: 3.6, ceil: 3.6, none: 3.9}, out)
+		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4 && out.none !== 4)
 	})
 
 	this.test('ensure alias attribute works', function(cb){
