@@ -170,14 +170,14 @@ define('pico/obj',function(exports,require){
 	function validate(key, spec, val, out, full, host, ext){
 		var run = Runner(full, host, ext)
 		var s = run(spec)
-		var k = run(s.alias) || key
-		var t = run(s.type) || s
+		var k = run(s.alias, key)
+		var t = run(s.type, s)
 		if (!t || !t.includes) return k
 		if (null == val){
 			if (void 0 === val) {
 				if (run(s.required)) return k
 			}
-			val = run(s.value) || val
+			val = run(s.value, val)
 		}
 		if (Array.isArray(s.map)){
 			val = run(['map', null, val].concat(s.map))

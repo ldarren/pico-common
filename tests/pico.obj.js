@@ -463,7 +463,8 @@ parallel('\npico/obj', function(){
 										c: {type: 'string', value: 'hello'},
 										d: {type: 'number', required: 1},
 										e: {type: 'boolean', value: true},
-										f: {type: 'date', value: '2019-10-16 06:36:00'}
+										f: {type: 'date', value: '2019-10-16 06:36:00'},
+										g: {type: 'number', notnull: 1, value: 0}
 									}
 								}
 							}
@@ -480,7 +481,7 @@ parallel('\npico/obj', function(){
 		var ret = pobj.validate(okSpec, obj, out)
 		if (null != ret) return cb(null, false)
 		var o = out[0].a.b[0]
-		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && !!(o.f.getTime()) && out[0].c === 12)
+		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && !!(o.f.getTime()) && 0 === o.g && out[0].c === 12)
 	})
 
 	this.test('ensure min max validation work', function(cb){
@@ -661,7 +662,7 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('validate support not nullable', function(cb){
-		var input = {a: null, b: null, c: null, d: null, e: null}
+		var input = {a: null, b: null, c: null, d: null, f: null}
 		var spec = {
 			type: 'object',
 			spec: {
@@ -670,6 +671,11 @@ parallel('\npico/obj', function(){
 				c: 'boolean',
 				d: 'array',
 				e: {
+					type: 'number',
+					notnull: 1,
+					value: 0
+				},
+				f: {
 					type: 'object',
 					notnull: 1
 				}
@@ -677,7 +683,7 @@ parallel('\npico/obj', function(){
 		}
 
 		var res = pobj.validate(spec, input, {})
-		return cb(null, '$.e' === res)
+		return cb(null, '$.f' === res)
 	})
 
 	this.test('validate array error position', function(cb){
