@@ -10,16 +10,18 @@ define('pico/build',function(){
 	return function(options){
 		var fs=require('fs')
 		var path=require('path')
-		var srcDir = options.shift()
-		var dstDir = options.shift()
+		var wd = options.shift()
+		var srcDir = path.resolve(wd, options.shift())
+		var dstDir = path.resolve(wd, options.shift())
 		var orgDefine = define
 
+		pico.ajax = pico.ajaxMock(wd)
 		// overide tick function
 		tick=dummyCB
 
 		function addDeps(dst, deps){
 			if (!deps || !deps.length) return
-			fs.appendFileSync(dst, fs.readFileSync(deps.shift()))
+			fs.appendFileSync(dst, fs.readFileSync(path.resolve(wd, deps.shift())))
 			fs.appendFileSync(dst, ';\n')
 			return addDeps(dst, deps)
 		}
