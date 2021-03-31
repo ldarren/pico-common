@@ -267,6 +267,13 @@ parallel('\npico/obj', function(){
 		cb(null, void 0 === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']]))
 	})
 
+	this.test('ensure dot handle null and undefined gracefully', function(cb){
+		var obj = {a: {b: null}}
+		if ('' !== pobj.dot(obj, ['a', 'b', 'c'], '')) return cb(null, false)
+		obj = {a: {b: { c: null }}}
+		cb(null, null === pobj.dot(obj, ['a', 'b', 'c'], ''))
+	})
+
 	this.test('ensure validate work', function(cb){
 		var obj = [{a: {b: [{c: '123', d: '1', e: null, f: '2019-10-16 06:33:00', g: 'T1'}]}}]
 		var okSpec = {

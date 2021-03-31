@@ -72,13 +72,16 @@ define('pico/obj',function(exports,require){
 	function dot(obj, p, def){
 		if (!obj || !p || !Array.isArray(p)) return def
 		var v = obj
-		for (var i = 0, l = p.length, pi; i < l; i++){
-			pi = p[i]
-			if (Array.isArray(pi)) v = find(v, pi)
-			else v = v[pi]
-			if (void 0 === v) return def
+		try {
+			for (var i = 0, l = p.length, pi; i < l; i++){
+				pi = p[i]
+				if (Array.isArray(pi)) v = find(v, pi)
+				else v = v[pi]
+			}
+		} catch (exp) {
+			return def
 		}
-		return v
+		return void 0 === v ? def : v
 	}
 	function isObjFun(o){
 		if (!o || o instanceof Date) return -1
