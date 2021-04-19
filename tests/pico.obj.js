@@ -976,8 +976,8 @@ parallel('\npico/obj', function(){
 		var out = {}
 		var res = pobj.validate(spec, {}, out)
 		if (res || !out.today || !out.yesterday) return cb(null, false, res)
-
-		return cb(null, DAY === out.today.getTime() - out.yesterday.getTime())
+		var diff = out.today.getTime() - out.yesterday.getTime()
+		return cb(null, DAY + 5 > diff && DAY - 5 < diff)
 	})
 
 	this.test('validate dynamic spec with validate op', function(cb){

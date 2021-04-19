@@ -40,6 +40,7 @@ define('pico/str', function(){
 	// tokenize /events/:id/upload/p*path to ['/events/', ':id', '/upload/p', '*path']
 	function tokenizer(ctx, route, tokens, pos){
 		tokens = tokens || []
+		if (null == route) return tokens
 		pos = pos || 0
 		if (pos >= route.length) {
 			// to handle empty string route
