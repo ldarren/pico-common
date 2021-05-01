@@ -3,7 +3,7 @@ var
 	modules={},
 	updates={},
 	paths={},
-	env={},
+	env={build:'dev'},
 	preprocessors={},
 	EXT_JS='.js',EXT_JSON='.json',
 	MOD_PREFIX='"use strict";\n',
@@ -173,7 +173,7 @@ var
 	compile=function(url,txt,deps,me){
 		me=me||dummyPico
 		var
-			script=url ? MOD_PREFIX+txt+(env.live ? '' : MOD_POSTFIX+url) : txt,
+			script=url ? MOD_PREFIX+txt+('prod' === env.build ? '' : MOD_POSTFIX+url) : txt,
 			frequire=function(k){
 				if(!modules[k])deps.push(k);return modules[k]
 			}

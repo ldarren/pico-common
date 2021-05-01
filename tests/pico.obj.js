@@ -267,6 +267,13 @@ parallel('\npico/obj', function(){
 		cb(null, void 0 === pobj.dot(obj, ['a', ['q', '2', 'b'], ['!', '3']]))
 	})
 
+	this.test('ensure dot handle null and undefined gracefully', function(cb){
+		var obj = {a: {b: null}}
+		if ('' !== pobj.dot(obj, ['a', 'b', 'c'], '')) return cb(null, false)
+		obj = {a: {b: { c: null }}}
+		cb(null, null === pobj.dot(obj, ['a', 'b', 'c'], ''))
+	})
+
 	this.test('ensure validate work', function(cb){
 		var obj = [{a: {b: [{c: '123', d: '1', e: null, f: '2019-10-16 06:33:00', g: 'T1'}]}}]
 		var okSpec = {
@@ -463,7 +470,8 @@ parallel('\npico/obj', function(){
 										c: {type: 'string', value: 'hello'},
 										d: {type: 'number', required: 1},
 										e: {type: 'boolean', value: true},
-										f: {type: 'date', value: '2019-10-16 06:36:00'}
+										f: {type: 'date', value: '2019-10-16 06:36:00'},
+										g: {type: 'number', notnull: 1, value: 0}
 									}
 								}
 							}
@@ -480,7 +488,7 @@ parallel('\npico/obj', function(){
 		var ret = pobj.validate(okSpec, obj, out)
 		if (null != ret) return cb(null, false)
 		var o = out[0].a.b[0]
-		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && !!(o.f.getTime()) && out[0].c === 12)
+		cb(null, o.c === 'hello' && o.d === 1 && o.e === true && !!(o.f.getTime()) && 0 === o.g && out[0].c === 12)
 	})
 
 	this.test('ensure min max validation work', function(cb){
@@ -661,7 +669,7 @@ parallel('\npico/obj', function(){
 	})
 
 	this.test('validate support not nullable', function(cb){
-		var input = {a: null, b: null, c: null, d: null, e: null}
+		var input = {a: null, b: null, c: null, d: null, f: null}
 		var spec = {
 			type: 'object',
 			spec: {
@@ -670,6 +678,11 @@ parallel('\npico/obj', function(){
 				c: 'boolean',
 				d: 'array',
 				e: {
+					type: 'number',
+					notnull: 1,
+					value: 0
+				},
+				f: {
 					type: 'object',
 					notnull: 1
 				}
@@ -677,7 +690,7 @@ parallel('\npico/obj', function(){
 		}
 
 		var res = pobj.validate(spec, input, {})
-		return cb(null, '$.e' === res)
+		return cb(null, '$.f' === res)
 	})
 
 	this.test('validate array error position', function(cb){
@@ -855,16 +868,28 @@ parallel('\npico/obj', function(){
 				free_delivery: {
 					type: 'bool',
 					value: ['eq', ['choice'], 0, null, 1, 1]
+				},
+				insurance: {
+					type: 'number',
+					notnull: ['bool', ['policy'], 1],
+					value: ['map', ['policy'], 0, ['_', 'premium'], ['price']]
 				}
 			}
 		}
 
+		var ext = {premium: [null, {price: 50}, {price: 30}]}
 		var out = {}
-		var res = pobj.validate(spec, {choice: 2}, out)
-		if (res || !out.discount || !out.free_delivery) return cb(null, false, res)
 
-		res = pobj.validate(spec, {choice: 1})
-		cb(null, res || !out.discount || out.free_delivery, out)
+		var res = pobj.validate(spec, {choice: 2}, out, ext)
+		if (!res || '$.insurance' !== res) return cb(null, false, res)
+
+		out = {}
+		res = pobj.validate(spec, {choice: 2, insurance: 10}, out, ext)
+		if (res || !out.discount || !out.free_delivery || 10 !== out.insurance) return cb(null, false, res)
+
+		out = {}
+		res = pobj.validate(spec, {choice: 1, policy: 2}, out, ext)
+		cb(null, !res && out.discount && !out.free_delivery && 30 === out.insurance, out)
 	})
 
 	this.test('validate dynamic spec with map op', function(cb){
@@ -951,8 +976,8 @@ parallel('\npico/obj', function(){
 		var out = {}
 		var res = pobj.validate(spec, {}, out)
 		if (res || !out.today || !out.yesterday) return cb(null, false, res)
-
-		return cb(null, DAY === out.today.getTime() - out.yesterday.getTime())
+		var diff = out.today.getTime() - out.yesterday.getTime()
+		return cb(null, DAY + 5 > diff && DAY - 5 < diff)
 	})
 
 	this.test('validate dynamic spec with validate op', function(cb){
@@ -1078,13 +1103,14 @@ parallel('\npico/obj', function(){
 				ceil: {
 					type: 'number',
 					int: 'c'
-				}
+				},
+				none: 'number'
 			}
 		}
 
 		var out = {}
-		var res = pobj.validate(spec, {round: 3.6, down: 3.6, floor: 3.6, up: 3.6, ceil: 3.6}, out)
-		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4)
+		var res = pobj.validate(spec, {round: 3.6, down: 3.6, floor: 3.6, up: 3.6, ceil: 3.6, none: 3.9}, out)
+		cb(null, !res && out.round === 4 && out.down === 3 && out.floor === 3 && out.up === 4 && out.ceil === 4 && out.none !== 4)
 	})
 
 	this.test('ensure alias attribute works', function(cb){
@@ -1151,7 +1177,10 @@ parallel('\npico/obj', function(){
 					bl: 'bool',
 					date: 'date',
 					empty: 'null',
-					county: ['CN', 'MY', 'US', 'SG']
+					county: {
+						type: ['CN', 'MY', 'US', 'SG'],
+						required: 1
+					}
 				}
 			}
 		}
