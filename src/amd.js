@@ -254,7 +254,7 @@ var pico=module[exports]={
 		if (Array.isArray(importRule) && importRule.some(function(rx){
 			return rx.match(url)
 		}))
-		return require(url)
+			return require(url)
 	},
 	export:getMod,
 	env:getEnv
