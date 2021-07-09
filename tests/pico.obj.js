@@ -853,7 +853,7 @@ parallel('\npico/obj', function(){
 		res = pobj.validate(spec, [{idx: 42}, {ref: 'd'}, {}])
 		cb(null, '$.2.idx' === res, res)
 	})
-	this.test('transfrom with bool op', function(cb){
+	this.test('transform with bool op', function(cb){
 		var spec = {
 			type: 'array',
 			spec: {
@@ -874,7 +874,7 @@ parallel('\npico/obj', function(){
 		var out = []
 		var res = pobj.validate(spec, [{status: 1}, {status: 0}, {status: true}, {status: false}], out)
 		if (res) return cb(null, false, res)
-		function cmp(obj) { return obj.enabled == !obj.disabled }
+		const cmp = (obj) => ( obj.enabled === !obj.disabled )
 		cb(null, cmp(out[0]) && cmp(out[1]) && cmp(out[2]) && cmp(out[3]))
 	})
 
