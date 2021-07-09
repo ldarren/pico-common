@@ -116,7 +116,7 @@ parallel('\npico/str', function(){
 			['/static/*rest', '/static/foo/bar', {rest: 'foo/bar'}],
 		]
 
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		var i, r
 		for (i = 0; (r = routes[i]); i++){
 			radix.add(r[0])
@@ -139,7 +139,7 @@ parallel('\npico/str', function(){
 			'/user/lookup/*rest'
 		]
 
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		for (var i = 0, r; (r = routes[i]); i++){
 			radix.add(r)
 		}
@@ -155,7 +155,7 @@ parallel('\npico/str', function(){
 	})
 
 	this.test('ensure router handle empty and cron route', function(cb){
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		radix.add('')
 		radix.add('* * * * * *')
 		var params = {}
@@ -164,7 +164,7 @@ parallel('\npico/str', function(){
 	})
 
 	this.test('ensure router / is not wildcard', function(cb){
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		radix.add('/user/:id')
 		var params = {}
 		var res = radix.match('/', params)
@@ -172,16 +172,48 @@ parallel('\npico/str', function(){
 	})
 
 	this.test('ensure router build', function(cb){
-		var routes = [
+		const routes = [
 			['/users/:id/parcels', {id: 1}, '/users/1/parcels'],
 			['/users/:id/devices/:did', {id: 1, did: 'abc'}, '/users/1/devices/abc'],
 		]
 
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		for (var i = 0, r; (r = routes[i]); i++){
 			if (r[2] !== radix.build(r[0], r[1])) return cb(null, false)
 		}
 		cb(null, true)
+	})
+
+	this.test('ensure router group works', function(cb){
+		const search = new pStr.Radix()
+		search.add('/state/:state')
+		search.add('/type/:type')
+
+		const group1 = new pStr.Radix()
+		group1.add('/mer/:mid/*rest')
+
+		const group2 = new pStr.Radix()
+		group2.add('/ref/:ref/*rest')
+
+		const params = {}
+		let res = group1.match('/mer/MT07/ref/D107100255/state/CL', params)
+		if (!res) return cb(null, false)
+
+		switch(res){
+		case '/mer/:mid/*rest':
+			res = group2.match('/' + params.rest, params)
+			break
+		}
+		if (!res) return cb(null, false)
+
+		switch(res){
+		case '/ref/:ref/*rest':
+			res = search.match('/' + params.rest, params)
+			break
+		}
+		if (!res) return cb(null, false)
+
+		return cb(null, 'MT07' === params.mid && 'D107100255' === params.ref && 'CL' === params.state)
 	})
 
 	this.test('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
