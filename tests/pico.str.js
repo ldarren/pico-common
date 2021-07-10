@@ -185,33 +185,28 @@ parallel('\npico/str', function(){
 	})
 
 	this.test('ensure router group works', function(cb){
-		const search = new pStr.Radix()
-		search.add('/state/:state')
-		search.add('/type/:type')
-
-		const group1 = new pStr.Radix()
-		group1.add('/mer/:mid/*rest')
-
-		const group2 = new pStr.Radix()
-		group2.add('/ref/:ref/*rest')
-
-		const params = {}
-		let res = group1.match('/mer/MT07/ref/D107100255/state/CL', params)
-		if (!res) return cb(null, false)
-
-		switch(res){
-		case '/mer/:mid/*rest':
-			res = group2.match('/' + params.rest, params)
-			break
+		const map = {}
+		function add(ctx, path, radix){
+			ctx = ctx || new pStr.Radix()
+			ctx.add(path)
+			map[path] = radix
+			return ctx
 		}
-		if (!res) return cb(null, false)
-
-		switch(res){
-		case '/ref/:ref/*rest':
-			res = search.match('/' + params.rest, params)
-			break
+		function match(ctx, path, params = {}){
+			const res = ctx.match(path, params)
+			if (!res) return
+			const radix = map[res]
+			if (!radix) return params
+			return match(radix, '/' + params.rest, params)
 		}
-		if (!res) return cb(null, false)
+		const search = add(null, '/state/:state', null)
+		add(search, '/type/:type', null)
+
+		const grp2 = add(null, '/ref/:ref/*rest', search)
+		const grp1 = add(null, '/mer/:mid/*rest', grp2)
+
+		const params = match(grp1, '/mer/MT07/ref/D107100255/state/CL')
+		if (!params) return cb(null, false)
 
 		return cb(null, 'MT07' === params.mid && 'D107100255' === params.ref && 'CL' === params.state)
 	})
