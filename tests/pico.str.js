@@ -112,11 +112,13 @@ parallel('\npico/str', function(){
 			['/event/:id', '/event/1', {id: '1'}],
 			['/event/:id/comments', '/event/2/comments', {id: '2'}],
 			['/event/:id/comment', '/event/3/comment', {id: '3'}],
+			['/user/:id/comment/download', '/user/1/comment/download', {id: '1'}], // test static and dynamic params
 			['/user/:id/comment/:cid', '/user/1/comment/2', {id: '1', cid: '2'}],
+			['/user/:id/comment/upload', '/user/1/comment/upload', {id: '1'}],
 			['/static/*rest', '/static/foo/bar', {rest: 'foo/bar'}],
 		]
 
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		var i, r
 		for (i = 0; (r = routes[i]); i++){
 			radix.add(r[0])
@@ -139,7 +141,7 @@ parallel('\npico/str', function(){
 			'/user/lookup/*rest'
 		]
 
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		for (var i = 0, r; (r = routes[i]); i++){
 			radix.add(r)
 		}
@@ -155,7 +157,7 @@ parallel('\npico/str', function(){
 	})
 
 	this.test('ensure router handle empty and cron route', function(cb){
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		radix.add('')
 		radix.add('* * * * * *')
 		var params = {}
@@ -164,7 +166,7 @@ parallel('\npico/str', function(){
 	})
 
 	this.test('ensure router / is not wildcard', function(cb){
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		radix.add('/user/:id')
 		var params = {}
 		var res = radix.match('/', params)
@@ -172,16 +174,43 @@ parallel('\npico/str', function(){
 	})
 
 	this.test('ensure router build', function(cb){
-		var routes = [
+		const routes = [
 			['/users/:id/parcels', {id: 1}, '/users/1/parcels'],
 			['/users/:id/devices/:did', {id: 1, did: 'abc'}, '/users/1/devices/abc'],
 		]
 
-		var radix = new pStr.Radix
+		const radix = new pStr.Radix
 		for (var i = 0, r; (r = routes[i]); i++){
 			if (r[2] !== radix.build(r[0], r[1])) return cb(null, false)
 		}
 		cb(null, true)
+	})
+
+	this.test('ensure router group works', function(cb){
+		const map = {}
+		function add(ctx, path, radix){
+			ctx = ctx || new pStr.Radix()
+			ctx.add(path)
+			map[path] = radix
+			return ctx
+		}
+		function match(ctx, path, params = {}){
+			const res = ctx.match(path, params)
+			if (!res) return
+			const radix = map[res]
+			if (!radix) return params
+			return match(radix, '/' + params.rest, params)
+		}
+		const search = add(null, '/state/:state', null)
+		add(search, '/type/:type', null)
+
+		const grp2 = add(null, '/ref/:ref/*rest', search)
+		const grp1 = add(null, '/mer/:mid/*rest', grp2)
+
+		const params = match(grp1, '/mer/MT07/ref/D107100255/state/CL')
+		if (!params) return cb(null, false)
+
+		return cb(null, 'MT07' === params.mid && 'D107100255' === params.ref && 'CL' === params.state)
 	})
 
 	this.test('ensure codec encode string "{"data":123}" and decode to the same', function(cb){
