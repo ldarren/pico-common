@@ -112,7 +112,9 @@ parallel('\npico/str', function(){
 			['/event/:id', '/event/1', {id: '1'}],
 			['/event/:id/comments', '/event/2/comments', {id: '2'}],
 			['/event/:id/comment', '/event/3/comment', {id: '3'}],
+			['/user/:id/comment/download', '/user/1/comment/download', {id: '1'}], // test static and dynamic params
 			['/user/:id/comment/:cid', '/user/1/comment/2', {id: '1', cid: '2'}],
+			['/user/:id/comment/upload', '/user/1/comment/upload', {id: '1'}],
 			['/static/*rest', '/static/foo/bar', {rest: 'foo/bar'}],
 		]
 
