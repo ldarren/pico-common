@@ -314,14 +314,15 @@ define('pico/obj',function(exports,require){
 		if ((2 & tidy) && null === val) return 1
 	}
 
-	return  {
+	return {
 		extend: function extend(to, from, options){
 			var tf=isObjFun(to)
 			var ft=isObjFun(from)
 			if (1 === tf) tf = isObjFun(to.__proto__)
 			if (1 === ft) ft = isObjFun(from.__proto__)
 			options=options||{}
-			if (0 === ft && options.flat && from.__proto__) from = extend(from, from.__proto__, options)
+			var ifa = Array.isArray(from)
+			if (0 === ft && options.flat && !ifa && from.__proto__) from = extend(from, from.__proto__, options)
 			var tidy = options.tidy
 			if (!to || null === from || (-1 === ft && ft === tf)) return ignore(from, tidy) ? to : from
 			if (1===ft) {
@@ -329,7 +330,7 @@ define('pico/obj',function(exports,require){
 				return from
 			}
 			var key, value
-			if (Array.isArray(from)){
+			if (ifa){
 				if (options.mergeArr){
 					to = to || []
 					// TODO: change unique to Set when it is more common on mobile
