@@ -1199,6 +1199,21 @@ parallel('\npico/obj', function(){
 			0 === Object.keys(out.g).length
 		)
 	})
+	
+	this.test('validate object and array without type', function(cb){
+		var spec = {
+			type: 'object',
+			spec: {
+				a: 'number',
+				b: 'string',
+				c: 'object',
+				d: 'array'
+			}
+		}
+		var out
+		var res = pobj.validate(spec, {a: 1, b: '2', c: {}, d: []}, out)
+		cb(null, !res)
+	})
 
 	this.test('validate pObj.create', function(cb){
 		var spec = {
