@@ -184,6 +184,17 @@ parallel('\npico/obj', function(){
 		cb(null, JSON.stringify([2,3]) === JSON.stringify(out))
 	})
 
+	this.test('ensure extend __proto__ work correctly', function(cb){
+		var a = pico.export('/')
+		var b = {b: 2}
+		var c = {c: 3}
+		a.prototype = b.prototype
+		a.__proto__= b
+		var out = pobj.extends({}, [c, {a}], {flat: 1})
+
+		cb(null, out.a.b === b.b && out.c === c.c && Object.keys(out.a)[0] === 'b')
+	})
+
 	this.test('ensure function extended correctly', function(cb){
 		var
 			obj1 = {func:function(){

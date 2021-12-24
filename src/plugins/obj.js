@@ -7,7 +7,6 @@ define('pico/obj',function(exports,require){
 	var Floor = Math.floor
 	var negative = ['false', '0', 'no']
 	var objfun = ['object','function']
-	var specialFunc = ['nstructor']
 	var ROOT = '$'
 	var EXT = '_'
 	var REL = '.'
@@ -322,6 +321,7 @@ define('pico/obj',function(exports,require){
 			if (1 === tf) tf = isObjFun(to.__proto__)
 			if (1 === ft) ft = isObjFun(from.__proto__)
 			options=options||{}
+			if (0 === ft && options.flat && from.__proto__) from = extend(from, from.__proto__, options)
 			var tidy = options.tidy
 			if (!to || null === from || (-1 === ft && ft === tf)) return ignore(from, tidy) ? to : from
 			if (1===ft) {
@@ -351,7 +351,7 @@ define('pico/obj',function(exports,require){
 				to = to || {}
 				for (key in from){
 					value = from[key]
-					if (~specialFunc.indexOf(key) || ignore(value, tidy)) continue
+					if (ignore(value, tidy)) continue
 					to[key] = extend(to[key], value, options)
 				}
 			}
