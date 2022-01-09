@@ -1100,7 +1100,7 @@ parallel('\npico/obj', function(){
 
 		var out = []
 		var res = pobj.validate(spec, val, out, spec)
-		return cb(null, res && '$.1.1.1.0.1' === res && val[1][0][1] == out[1][0][1])
+		return cb(null, res && '$.1.1.1.0.1' === res && val[1][0][1] === out[1][0][1])
 	})
 
 	this.test('validate dynamic spec with call operator', function(cb){
@@ -1229,7 +1229,7 @@ parallel('\npico/obj', function(){
 			0 === Object.keys(out.g).length
 		)
 	})
-	
+
 	this.test('validate object and array without type', function(cb){
 		var spec = {
 			type: 'object',
