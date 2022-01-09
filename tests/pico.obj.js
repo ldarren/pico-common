@@ -5,6 +5,7 @@ const { parallel } = pico.export('pico/test')
 const first_name = 'Darren'
 
 parallel('\npico/obj', function(){
+
 	this.test('ensure inherit work with child(obj) and ancestor(obj)', function(cb){
 		pico.define('ancestor0',function(exports,require,module,define,inherit,pico){
 			return {say:function(txt){
@@ -730,9 +731,20 @@ parallel('\npico/obj', function(){
 		if ('$.0' !== res) return cb(null, false, res)
 		res = pobj.validate(spec, [0])
 		if ('$.1' !== res) return cb(null, false, res)
-		var out = {}
+		var out = []
 		res = pobj.validate(spec, [0, '2020-12-30', 0], out)
 		cb(null, !res && '0' === out[2])
+	})
+
+	this.test('validate array with specs with excess values', function(cb){
+		var spec = {
+			type: 'array',
+			specs: ['number', 'date'],
+		}
+
+		var out = []
+		var res = pobj.validate(spec, [0, '2020-12-30', 1, 2], out)
+		cb(null, !res && 1 === out[2] && 2 === out[3])
 	})
 
 	this.test('validate boolean', function(cb){
@@ -1039,7 +1051,7 @@ parallel('\npico/obj', function(){
 
 		var out = {}
 		var res = pobj.validate(spec, {ids: 'a,b,c'}, out, ext)
-		return cb(null, !res && 3 === out.idxs.length && 2 === out.idxs[1], res)
+		return cb(null, !res && 3 === out.idxs.length && ext.b === out.idxs[1], res)
 	})
 
 	this.test('validate op can be applied to spec', function(cb){
@@ -1071,6 +1083,24 @@ parallel('\npico/obj', function(){
 		var out = {}
 		var res = pobj.validate(spec, input, out, ext)
 		return cb(null, !res && 1 === out.child.length && 1 === out.child[0].product_idx, res)
+	})
+
+	this.test('validate nested data structure with ref operator', function(cb){
+		var spec = {
+			type: 'array',
+			specs: ['number', { type: 'array', spec: ['ref', ['_'], null]}],
+		}
+		var val = [1, [
+			[2],
+			[3, [
+				[4, 0],
+				[5]
+			]]
+		]]
+
+		var out = []
+		var res = pobj.validate(spec, val, out, spec)
+		return cb(null, res && '$.1.1.1.0.1' === res && val[1][0][1] == out[1][0][1])
 	})
 
 	this.test('validate dynamic spec with call operator', function(cb){
@@ -1268,4 +1298,5 @@ parallel('\npico/obj', function(){
 		var res = pobj.validate(spec, obj)
 		return cb(null, void 0 === res)
 	})
+
 })

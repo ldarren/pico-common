@@ -166,7 +166,7 @@ define('pico/obj',function(exports,require){
 				if (void 0 !== ret) return [key, ret].join('.')
 			}
 		} else if (o) {
-			Array.prototype.push.apply(o, val.slice())
+			Array.prototype.push.apply(o, val.slice(j))
 		}
 	}
 	function validate(key, spec, val, out, full, host, ext){

@@ -96,7 +96,7 @@ __default_value__: if value not found in the given _path_to_value_, the default 
 convert value to boolean value: 1 or 0
 > syntax: ['operator\_name', 'path', ['default'], [invertor]]
 
-__operator_name__: _string_, `bool` for inverting a value
+__operator_name__: _string_, `bool`. use js implicit conversion to convert value to 1 or 0
 
 __path__: _array_, an array of string for the path to referencing value, e.g. [{id: 1}, {id: 2}, {id: 3}], the _path_to_value_ of `id:3` is [2, 'id']
 
@@ -158,7 +158,7 @@ __B_default__: default value B if path not found
 ### spec operator
 > syntax: ['operator\_name', 'path', ['default'], 'spec']
 
-__operator_name__: _string_, `spec`
+__operator_name__: _string_, `spec`. use `spec` to transform the value pointing by `path`
 
 __path__: _array_, path to value A
 
