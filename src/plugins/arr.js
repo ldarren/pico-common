@@ -14,9 +14,17 @@ define('pico/arr',function(exports,require){
 		diff: function(from, to){
 			if (!Array.isArray(from) || !from.length) return [to, []]
 			if (!Array.isArray(to) || !to.length) return [[], from]
-			var rem = from.filter(f => !to.includes(f))
-			var add = to.filter(t => !from.includes(t))
-			return [add, rem]
+			var rem = from.reduce((acc, f, i) => {
+				if (to.includes(f)) return acc
+				acc.push(i)
+				return acc
+			}, [])
+			var add = to.reduce((acc, t, i) => {
+				if (from.includes(t)) return acc
+				acc[i] = t
+				return acc
+			}, {})
+			return [rem.reverse(), add]
 		},
 		eq: eq,
 	}

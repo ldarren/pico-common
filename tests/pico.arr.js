@@ -6,22 +6,22 @@ parallel('\npico/arr', function(){
 
 	this.test('diff', function(cb){
 		var arr1 = [2,5,6]
-		var arr2 = [5,7,1]
+		var arr2 = [7,1,5]
 
 		var diff = pArr.diff(arr1, arr2)
-		var add = diff[0]
-		var rem = diff[1]
-		if (!add.includes(7)) return cb(null, false)
-		if (!add.includes(1)) return cb(null, false)
+		var rem = diff[0]
+		var add = diff[1]
+		if (7 !== add[0]) return cb(null, false)
+		if (1 !== add[1]) return cb(null, false)
 		if (!rem.includes(2)) return cb(null, false)
-		if (!rem.includes(6)) return cb(null, false)
+		if (!rem.includes(0)) return cb(null, false)
 
 		diff = pArr.diff(arr2, arr1)
-		add = diff[0]
-		rem = diff[1]
-		if (!add.includes(2)) return cb(null, false)
-		if (!add.includes(6)) return cb(null, false)
-		if (!rem.includes(7)) return cb(null, false)
+		rem = diff[0]
+		add = diff[1]
+		if (2 !== add[0]) return cb(null, false)
+		if (6 !== add[2]) return cb(null, false)
+		if (!rem.includes(0)) return cb(null, false)
 		if (!rem.includes(1)) return cb(null, false)
 		return cb(null, true)
 	})
@@ -36,6 +36,23 @@ parallel('\npico/arr', function(){
 		eq = pArr.diff(arr1, [6, 5, 2])
 		if (!eq) return cb(null, false)
 		return cb(null, true)
+	})
+
+	this.test('diff and eq', function(cb){
+		var arr1 = [2,5,6]
+		var arr2 = [5,7,1]
+
+		var diff = pArr.diff(arr1, arr2)
+		var rem = diff[0]
+		var add = diff[1]
+
+		var res = arr1.slice()
+		rem.forEach(idx => res.splice(idx, 1))
+		for (var idx in add) {
+			res.splice(parseInt(idx), 0, add[idx])
+		}
+
+		return cb(null, pArr.eq(res, arr2))
 	})
 
 	this.test('eq nested', function(cb){
