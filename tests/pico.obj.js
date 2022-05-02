@@ -1298,5 +1298,4 @@ parallel('\npico/obj', function(){
 		var res = pobj.validate(spec, obj)
 		return cb(null, void 0 === res)
 	})
-
 })
