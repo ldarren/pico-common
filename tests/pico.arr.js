@@ -44,6 +44,13 @@ parallel('\npico/arr', function(){
 		if (5 !== add[1]) return cb(null, false)
 		if (6 !== add[2]) return cb(null, false)
 		if (0 !== rem.length) return cb(null, false)
+
+		diff = pArr.diff()
+		rem = diff[0]
+		add = diff[1]
+		if (0 !== Object.keys(add).length) return cb(null, false)
+		if (0 !== rem.length) return cb(null, false)
+
 		return cb(null, true)
 	})
 
