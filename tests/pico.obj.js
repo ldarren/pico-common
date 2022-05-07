@@ -289,24 +289,24 @@ parallel('\npico/obj', function(){
 	this.test('ensure validate work', function(cb){
 		var obj = [{a: {b: [{c: '123', d: '1', e: null, f: '2019-10-16 06:33:00', g: 'T1'}]}}]
 		var okSpec = {
-			type: 'array',
+			type: 'arr',
 			spec: {
-				type: 'object',
+				type: 'obj',
 				spec: {
 					a: {
-						type: 'object',
+						type: 'obj',
 						required: 1,
 						spec: {
 							b: {
-								type: 'array',
+								type: 'arr',
 								required: 1,
 								spec: {
-									type: 'object',
+									type: 'obj',
 									spec: {
-										c: 'string',
-										d: {type: 'number', required: 1},
-										e: 'boolean',
-										f: 'date',
+										c: 'str',
+										d: {type: 'num', required: 1},
+										e: 'bool',
+										f: 'dat',
 										g: ['T1', 'T2']
 									}
 								}
@@ -317,21 +317,21 @@ parallel('\npico/obj', function(){
 			}
 		}
 		var koSpec = {
-			type: 'array',
+			type: 'arr',
 			spec: {
-				type: 'object',
+				type: 'obj',
 				spec: {
 					a: {
-						type: 'object',
+						type: 'obj',
 						required: 1,
 						spec: {
 							b: {
-								type: 'object',
+								type: 'obj',
 								spec: {
-									c: 'string',
-									d: 'number',
-									e: 'boolean',
-									f: 'date',
+									c: 'str',
+									d: 'num',
+									e: 'boo',
+									f: 'dat',
 									g: ['T1', 'T2']
 								}
 							}
@@ -350,26 +350,26 @@ parallel('\npico/obj', function(){
 	this.test('ensure primitive array type check', function(cb){
 		var obj = {a: ['a', 'b'], b: [1, 2], c: [['d', 'e'], ['3', '4']]}
 		var okSpec = {
-			type: 'object',
+			type: 'obj',
 			spec:{
 				a: {
-					type: 'array',
+					type: 'arr',
 					spec: {
-						type: 'string'
+						type: 'str'
 					}
 				},
 				b: {
-					type: 'array',
+					type: 'arr',
 					spec: {
-						type: 'number'
+						type: 'num'
 					}
 				},
 				c: {
-					type: 'array',
+					type: 'arr',
 					spec: {
-						type: 'array',
+						type: 'arr',
 						spec: {
-							type: 'string'
+							type: 'str'
 						}
 					}
 				},
@@ -382,13 +382,13 @@ parallel('\npico/obj', function(){
 	this.test('ensure validate without nested spec work', function(cb){
 		var obj = {a:{c:1, d:2}, b:[{e:1, f:2}]}
 		var okSpec = {
-			type: 'object',
+			type: 'obj',
 			spec:{
 				a: {
-					type: 'object',
+					type: 'obj',
 					required: 1
 				},
-				b: 'array',
+				b: 'arr',
 			}
 		}
 		var ret = pobj.validate(okSpec, obj)
@@ -398,21 +398,21 @@ parallel('\npico/obj', function(){
 	this.test('ensure validate for optional handle gracefully', function(cb){
 		var obj = {a:{}}
 		var okSpec = {
-			type: 'object',
+			type: 'obj',
 			spec: {
 				a: {
-					type: 'object',
+					type: 'obj',
 					required: 1,
 					spec: {
-						c: 'date',
-						d: 'string',
-						e: 'string',
+						c: 'dat',
+						d: 'str',
+						e: 'str',
 					}
 				},
 				b: {
-					type: 'array',
+					type: 'arr',
 				},
-				g: 'object'
+				g: 'obj'
 			}
 		}
 		var out = {}

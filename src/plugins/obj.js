@@ -7,6 +7,13 @@ define('pico/obj',function(exports,require){
 	var Floor = Math.floor
 	var negative = ['false', '0', 'no']
 	var objfun = ['object','function']
+	var NUM = 'num'
+	var STR = 'str'
+	var BOOL = 'boo'
+	var DATE = 'dat'
+	var OBJ = 'obj'
+	var ARR = 'arr'
+	var NULL = 'nul'
 	var ROOT = '$'
 	var EXT = '_'
 	var REL = '.'
@@ -185,8 +192,8 @@ define('pico/obj',function(exports,require){
 			val = run(['map', null, val].concat(s.map))
 		}
 		var vt = typeof val
-		if (t.includes('bool')) {
-			if ('string' === vt) set(out, k, val && !negative.includes(val.toLowerCase()))
+		if (t.includes(BOOL)) {
+			if (vt.includes(STR)) set(out, k, val && !negative.includes(val.toLowerCase()))
 			else set(out, k, !!val)
 			return
 		}
@@ -203,15 +210,15 @@ define('pico/obj',function(exports,require){
 
 		var ret
 		switch(t.substring(0, 3)){
-		case 'str':
-			if (t !== vt){
+		case STR:
+			if (!vt.includes(t)){
 				if (!s.force) return k
 				val = JSON.stringify(val)
 			}
 			if (notin(val.length, run(s.lt), run(s.gt)) || !RegExp(run(s.regex)).test(val)) return k
 			set(out, k, val)
 			break
-		case 'num':
+		case NUM:
 			val = parseFloat(val)
 			if (!isFinite(val)) return k
 			if (s.int) {
@@ -226,20 +233,20 @@ define('pico/obj',function(exports,require){
 			if (notin(val, run(s.lt), run(s.gt))) return k
 			set(out, k, val)
 			break
-		case 'dat':
+		case DATE:
 			val = pTime.convert(val, run(s.formats))
 			if (!val.getTime() || notin(val.getTime(), run(s.lt), run(s.gt))) return k
 			set(out, k, val)
 			break
-		case 'obj':
+		case OBJ:
 			ret = validateObj(k, s, val, out, full, ext)
 			if (void 0 !== ret) return ret
 			break
-		case 'arr':
+		case ARR:
 			ret = validateArr(k, s, val, out, full, ext)
 			if (void 0 !== ret) return ret
 			break
-		case 'nul':
+		case NULL:
 			set(out, k, null == val ? s.value || null : val)
 			break
 		default: return k
@@ -288,19 +295,19 @@ define('pico/obj',function(exports,require){
 		}
 
 		switch(t.substring(0, 3)){
-		case 'num':
+		case NUM:
 			return randIn(run(s.gt, -10), run(s.lt, 10))
-		case 'str':
+		case STR:
 			return s.regex ? ext.randex(run(s.regex)) : pStr.rand(randIn(run(s.gt, 0), run(s.lt, 10)), run(s.sep))
-		case 'boo':
+		case BOOL:
 			return 1 === rand(0, 1)
-		case 'dat':
+		case DATE:
 			return new Date(randIn(run(s.gt, Date.now() - 0x9A7EC800), run(s.lt, Date.now() + 0x9A7EC800)))
-		case 'obj':
+		case OBJ:
 			return createObj(run(s.spec), ext)
-		case 'arr':
+		case ARR:
 			return createArr(s, ext)
-		case 'nul':
+		case NULL:
 			return null
 		default:
 			if (Array.isArray(t)) return t[rand(0, t.length - 1)]
