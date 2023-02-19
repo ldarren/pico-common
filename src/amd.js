@@ -38,7 +38,7 @@ var
 				m=func.call(mute?{}:evt,module.exports,getMod,module,define,getBase,pico)||module.exports
 
 			if (base) m=inherit(m,base)
-			if ('function' === typeof m) m.extend=extend
+			if (m instanceof Function) m.extend=extend
 			if (evt.load) evt.load(m)
 			if (evt.update) updates[url]=[evt.update,m]
 
@@ -74,7 +74,7 @@ var
 	linker=function(deps, cb){
 		if (!deps.length) return cb()
 		loader(deps.shift(),function(err){
-			if (err) return cb(err)
+			if (err) console.error('linker:',err)
 			linker(deps, cb)
 		})
 	},
@@ -98,7 +98,9 @@ var
 		}else{
 			pico.ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,ajaxOpt,function(err,state,txt){
 				if (4!==state) return
-				if (err) return cb(err)
+				if (err) return js(url,txt,function(){
+					cb(err)
+				})
 				js(url,txt,cb)
 			})
 		}
@@ -192,6 +194,10 @@ var
 	js=function(url,txt,cb){
 		cb=cb||dummyCB
 		if(modules[url]) return cb(null, modules[url])
+		if (!txt) {
+			modules[url] = null
+			return cb()
+		}
 		if(EXT_JS !== (getExt(url)||EXT_JS)) return cb(null, define(url,txt))
 
 		var
@@ -240,7 +246,7 @@ var pico=module[exports]={
 		})
 	},
 	reload:function(url, script, cb){
-		if ('function'===typeof script) cb=script
+		if (script instanceof Function) cb=script
 		cb=cb||dummyCB
 		var reattach=function(err, m){
 			if (err) return cb(err)
@@ -256,7 +262,7 @@ var pico=module[exports]={
 		if (Array.isArray(importRule) && importRule.some(function(rx){
 			return rx.match(url)
 		}))
-			return require(url)
+		return require(url)
 	},
 	export:getMod,
 	env:getEnv

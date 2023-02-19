@@ -1,0 +1,1 @@
+../../bin/pico-cli.js
