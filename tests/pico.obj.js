@@ -1298,4 +1298,22 @@ parallel('\npico/obj', function(){
 		var res = pobj.validate(spec, obj)
 		return cb(null, void 0 === res)
 	})
+
+	this.test('flatten obj', function(cb){
+		const obj = {
+			mod: {
+				ps: {
+					host: '://goo.gl',
+					u: 'un',
+					p: 'passwd'
+				}
+			}
+		}
+		const res = pobj.flatten(obj)
+		return cb(null, 
+			res['mod_ps_host'] === obj.mod.ps.host &&
+			res['mod_ps_u'] === obj.mod.ps.u &&
+			res['mod_ps_p'] === obj.mod.ps.p
+		)
+	})
 })

@@ -381,5 +381,16 @@ define('pico/obj',function(exports,require){
 			if (!obj || !key) return false
 			return Object.prototype.hasOwnProperty.call(obj, key)
 		},
+		flatten: function flatten(obj, join='_', lastKey='', res={}){
+			var keys = Object.keys(obj)
+			for (var i=0, l=keys.length, k, v, lk; i<l; i++){
+				k = keys[i]
+				lk = lastKey ? lastKey + join + k : k
+				v = obj[k]
+				if (v instanceof Object && !Array.isArray(v)) flatten(v, join, lk, res)
+				else res[lk] = v
+			}
+			return res
+		}
 	}
 })
