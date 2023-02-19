@@ -7,7 +7,13 @@ define('pico/obj',function(exports,require){
 	var Floor = Math.floor
 	var negative = ['false', '0', 'no']
 	var objfun = ['object','function']
-	var specialFunc = ['nstructor']
+	var NUM = 'num'
+	var STR = 'str'
+	var BOOL = 'boo'
+	var DATE = 'dat'
+	var OBJ = 'obj'
+	var ARR = 'arr'
+	var NULL = 'nul'
 	var ROOT = '$'
 	var EXT = '_'
 	var REL = '.'
@@ -123,7 +129,7 @@ define('pico/obj',function(exports,require){
 		}
 	}
 	function validateObj(key, spec, val, out, full, ext){
-		if (!(spec.type === typeof val) || Array.isArray(val)) return key
+		if (Array.isArray(val)) return key
 		var run = Runner(full, val, ext)
 		var s = run(spec.spec)
 		if (s) {
@@ -167,7 +173,7 @@ define('pico/obj',function(exports,require){
 				if (void 0 !== ret) return [key, ret].join('.')
 			}
 		} else if (o) {
-			Array.prototype.push.apply(o, val.slice())
+			Array.prototype.push.apply(o, val.slice(j))
 		}
 	}
 	function validate(key, spec, val, out, full, host, ext){
@@ -186,8 +192,8 @@ define('pico/obj',function(exports,require){
 			val = run(['map', null, val].concat(s.map))
 		}
 		var vt = typeof val
-		if (t.includes('bool')) {
-			if ('string' === vt) set(out, k, val && !negative.includes(val.toLowerCase()))
+		if (t.includes(BOOL)) {
+			if (vt.includes(STR)) set(out, k, val && !negative.includes(val.toLowerCase()))
 			else set(out, k, !!val)
 			return
 		}
@@ -203,16 +209,16 @@ define('pico/obj',function(exports,require){
 		}
 
 		var ret
-		switch(t){
-		case 'string':
-			if (t !== vt){
+		switch(t.substring(0, 3)){
+		case STR:
+			if (!vt.includes(t)){
 				if (!s.force) return k
 				val = JSON.stringify(val)
 			}
 			if (notin(val.length, run(s.lt), run(s.gt)) || !RegExp(run(s.regex)).test(val)) return k
 			set(out, k, val)
 			break
-		case 'number':
+		case NUM:
 			val = parseFloat(val)
 			if (!isFinite(val)) return k
 			if (s.int) {
@@ -227,20 +233,20 @@ define('pico/obj',function(exports,require){
 			if (notin(val, run(s.lt), run(s.gt))) return k
 			set(out, k, val)
 			break
-		case 'date':
+		case DATE:
 			val = pTime.convert(val, run(s.formats))
 			if (!val.getTime() || notin(val.getTime(), run(s.lt), run(s.gt))) return k
 			set(out, k, val)
 			break
-		case 'object':
+		case OBJ:
 			ret = validateObj(k, s, val, out, full, ext)
 			if (void 0 !== ret) return ret
 			break
-		case 'array':
+		case ARR:
 			ret = validateArr(k, s, val, out, full, ext)
 			if (void 0 !== ret) return ret
 			break
-		case 'null':
+		case NULL:
 			set(out, k, null == val ? s.value || null : val)
 			break
 		default: return k
@@ -280,6 +286,7 @@ define('pico/obj',function(exports,require){
 		var s = run(spec)
 		var t = run(s.type, s)
 
+		if (!t || !t.charAt) return null
 		if (!run(s.required)) {
 			if (1 > rand(0, 100)) return run(s.value)
 		}
@@ -287,21 +294,20 @@ define('pico/obj',function(exports,require){
 			if (1 > rand(0, 100)) return null
 		}
 
-		switch(t){
-		case 'number':
+		switch(t.substring(0, 3)){
+		case NUM:
 			return randIn(run(s.gt, -10), run(s.lt, 10))
-		case 'string':
+		case STR:
 			return s.regex ? ext.randex(run(s.regex)) : pStr.rand(randIn(run(s.gt, 0), run(s.lt, 10)), run(s.sep))
-		case 'boolean':
-		case 'bool':
+		case BOOL:
 			return 1 === rand(0, 1)
-		case 'date':
+		case DATE:
 			return new Date(randIn(run(s.gt, Date.now() - 0x9A7EC800), run(s.lt, Date.now() + 0x9A7EC800)))
-		case 'object':
+		case OBJ:
 			return createObj(run(s.spec), ext)
-		case 'array':
+		case ARR:
 			return createArr(s, ext)
-		case 'null':
+		case NULL:
 			return null
 		default:
 			if (Array.isArray(t)) return t[rand(0, t.length - 1)]
@@ -315,13 +321,15 @@ define('pico/obj',function(exports,require){
 		if ((2 & tidy) && null === val) return 1
 	}
 
-	return  {
+	return {
 		extend: function extend(to, from, options){
 			var tf=isObjFun(to)
 			var ft=isObjFun(from)
 			if (1 === tf) tf = isObjFun(to.__proto__)
 			if (1 === ft) ft = isObjFun(from.__proto__)
 			options=options||{}
+			var ifa = Array.isArray(from)
+			if (0 === ft && options.flat && !ifa && from.__proto__) from = extend(from, from.__proto__, options)
 			var tidy = options.tidy
 			if (!to || null === from || (-1 === ft && ft === tf)) return ignore(from, tidy) ? to : from
 			if (1===ft) {
@@ -329,7 +337,7 @@ define('pico/obj',function(exports,require){
 				return from
 			}
 			var key, value
-			if (Array.isArray(from)){
+			if (ifa){
 				if (options.mergeArr){
 					to = to || []
 					// TODO: change unique to Set when it is more common on mobile
@@ -351,7 +359,7 @@ define('pico/obj',function(exports,require){
 				to = to || {}
 				for (key in from){
 					value = from[key]
-					if (~specialFunc.indexOf(key) || ignore(value, tidy)) continue
+					if (ignore(value, tidy)) continue
 					to[key] = extend(to[key], value, options)
 				}
 			}
@@ -370,7 +378,8 @@ define('pico/obj',function(exports,require){
 		},
 		create: create,
 		has: function(obj, key){
+			if (!obj || !key) return false
 			return Object.prototype.hasOwnProperty.call(obj, key)
-		}
+		},
 	}
 })

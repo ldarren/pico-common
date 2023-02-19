@@ -3,6 +3,7 @@ var
 	modules={},
 	updates={},
 	paths={},
+	ajaxOpt={baseurl:null},
 	env={build:'dev'},
 	preprocessors={},
 	EXT_JS='.js',EXT_JSON='.json',
@@ -95,7 +96,7 @@ var
 				js(url,txt,cb)
 			})
 		}else{
-			pico.ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,null,function(err,state,txt){
+			pico.ajax('get',path+fname+(getExt(url)?'':EXT_JS),null,ajaxOpt,function(err,state,txt){
 				if (4!==state) return
 				if (err) return cb(err)
 				js(url,txt,cb)
@@ -216,6 +217,7 @@ var
 var pico=module[exports]={
 	run:function(options,func){
 		pico.ajax=options.ajax||pico.ajax
+		ajaxOpt.baseurl=options.baseurl||ajaxOpt.baseurl
 		paths=options.paths||paths
 		env=options.env||env
 		preprocessors=options.preprocessors||preprocessors

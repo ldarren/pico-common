@@ -116,8 +116,7 @@ define('pico/str', function(){
 
 	function add(ctx, tree, tokens, route){
 		if (1 === tokens.length && -1 === (ctx.DYN || DYN).indexOf(tokens[0].charCodeAt(0))) {
-			addNode(ctx, tree, tokens, route, tokens[0])
-			return
+			return addNode(ctx, tree, tokens, route, tokens[0])
 		}
 
 		var key = getKey(ctx, tokens[0], 0, null, SEP)
@@ -181,7 +180,8 @@ define('pico/str', function(){
 		return find(ctx, route, path, params, pos)
 	}
 
-	function Radix(opt, tree){
+	function Radix(tree, opt){
+		this.tree = tree || {}
 		opt = Object.assign({
 			SEP: SEP,
 			PARAM: PARAM,
@@ -191,14 +191,13 @@ define('pico/str', function(){
 		this.PARAM = opt.PARAM
 		this.CAPTURE = opt.CAPTURE
 		this.DYN = [opt.PARAM.charCodeAt(0), opt.CAPTURE.charCodeAt(0)]
-		this.tree = tree || {}
 	}
 
 	Radix.prototype = {
 		add: function(route){
 			var tree = this.tree
 			var tokens = tokenizer(this, route, [], 0)
-			add(this, tree, tokens, route)
+			return add(this, tree, tokens, route)
 		},
 		match: function(path, params){
 			if (!path && !path.charAt) return
