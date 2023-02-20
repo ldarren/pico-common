@@ -23,7 +23,7 @@ jobs:
         npm run lint
     - name: Test
       run: |
-        npm ci
+        npm ci --production
         npm test
       env:
         CI: true
