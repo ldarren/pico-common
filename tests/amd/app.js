@@ -16,7 +16,7 @@ function(){
 		modAttach=require('./modAttach'),
 		modClass=require('./modClass'),
 		modFunc=require('./modFunc'),
-		modOverride=require('./modOverride')
+		modOverride=require('./modOverride'),
 		modUndefined=require('./modUndefined')
 
 	return function(){

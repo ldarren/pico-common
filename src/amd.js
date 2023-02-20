@@ -80,7 +80,6 @@ var
 	},
 	// load files, and execute them based on ext
 	loader=function(url,cb){
-		modules[url] = modules[url] || pico.import(url) // load node module?
 		if (modules[url]) return cb(null, modules[url])
 
 		var
@@ -259,10 +258,11 @@ var pico=module[exports]={
 	parse:js,
 	define:define,
 	import:function(url){
-		if (Array.isArray(importRule) && importRule.some(function(rx){
+		if (!Array.isArray(importRule) || importRule.some(function(rx){
 			return rx.match(url)
-		}))
-		return require(url)
+		})){
+			return require(url)
+		}
 	},
 	export:getMod,
 	env:getEnv

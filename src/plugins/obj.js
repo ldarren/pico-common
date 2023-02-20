@@ -391,6 +391,17 @@ define('pico/obj',function(exports,require){
 				else res[lk] = v
 			}
 			return res
+		},
+		replace: function replace(obj, env, sym = '$'){
+			var keys = Object.keys(obj)
+			for (var i = 0, l = keys.length, k, v; i < l; i++){
+				k = keys[i]
+				v = obj[k]
+				if (v instanceof Object && !Array.isArray(obj)) replace(v, env, sym)
+				else if (v.charAt && sym === v.charAt(0)) {
+					obj[k] = env[v.substring(1)] || v
+				}
+			}
 		}
 	}
 })
