@@ -1298,4 +1298,40 @@ parallel('\npico/obj', function(){
 		var res = pobj.validate(spec, obj)
 		return cb(null, void 0 === res)
 	})
+
+	this.test('flatten obj', function(cb){
+		const obj = {
+			mod: {
+				ps: {
+					host: '://goo.gl',
+					u: 'un',
+					p: 'passwd'
+				}
+			}
+		}
+		const res = pobj.flatten(obj)
+		return cb(null,
+			res['mod_ps_host'] === obj.mod.ps.host &&
+			res['mod_ps_u'] === obj.mod.ps.u &&
+			res['mod_ps_p'] === obj.mod.ps.p
+		)
+	})
+
+	this.test('replace obj value', function(cb){
+		const obj = {
+			mod: {
+				ps: {
+					host: '$host',
+					u: '$userId',
+					p: '$passwd'
+				}
+			}
+		}
+		pobj.replace(obj, {host: 1, userId: 2, passwd: 3})
+		return cb(null,
+			1 === obj.mod.ps.host &&
+			2 === obj.mod.ps.u &&
+			3 === obj.mod.ps.p
+		)
+	})
 })

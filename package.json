@@ -1,6 +1,6 @@
 {
     "name": "pico-common",
-    "version": "0.14.31",
+    "version": "0.15.1",
     "description": "pico common tools",
     "type": "common.js",
     "main": "bin/pico.js",
@@ -32,7 +32,7 @@
     },
     "homepage": "https://github.com/ldarren/pico-common",
     "devDependencies": {
-        "terser": "^5.3.2"
+        "terser": "^5.16.4"
     },
     "dependencies": {}
 }
