@@ -7,7 +7,9 @@ parallel('\npico', function(){
 		pico.run({
 			name: 'test',
 			preprocessors:{
-				'.md':function(){return 1}
+				'.md':function(){
+					return 1
+				}
 			},
 			ajax: pico.ajaxMock,
 			env:{
