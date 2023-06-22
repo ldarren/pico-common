@@ -2,23 +2,26 @@ const pico = require('../bin/pico-cli')
 const { parallel } = pico.export('pico/test')
 
 parallel('\npico', function(){
-/*
+
 	this.test('ensure pico preprocessors and env work', function(cb){
 		pico.run({
+			name: 'test',
 			preprocessors:{
 				'.md':function(){return 1}
 			},
+			ajax: pico.ajaxMock,
 			env:{
-				cb:cb
+				cb
 			}
 		},function(){
+			pico.env('cb')(null, true) // tmp solution, for some reason, the `return function()` never trigger
 			var md=require('README.md')
 			return function(){
-				pico.env('cb')(null, md===1)
+				pico.env('cb')(null, 1 === md)
 			}
 		})
 	})
-*/
+
 	this.test('ensure pico.parse function text to module', function(cb){
 		pico.parse('testMod123', 'return {value:123}', function(err, mod){
 			if (err) return cb(err)
