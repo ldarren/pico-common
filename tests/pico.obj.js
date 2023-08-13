@@ -1245,6 +1245,34 @@ parallel('\npico/obj', function(){
 		cb(null, !res)
 	})
 
+	this.test('validate object with any key (or wildcard)', function(cb){
+		var spec = {
+			type: 'obj',
+			spec: {
+				_: {
+					type: 'obj',
+					spec: {
+						type: 'str',
+						description: 'str',
+						enum: 'arr',
+					}
+				}
+			}
+		}
+		var out = {}
+		var res = pobj.validate(spec, {
+			location: {
+				type: 'string',
+				description: 'The city and state, e.g. San Francisco, CA',
+			},
+			unit: {
+				type: 'string',
+				enum: ['celsius', 'fahrenheit', 'kevin']
+			}
+		}, out)
+		cb(null, !res && Object.keys(out).length === 2)
+	})
+
 	this.test('validate pObj.create', function(cb){
 		var spec = {
 			type: 'array',
@@ -1334,4 +1362,5 @@ parallel('\npico/obj', function(){
 			3 === obj.mod.ps.p
 		)
 	})
+
 })

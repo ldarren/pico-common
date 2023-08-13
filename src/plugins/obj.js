@@ -14,6 +14,7 @@ define('pico/obj',function(exports,require){
 	var OBJ = 'obj'
 	var ARR = 'arr'
 	var NULL = 'nul'
+	var WILDCARD = '_'
 	var ROOT = '$'
 	var EXT = '_'
 	var REL = '.'
@@ -137,6 +138,15 @@ define('pico/obj',function(exports,require){
 			var o = get(out, key)
 			var keys = Object.keys(s)
 			for (var i = 0, ret, k; (k = keys[i]); i++){
+				if (k === WILDCARD) {
+					keys = Object.keys(val)
+					var sk = s[k]
+					for (i = 0; (k = keys[i]); i++){
+						ret = validate(k, sk, val[k], o, full, val, ext)
+						if (void 0 !== ret) return [key, ret].join('.')
+					}
+					break
+				}
 				ret = validate(k, s[k], val[k], o, full, val, ext)
 				if (void 0 !== ret) return [key, ret].join('.')
 			}
